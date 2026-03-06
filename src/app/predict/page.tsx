@@ -57,10 +57,11 @@ export default function PredictPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ venue, raceNo, raceClass, surface, distance, horses }),
       });
+      if (res.status === 429) { setShowPaywall(true); return; }
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setResult(data.prediction);
-      const next = usageCount + 1;
+      const next = data.count ?? usageCount + 1;
       setUsageCount(next);
       localStorage.setItem(STORAGE_KEY, String(next));
     } catch (e) {
@@ -190,9 +191,29 @@ export default function PredictPage() {
           <div className="mt-8 p-6 bg-green-50 border border-green-200 rounded-2xl">
             <h2 className="text-lg font-bold text-green-800 mb-4">🏆 AI予想結果</h2>
             <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{result}</p>
+            <div className="mt-4 flex gap-2">
+              <a
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`AIが${venue}${raceNo}R(${raceClass})を予想しました！🏇\n#競馬予想AI #競馬\nhttps://keiba-yoso-ai.vercel.app`)}`}
+                target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-sm font-bold rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                𝕏 でシェア
+              </a>
+              <a
+                href={`https://line.me/R/msg/text/?${encodeURIComponent(`AIが${venue}${raceNo}R(${raceClass})を予想！🏇 #競馬予想AI https://keiba-yoso-ai.vercel.app`)}`}
+                target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#06C755] text-white text-sm font-bold rounded-lg hover:bg-[#05b04c] transition-colors"
+              >
+                LINE でシェア
+              </a>
+            </div>
           </div>
         )}
       </div>
+      <footer className="text-center py-6 text-xs text-gray-400 border-t mt-8 space-x-4">
+        <a href="/legal" className="hover:text-gray-600">特定商取引法に基づく表記</a>
+        <a href="/privacy" className="hover:text-gray-600">プライバシーポリシー</a>
+      </footer>
     </div>
   );
 }
