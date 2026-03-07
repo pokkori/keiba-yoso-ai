@@ -87,6 +87,11 @@ async function fetchRaceData(raceId: string): Promise<{ info: string; horses: st
 
     if (horseLines.length === 0) return null;
 
+    // 文字化けチェック：馬名に置換文字(U+FFFD)や"?"が多すぎる場合は無効
+    const combined = horseLines.join("");
+    const garbageCount = [...combined].filter(c => c === "\uFFFD" || c === "?").length;
+    if (garbageCount > 5) return null;
+
     return {
       info: `${venue} ${raceNo}R${raceName ? ` ${raceName}` : ""}`,
       horses: horseLines.join("\n"),
@@ -167,6 +172,21 @@ ${promptHorses}
     });
 
     const prediction = message.content[0].type === "text" ? message.content[0].text : "";
+
+    // Claudeが拒否・謝罪した場合はカウントしない
+    const isRefusal = prediction.length < 300 && (
+      prediction.includes("申し訳") ||
+      prediction.includes("予想提供ができません") ||
+      prediction.includes("判読できない") ||
+      prediction.includes("データが不完全")
+    );
+    if (isRefusal) {
+      return NextResponse.json(
+        { error: "レースデータが正しく取得できませんでした。別のレースを選択するか、しばらく待ってから再試行してください。" },
+        { status: 422 }
+      );
+    }
+
     const newCount = cookieCount + 1;
     const response = NextResponse.json({ prediction, raceInfo: promptInfo.trim(), count: newCount });
 
