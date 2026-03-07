@@ -15,6 +15,36 @@ interface Race {
   isPast: boolean;
 }
 
+type PredictionSection = { title: string; icon: string; content: string };
+
+function parsePredict(text: string): PredictionSection[] {
+  const defs = [
+    { key: "本命", icon: "◎", label: "本命（◎）" },
+    { key: "対抗", icon: "○", label: "対抗（○）" },
+    { key: "単穴", icon: "▲", label: "単穴（▲）" },
+    { key: "買い目", icon: "🎯", label: "推奨買い目" },
+    { key: "展開", icon: "📊", label: "レース展開予想" },
+    { key: "総評", icon: "💡", label: "総評" },
+  ];
+
+  const sections: PredictionSection[] = [];
+  // Split on 【...】 headers
+  const parts = text.split(/(?=【[^】]+】)/);
+  for (const part of parts) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    const matched = defs.find(d => trimmed.startsWith(`【${d.key}`) || trimmed.includes(`【${d.key}`));
+    if (matched) {
+      const content = trimmed.replace(/^【[^】]+】/, "").trim();
+      sections.push({ title: matched.label, icon: matched.icon, content });
+    }
+  }
+  if (sections.length < 2) {
+    return [{ title: "AI予想結果", icon: "🏇", content: text }];
+  }
+  return sections;
+}
+
 async function startCheckout(plan: string) {
   const res = await fetch("/api/stripe/checkout", {
     method: "POST",
@@ -25,23 +55,69 @@ async function startCheckout(plan: string) {
   if (data.url) window.location.href = data.url;
 }
 
-function getTodayJST(): string {
-  const now = new Date();
-  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
-  const y = jst.getUTCFullYear();
-  const m = String(jst.getUTCMonth() + 1).padStart(2, "0");
-  const d = String(jst.getUTCDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+function PredictionCard({ sections, raceInfo, rawText }: { sections: PredictionSection[]; raceInfo: string; rawText: string }) {
+  const [activeTab, setActiveTab] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const [copiedAll, setCopiedAll] = useState(false);
+
+  const handleCopy = (text: string, all?: boolean) => {
+    navigator.clipboard.writeText(text);
+    if (all) { setCopiedAll(true); setTimeout(() => setCopiedAll(false), 2000); }
+    else { setCopied(true); setTimeout(() => setCopied(false), 2000); }
+  };
+
+  const current = sections[activeTab];
+
+  return (
+    <div className="mt-8 rounded-2xl border border-green-200 overflow-hidden">
+      {/* Header */}
+      <div className="bg-green-800 px-4 py-3 flex items-center justify-between">
+        <span className="text-white font-bold text-sm">🏆 {raceInfo} AI予想結果</span>
+        <button onClick={() => handleCopy(rawText, true)}
+          className="text-xs bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg font-medium transition-colors">
+          {copiedAll ? "✓ コピー済み" : "全文コピー"}
+        </button>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex overflow-x-auto bg-green-50 border-b border-green-200">
+        {sections.map((s, i) => (
+          <button key={i} onClick={() => setActiveTab(i)}
+            className={`flex items-center gap-1 px-3 py-2.5 text-xs font-bold whitespace-nowrap transition-colors border-b-2 ${activeTab === i ? "border-green-700 text-green-800 bg-white" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+            <span>{s.icon}</span>
+            <span className="hidden sm:inline">{s.title}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div className="bg-white p-5">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm font-bold text-green-800">{current.icon} {current.title}</span>
+          <button onClick={() => handleCopy(current.content)}
+            className="text-xs bg-green-50 hover:bg-green-100 text-green-700 px-3 py-1 rounded-lg font-medium transition-colors">
+            {copied ? "✓ コピー" : "コピー"}
+          </button>
+        </div>
+        <p className="text-gray-800 leading-relaxed whitespace-pre-wrap text-sm">{current.content}</p>
+      </div>
+    </div>
+  );
 }
 
 export default function PredictPage() {
-  const [date, setDate] = useState(getTodayJST());
+  const [date, setDate] = useState(() => {
+    const now = new Date();
+    const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    return `${jst.getUTCFullYear()}-${String(jst.getUTCMonth() + 1).padStart(2, "0")}-${String(jst.getUTCDate()).padStart(2, "0")}`;
+  });
   const [races, setRaces] = useState<Race[]>([]);
   const [selectedRaceId, setSelectedRaceId] = useState("");
   const [racesLoading, setRacesLoading] = useState(false);
   const [budget, setBudget] = useState("");
 
-  const [result, setResult] = useState("");
+  const [rawResult, setRawResult] = useState("");
+  const [sections, setSections] = useState<PredictionSection[]>([]);
   const [raceInfo, setRaceInfo] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -58,7 +134,8 @@ export default function PredictPage() {
     if (!date) return;
     setRaces([]);
     setSelectedRaceId("");
-    setResult("");
+    setRawResult("");
+    setSections([]);
     setRacesLoading(true);
 
     const dateStr = date.replace(/-/g, "");
@@ -67,7 +144,6 @@ export default function PredictPage() {
       .then((data) => {
         if (data.races && data.races.length > 0) {
           setRaces(data.races);
-          // 最初の未発走レースを選択、なければ先頭
           const upcoming = data.races.find((r: Race) => !r.isPast);
           setSelectedRaceId((upcoming ?? data.races[0]).raceId);
         }
@@ -81,20 +157,13 @@ export default function PredictPage() {
 
   const handlePredict = async () => {
     if (racePast) return;
-
-    if (!isPremium && usageCount >= FREE_LIMIT) {
-      setShowPaywall(true);
-      return;
-    }
-
-    if (!selectedRaceId) {
-      setError("レースを選択してください");
-      return;
-    }
+    if (!isPremium && usageCount >= FREE_LIMIT) { setShowPaywall(true); return; }
+    if (!selectedRaceId) { setError("レースを選択してください"); return; }
 
     setLoading(true);
     setError("");
-    setResult("");
+    setRawResult("");
+    setSections([]);
     setRaceInfo("");
 
     try {
@@ -111,9 +180,10 @@ export default function PredictPage() {
         setError("出走表の自動取得ができませんでした。時間をおいてから別のレースを選択してください。");
         return;
       }
-
       if (data.error) throw new Error(data.error);
-      setResult(data.prediction);
+
+      setRawResult(data.prediction);
+      setSections(parsePredict(data.prediction));
       setRaceInfo(data.raceInfo || "");
       const next = data.count ?? usageCount + 1;
       setUsageCount(next);
@@ -132,28 +202,31 @@ export default function PredictPage() {
   }, {});
 
   const shareLabel = raceInfo || "競馬";
+  const shareText = rawResult ? `${shareLabel}をAIが予想！🏇\n#競馬予想AI #競馬\nhttps://keiba-yoso-ai.vercel.app` : "";
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       {showPaywall && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full text-center">
-            <div className="text-4xl mb-3">🔒</div>
+            <div className="text-4xl mb-3">🏇</div>
             <h2 className="text-xl font-bold text-gray-800 mb-2">無料枠を使い切りました</h2>
-            <p className="text-gray-500 text-sm mb-6">
-              無料プランは1レース予想まで。<br />
-              プレミアムプランで全レース無制限に使えます。
+            <p className="text-gray-500 text-sm mb-1">
+              毎週土日・全レース無制限に使えます
             </p>
-            <button
-              onClick={() => startCheckout("pro")}
-              className="w-full bg-gradient-to-r from-green-700 to-green-600 text-white py-3 rounded-xl font-bold hover:from-green-800 hover:to-green-700 transition-all mb-3"
-            >
+            <ul className="text-xs text-gray-400 text-left mb-6 space-y-1.5 mt-3">
+              <li>✓ 全レース予想（1日20〜30レース）</li>
+              <li>✓ 本命・対抗・単穴・買い目を明示</li>
+              <li>✓ 軍資金別の具体的な配分提案</li>
+              <li>✓ 回収率トラッキングで成績可視化</li>
+              <li>✓ 重賞G1の特別詳細分析（プロプラン）</li>
+            </ul>
+            <button onClick={() => startCheckout("pro")}
+              className="w-full bg-gradient-to-r from-green-700 to-green-600 text-white py-3 rounded-xl font-bold hover:from-green-800 hover:to-green-700 transition-all mb-3">
               プロプランで続ける（¥2,980/月）
             </button>
-            <button
-              onClick={() => startCheckout("basic")}
-              className="w-full border border-green-300 text-green-700 py-2 rounded-xl text-sm font-medium hover:bg-green-50 transition-colors mb-3"
-            >
+            <button onClick={() => startCheckout("basic")}
+              className="w-full border border-green-300 text-green-700 py-2 rounded-xl text-sm font-medium hover:bg-green-50 transition-colors mb-3">
               ベーシックプラン（¥980/月）
             </button>
             <button onClick={() => setShowPaywall(false)} className="text-xs text-gray-400 hover:text-gray-600">
@@ -165,119 +238,128 @@ export default function PredictPage() {
 
       <nav className="flex items-center justify-between px-6 py-4 border-b border-green-200 bg-green-900">
         <Link href="/" className="text-xl font-bold text-white">🏇 競馬予想AI</Link>
-        {!isPremium && (
-          <span className="text-green-300 text-xs">無料残り {Math.max(0, FREE_LIMIT - usageCount)} 回</span>
-        )}
+        <div className="flex items-center gap-4">
+          <Link href="/tracker" className="text-sm text-green-300 hover:text-white">回収率管理</Link>
+          {isPremium ? (
+            <span className="text-xs bg-yellow-400 text-green-900 font-bold px-3 py-1 rounded-full">PRO</span>
+          ) : (
+            <span className="text-green-300 text-xs">無料残り {Math.max(0, FREE_LIMIT - usageCount)} 回</span>
+          )}
+        </div>
       </nav>
 
       <div className="max-w-2xl mx-auto py-10 px-6">
-        <h1 className="text-2xl font-bold text-center text-gray-900 mb-8">レース予想</h1>
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+          <h1 className="text-xl font-bold text-gray-900 mb-6">🏇 レース予想</h1>
 
-        {/* 日付選択 */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-600 mb-1">開催日</label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:border-green-500"
-          />
-        </div>
-
-        {racesLoading ? (
-          <div className="flex items-center gap-2 text-gray-500 text-sm py-4">
-            <span className="animate-spin inline-block">⟳</span> レース一覧を取得中...
+          {/* 日付選択 */}
+          <div className="mb-5">
+            <label className="block text-sm font-medium text-gray-600 mb-1.5">開催日</label>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+              className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:border-green-500 bg-gray-50" />
           </div>
-        ) : (
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-600 mb-1">レース選択</label>
-            {races.length > 0 ? (
-              <select
-                value={selectedRaceId}
-                onChange={(e) => { setSelectedRaceId(e.target.value); setResult(""); setError(""); }}
-                className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:border-green-500 bg-white"
-              >
-                {Object.entries(venueGroups).map(([venue, venueRaces]) => (
-                  <optgroup key={venue} label={`── ${venue} ──`}>
-                    {venueRaces.map((r) => (
-                      <option key={r.raceId} value={r.raceId}>
-                        {r.isPast ? `[発走済] ${r.label}` : r.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            ) : (
-              <p className="text-gray-400 text-sm py-2">レースが見つかりませんでした</p>
-            )}
-          </div>
-        )}
 
-        {/* 軍資金入力 */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            軍資金（任意）
-            <span className="ml-2 text-xs text-gray-400">入力すると具体的な購入金額を提案します</span>
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">¥</span>
-            <input
-              type="number"
-              value={budget}
-              onChange={(e) => setBudget(e.target.value)}
-              placeholder="例: 3000"
-              min={100}
-              max={1000000}
-              className="w-full border border-gray-300 rounded-lg pl-8 pr-16 py-3 focus:outline-none focus:border-green-500"
-            />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">円</span>
-          </div>
-        </div>
+          {racesLoading ? (
+            <div className="flex items-center gap-2 text-gray-500 text-sm py-4">
+              <span className="animate-spin inline-block">⟳</span> レース一覧を取得中...
+            </div>
+          ) : (
+            <div className="mb-5">
+              <label className="block text-sm font-medium text-gray-600 mb-1.5">レース選択</label>
+              {races.length > 0 ? (
+                <select value={selectedRaceId}
+                  onChange={(e) => { setSelectedRaceId(e.target.value); setRawResult(""); setSections([]); setError(""); }}
+                  className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:border-green-500 bg-gray-50">
+                  {Object.entries(venueGroups).map(([venue, venueRaces]) => (
+                    <optgroup key={venue} label={`── ${venue} ──`}>
+                      {venueRaces.map((r) => (
+                        <option key={r.raceId} value={r.raceId}>
+                          {r.isPast ? `[発走済] ${r.label}` : r.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              ) : (
+                <p className="text-gray-400 text-sm py-2 bg-gray-50 rounded-xl px-3">レースが見つかりませんでした（土日のみ開催）</p>
+              )}
+            </div>
+          )}
 
-        {/* 発走済み警告 */}
-        {racePast && (
-          <div className="mb-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
-            このレースはすでに発走済みのため予想できません。別のレースを選択してください。
-          </div>
-        )}
-
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-
-        <button
-          onClick={handlePredict}
-          disabled={loading || racePast || (!selectedRaceId && !racesLoading)}
-          className="w-full bg-green-700 hover:bg-green-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-lg transition-colors"
-        >
-          {loading ? "🤖 出走馬データ取得 & AI分析中..." : "🏇 このレースを予想する"}
-        </button>
-
-        {/* 予想結果 */}
-        {result && (
-          <div className="mt-8 p-6 bg-green-50 border border-green-200 rounded-2xl">
-            {raceInfo && (
-              <p className="text-xs text-green-700 font-semibold mb-3 bg-green-100 px-3 py-1 rounded-full inline-block">
-                {raceInfo}
-              </p>
-            )}
-            <h2 className="text-lg font-bold text-green-800 mb-4">🏆 AI予想結果</h2>
-            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{result}</p>
-            <div className="mt-4 flex gap-2">
-              <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${shareLabel}をAIが予想！🏇\n#競馬予想AI #競馬\nhttps://keiba-yoso-ai.vercel.app`)}`}
-                target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-sm font-bold rounded-lg hover:bg-gray-800 transition-colors"
-              >
-                𝕏 でシェア
-              </a>
-              <a
-                href={`https://line.me/R/msg/text/?${encodeURIComponent(`${shareLabel}をAIが予想！🏇 #競馬予想AI https://keiba-yoso-ai.vercel.app`)}`}
-                target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-4 py-2 bg-[#06C755] text-white text-sm font-bold rounded-lg hover:bg-[#05b04c] transition-colors"
-              >
-                LINE でシェア
-              </a>
+          {/* 軍資金 */}
+          <div className="mb-5">
+            <label className="block text-sm font-medium text-gray-600 mb-1.5">
+              軍資金（任意）
+              <span className="ml-2 text-xs text-gray-400 font-normal">入力すると具体的な購入金額を提案</span>
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">¥</span>
+              <input type="number" value={budget} onChange={(e) => setBudget(e.target.value)}
+                placeholder="例: 3000" min={100} max={1000000}
+                className="w-full border border-gray-300 rounded-xl pl-8 pr-16 py-3 focus:outline-none focus:border-green-500 bg-gray-50" />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">円</span>
             </div>
           </div>
+
+          {racePast && (
+            <div className="mb-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm">
+              このレースはすでに発走済みです。別のレースを選択してください。
+            </div>
+          )}
+
+          {error && <p className="text-red-500 text-sm mb-4 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+
+          <button onClick={handlePredict}
+            disabled={loading || racePast || (!selectedRaceId && !racesLoading)}
+            className="w-full bg-green-700 hover:bg-green-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-base transition-colors">
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="animate-spin">⟳</span>
+                出走馬データ取得 & AI分析中...（20〜40秒）
+              </span>
+            ) : "🏇 このレースを予想する"}
+          </button>
+
+          {!isPremium && (
+            <p className="text-center text-xs text-gray-400 mt-3">
+              無料 {FREE_LIMIT} 回 → <button onClick={() => setShowPaywall(true)} className="text-green-600 font-medium hover:underline">プレミアムで全レース無制限</button>
+            </p>
+          )}
+        </div>
+
+        {/* 予想結果 */}
+        {sections.length > 0 && (
+          <>
+            <PredictionCard sections={sections} raceInfo={raceInfo} rawText={rawResult} />
+
+            <div className="mt-4 flex gap-3">
+              <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`}
+                target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-colors">
+                𝕏 でシェア
+              </a>
+              <a href={`https://line.me/R/msg/text/?${encodeURIComponent(`${shareLabel}をAIが予想！🏇 #競馬予想AI https://keiba-yoso-ai.vercel.app`)}`}
+                target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#06C755] text-white text-sm font-bold rounded-xl hover:bg-[#05b04c] transition-colors">
+                LINE でシェア
+              </a>
+              <Link href="/tracker"
+                className="flex items-center gap-1.5 px-4 py-2 bg-green-50 text-green-700 text-sm font-bold rounded-xl hover:bg-green-100 transition-colors border border-green-200">
+                📊 結果を記録
+              </Link>
+            </div>
+
+            {!isPremium && (
+              <div className="mt-5 bg-gradient-to-r from-green-800 to-green-700 rounded-2xl p-5 text-white text-center">
+                <p className="font-bold mb-1">毎週全レース予想したい方へ</p>
+                <p className="text-green-200 text-xs mb-4">土日毎週20〜30レースが全部使い放題。¥980/月から。</p>
+                <button onClick={() => startCheckout("basic")}
+                  className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-2.5 px-8 rounded-full text-sm transition-colors">
+                  ベーシック ¥980/月 で始める
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
