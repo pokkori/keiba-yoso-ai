@@ -29,12 +29,19 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
-const FETCH_HEADERS = {
+const HTML_HEADERS = {
   "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
   "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
   "Accept-Language": "ja,en;q=0.5",
-  "Accept-Encoding": "gzip, deflate, br",
   "Referer": "https://sp.netkeiba.com/",
+};
+
+const JSON_HEADERS = {
+  "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+  "Accept": "application/json, text/javascript, */*",
+  "Accept-Language": "ja,en;q=0.5",
+  "Referer": "https://race.netkeiba.com/",
+  "X-Requested-With": "XMLHttpRequest",
 };
 
 async function decodeBuffer(buffer: ArrayBuffer): Promise<string> {
@@ -47,102 +54,118 @@ async function decodeBuffer(buffer: ArrayBuffer): Promise<string> {
   return new TextDecoder("utf-8", { fatal: false }).decode(buffer);
 }
 
-function parseHorses(html: string): string[] {
-  const horseLines: string[] = [];
+function parseHorsesFromHtml(html: string): string[] {
+  const lines: string[] = [];
+  let m;
 
-  // PC版: class="HorseList"の<tr>行をパース
-  const rowPattern = /<tr[^>]*class="[^"]*HorseList[^"]*"[^>]*>([\s\S]*?)<\/tr>/g;
-  let rowMatch;
-  while ((rowMatch = rowPattern.exec(html)) !== null) {
-    const row = rowMatch[1];
-    const numMatch = row.match(/class="Umaban[^"]*"[^>]*><span>(\d+)<\/span>/);
-    const nameMatch = row.match(/class="HorseName"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/);
-    const jockeyMatch = row.match(/class="Jockey"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/);
-    const weightMatch = row.match(/class="Futan[^"]*"[^>]*><span>([^<]+)<\/span>/);
-    if (nameMatch) {
-      const num = numMatch ? numMatch[1] : "?";
-      const name = nameMatch[1].trim();
-      const jockey = jockeyMatch ? jockeyMatch[1].trim() : "不明";
-      const weight = weightMatch ? ` 斤量${weightMatch[1].trim()}kg` : "";
-      horseLines.push(`${num}番 ${name}  騎手:${jockey}${weight}`);
-    }
+  // PC版: class="HorseList" の <tr> 行
+  const pcPattern = /<tr[^>]*class="[^"]*HorseList[^"]*"[^>]*>([\s\S]*?)<\/tr>/g;
+  while ((m = pcPattern.exec(html)) !== null) {
+    const row = m[1];
+    const num = row.match(/class="Umaban[^"]*"[^>]*><span>(\d+)<\/span>/)?.[1];
+    const name = row.match(/class="HorseName"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/)?.[1]?.trim();
+    const jockey = row.match(/class="Jockey"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/)?.[1]?.trim();
+    const weight = row.match(/class="Futan[^"]*"[^>]*><span>([^<]+)<\/span>/)?.[1]?.trim();
+    if (name) lines.push(`${num ?? "?"}番 ${name}  騎手:${jockey ?? "不明"}${weight ? ` 斤量${weight}kg` : ""}`);
   }
-  if (horseLines.length > 0) return horseLines;
+  if (lines.length > 0) return lines;
 
-  // SP版: class="HorseInfo"等 (sp.netkeiba.com)
+  // SP版: <li class="RaceHorse..."> 要素
   const spPattern = /<li[^>]*class="[^"]*RaceHorse[^"]*"[^>]*>([\s\S]*?)<\/li>/g;
-  while ((rowMatch = spPattern.exec(html)) !== null) {
-    const row = rowMatch[1];
-    const numMatch = row.match(/<span[^>]*class="[^"]*Num[^"]*"[^>]*>(\d+)<\/span>/);
-    const nameMatch = row.match(/<span[^>]*class="[^"]*HorseName[^"]*"[^>]*>([^<]+)<\/span>/) ||
-                      row.match(/<a[^>]*class="[^"]*HorseName[^"]*"[^>]*>([^<]+)<\/a>/);
-    const jockeyMatch = row.match(/<span[^>]*class="[^"]*Jockey[^"]*"[^>]*>([^<]+)<\/span>/);
-    if (nameMatch) {
-      const num = numMatch ? numMatch[1] : "?";
-      const name = nameMatch[1].trim();
-      const jockey = jockeyMatch ? jockeyMatch[1].trim() : "不明";
-      horseLines.push(`${num}番 ${name}  騎手:${jockey}`);
-    }
+  while ((m = spPattern.exec(html)) !== null) {
+    const row = m[1];
+    const num = row.match(/<span[^>]*class="[^"]*Num[^"]*"[^>]*>(\d+)<\/span>/)?.[1];
+    const name = (row.match(/<span[^>]*class="[^"]*HorseName[^"]*"[^>]*>([^<]+)<\/span>/) ||
+                  row.match(/<a[^>]*class="[^"]*HorseName[^"]*"[^>]*>([^<]+)<\/a>/))?.[1]?.trim();
+    const jockey = row.match(/<span[^>]*class="[^"]*Jockey[^"]*"[^>]*>([^<]+)<\/span>/)?.[1]?.trim();
+    if (name) lines.push(`${num ?? "?"}番 ${name}  騎手:${jockey ?? "不明"}`);
   }
-  if (horseLines.length > 0) return horseLines;
-
-  // 汎用フォールバック: data-horse-num等
-  const genericPattern = /data-horse-num="(\d+)"[^>]*>[\s\S]{0,500}?<[^>]*class="[^"]*name[^"]*"[^>]*>([^<]+)<\/[^>]+>/gi;
-  while ((rowMatch = genericPattern.exec(html)) !== null) {
-    horseLines.push(`${rowMatch[1]}番 ${rowMatch[2].trim()}`);
-  }
-
-  return horseLines;
+  return lines;
 }
 
-async function fetchRaceData(raceId: string): Promise<{ info: string; horses: string } | null> {
+type FetchResult = { data: { info: string; horses: string } | null; debugLog: string[] };
+
+async function fetchRaceData(raceId: string): Promise<FetchResult> {
+  const log: string[] = [];
   const trackCode = raceId.substring(4, 6);
   const raceNo = parseInt(raceId.substring(10, 12), 10);
   const venue = TRACK_NAMES[trackCode] || "不明";
 
-  // 試すURLリスト（SP版を優先 → PC版 → ポップアップ版）
-  const urls = [
+  // ── Strategy 1: netkeiba JSON odds API (b1=単勝) ──
+  // このエンドポイントはAJAX用なのでHTMLページより軽量でブロックされにくい
+  const jsonApiUrls = [
+    `https://race.netkeiba.com/api/api_get_jra_odds.html?type=b1&race_id=${raceId}&json=1`,
+    `https://race.netkeiba.com/api/api_get_shutuba_table.html?race_id=${raceId}&json=1`,
+  ];
+  for (const url of jsonApiUrls) {
+    try {
+      const res = await fetch(url, { headers: JSON_HEADERS, signal: AbortSignal.timeout(8000) });
+      const key = url.includes("shutuba_table") ? "json_shutuba" : "json_odds";
+      log.push(`${key}: HTTP ${res.status}`);
+      if (!res.ok) continue;
+      const text = await res.text();
+      log.push(`${key}: len=${text.length} preview=${text.slice(0, 120).replace(/\n/g, " ")}`);
+      const json = JSON.parse(text);
+
+      // 単勝オッズ形式: data.OddsInfo = [[num, name, odds, popular, jockey?], ...]
+      const oddsInfo = json?.data?.OddsInfo;
+      if (Array.isArray(oddsInfo) && oddsInfo.length > 0) {
+        const lines = oddsInfo.map((item: string[]) =>
+          `${item[0]}番 ${item[1]}${item[4] ? `  騎手:${item[4]}` : ""}  単勝:${item[2]}倍`
+        );
+        log.push(`${key}: horses=${lines.length}`);
+        return { data: { info: `${venue} ${raceNo}R`, horses: lines.join("\n") }, debugLog: log };
+      }
+
+      // 出走表形式の可能性: data.HorseList = [{HorseNum, HorseName, JockeyName}, ...]
+      const horseList = json?.data?.HorseList || json?.data?.horses;
+      if (Array.isArray(horseList) && horseList.length > 0) {
+        const lines = horseList.map((h: Record<string, string>) =>
+          `${h.HorseNum ?? h.num ?? "?"}番 ${h.HorseName ?? h.name ?? "不明"}  騎手:${h.JockeyName ?? h.jockey ?? "不明"}`
+        );
+        log.push(`${key}: horses=${lines.length}`);
+        return { data: { info: `${venue} ${raceNo}R`, horses: lines.join("\n") }, debugLog: log };
+      }
+    } catch (e) {
+      log.push(`json_api error: ${e instanceof Error ? e.message.slice(0, 60) : "unknown"}`);
+    }
+  }
+
+  // ── Strategy 2: HTML pages ──
+  const htmlUrls = [
     `https://sp.netkeiba.com/race/shutuba.html?race_id=${raceId}`,
-    `https://sp.netkeiba.com/race/card.html?race_id=${raceId}`,
     `https://race.netkeiba.com/race/shutuba_popup.html?race_id=${raceId}`,
     `https://race.netkeiba.com/race/shutuba.html?race_id=${raceId}`,
   ];
-
-  for (const url of urls) {
+  for (const url of htmlUrls) {
     try {
-      const res = await fetch(url, {
-        headers: FETCH_HEADERS,
-        signal: AbortSignal.timeout(10000),
-      });
+      const res = await fetch(url, { headers: HTML_HEADERS, signal: AbortSignal.timeout(10000) });
+      const key = url.replace(/https?:\/\/[^/]+/, "").replace(/\?.*/, "");
+      log.push(`${key}: HTTP ${res.status}`);
       if (!res.ok) continue;
 
       const buffer = await res.arrayBuffer();
       const html = await decodeBuffer(buffer);
+      log.push(`${key}: len=${html.length}`);
 
-      // レース名抽出
-      const titleMatch = html.match(/<title>([^<]+)<\/title>/);
-      const raceName = titleMatch
-        ? titleMatch[1].replace(/\s*[-|].*$/, "").trim()
-        : "";
-
-      const horseLines = parseHorses(html);
+      const raceName = html.match(/<title>([^<]+)<\/title>/)?.[1]?.replace(/\s*[-|].*$/, "").trim() ?? "";
+      const horseLines = parseHorsesFromHtml(html);
+      log.push(`${key}: horses=${horseLines.length}`);
       if (horseLines.length === 0) continue;
 
-      // 文字化けチェック
-      const combined = horseLines.join("");
-      const garbageCount = [...combined].filter(c => c === "\uFFFD" || c === "?").length;
-      if (garbageCount > 5) continue;
+      const garbage = [...horseLines.join("")].filter(c => c === "\uFFFD" || c === "?").length;
+      if (garbage > 5) { log.push(`${key}: too many garbage chars (${garbage})`); continue; }
 
       return {
-        info: `${venue} ${raceNo}R${raceName ? ` ${raceName}` : ""}`,
-        horses: horseLines.join("\n"),
+        data: { info: `${venue} ${raceNo}R${raceName ? ` ${raceName}` : ""}`, horses: horseLines.join("\n") },
+        debugLog: log,
       };
-    } catch {
-      continue;
+    } catch (e) {
+      log.push(`html error: ${e instanceof Error ? e.message.slice(0, 60) : "unknown"}`);
     }
   }
 
-  return null;
+  return { data: null, debugLog: log };
 }
 
 export async function POST(req: NextRequest) {
@@ -157,12 +180,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "LIMIT_REACHED" }, { status: 429 });
   }
 
-  let body: {
-    raceId?: string;
-    // 手動入力モード
-    venue?: string; raceNo?: string; raceClass?: string;
-    surface?: string; distance?: string; horses?: string;
-  };
+  let body: { raceId?: string };
   try { body = await req.json(); }
   catch { return NextResponse.json({ error: "リクエストの形式が正しくありません" }, { status: 400 }); }
 
@@ -174,30 +192,21 @@ export async function POST(req: NextRequest) {
     if (!body.raceId.match(/^\d{12}$/)) {
       return NextResponse.json({ error: "レースIDが不正です" }, { status: 400 });
     }
-    const raceData = await fetchRaceData(body.raceId);
+    const { data: raceData, debugLog } = await fetchRaceData(body.raceId);
     if (!raceData) {
-      // 出走表取得失敗 → 手動入力へ誘導
+      console.error("fetchRaceData failed:", debugLog);
       const trackCode = body.raceId.substring(4, 6);
       const raceNo = parseInt(body.raceId.substring(10, 12), 10);
       const venue = TRACK_NAMES[trackCode] || "";
       return NextResponse.json(
-        { error: "FETCH_FAILED", venue, raceNo },
+        { error: "FETCH_FAILED", venue, raceNo, debugLog },
         { status: 502 }
       );
     }
     promptInfo = raceData.info;
     promptHorses = raceData.horses;
   } else {
-    // 手動入力モード
-    const { venue, raceNo, raceClass, surface, distance, horses } = body;
-    if (!horses?.trim()) {
-      return NextResponse.json({ error: "出走馬情報を入力してください" }, { status: 400 });
-    }
-    if (horses.length > 3000) {
-      return NextResponse.json({ error: "出走馬情報が長すぎます（3000文字以内）" }, { status: 400 });
-    }
-    promptInfo = `${venue || ""} ${raceNo || ""}R ${raceClass || ""} ${surface || ""}${distance || ""}m`;
-    promptHorses = horses;
+    return NextResponse.json({ error: "raceIdが必要です" }, { status: 400 });
   }
 
   const prompt = `以下の競馬レース情報を分析して、予想を提供してください。
