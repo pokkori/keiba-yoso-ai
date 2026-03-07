@@ -43,53 +43,42 @@ async function fetchRaceData(raceId: string): Promise<{ info: string; horses: st
         signal: AbortSignal.timeout(10000),
       }
     );
-
     if (!res.ok) return null;
     const html = await res.text();
 
-    // レース名
-    const raceNameMatch = html.match(/<title>([^<]+)<\/title>/);
-    const rawTitle = raceNameMatch ? raceNameMatch[1] : "";
-    const raceName = rawTitle.replace(/\s*[-|]\s*netkei.*$/i, "").trim();
-
-    // 開催場・レース番号
     const trackCode = raceId.substring(4, 6);
     const raceNo = parseInt(raceId.substring(10, 12), 10);
     const venue = TRACK_NAMES[trackCode] || "不明";
 
-    // コース情報（例: 芝1600m）
-    const courseMatch = html.match(/芝|ダート[\d,]+m/);
-    const courseInfo = courseMatch ? courseMatch[0] : "";
+    // レース名をtitleから抽出
+    const titleMatch = html.match(/<title>([^<]+)<\/title>/);
+    const raceName = titleMatch
+      ? titleMatch[1].replace(/\s*[-|].*$/, "").trim()
+      : "";
 
-    // 出走馬パース（HorseListの各行）
+    // 出走馬テーブルをパース
     const horseLines: string[] = [];
     const rowPattern = /<tr[^>]*class="[^"]*HorseList[^"]*"[^>]*>([\s\S]*?)<\/tr>/g;
     let rowMatch;
     while ((rowMatch = rowPattern.exec(html)) !== null) {
       const row = rowMatch[1];
-
-      // 馬番
       const numMatch = row.match(/class="Umaban[^"]*"[^>]*><span>(\d+)<\/span>/);
-      // 馬名
       const nameMatch = row.match(/class="HorseName"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/);
-      // 騎手
       const jockeyMatch = row.match(/class="Jockey"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/);
-      // 斤量
       const weightMatch = row.match(/class="Futan[^"]*"[^>]*><span>([^<]+)<\/span>/);
-
       if (nameMatch) {
         const num = numMatch ? numMatch[1] : "?";
         const name = nameMatch[1].trim();
         const jockey = jockeyMatch ? jockeyMatch[1].trim() : "不明";
-        const weight = weightMatch ? `${weightMatch[1].trim()}kg` : "";
-        horseLines.push(`${num}番 ${name}  騎手:${jockey}${weight ? `  斤量:${weight}` : ""}`);
+        const weight = weightMatch ? ` 斤量${weightMatch[1].trim()}kg` : "";
+        horseLines.push(`${num}番 ${name}  騎手:${jockey}${weight}`);
       }
     }
 
     if (horseLines.length === 0) return null;
 
     return {
-      info: `${venue} ${raceNo}R${raceName ? ` ${raceName}` : ""}${courseInfo ? ` (${courseInfo})` : ""}`,
+      info: `${venue} ${raceNo}R${raceName ? ` ${raceName}` : ""}`,
       horses: horseLines.join("\n"),
     };
   } catch {
@@ -105,30 +94,51 @@ export async function POST(req: NextRequest) {
 
   const isPremium = req.cookies.get("stripe_premium")?.value === "1";
   const cookieCount = parseInt(req.cookies.get(COOKIE_KEY)?.value || "0");
-
   if (!isPremium && cookieCount >= FREE_LIMIT) {
     return NextResponse.json({ error: "LIMIT_REACHED" }, { status: 429 });
   }
 
-  let body: { raceId?: string };
+  let body: {
+    raceId?: string;
+    // 手動入力モード
+    venue?: string; raceNo?: string; raceClass?: string;
+    surface?: string; distance?: string; horses?: string;
+  };
   try { body = await req.json(); }
   catch { return NextResponse.json({ error: "リクエストの形式が正しくありません" }, { status: 400 }); }
 
-  const { raceId } = body;
-  if (!raceId?.match(/^\d{12}$/)) {
-    return NextResponse.json({ error: "レースIDが不正です" }, { status: 400 });
-  }
+  let promptInfo = "";
+  let promptHorses = "";
 
-  const raceData = await fetchRaceData(raceId);
-  if (!raceData) {
-    return NextResponse.json({ error: "レースデータの取得に失敗しました。しばらく経ってから再試行してください。" }, { status: 502 });
+  if (body.raceId) {
+    // 自動取得モード
+    if (!body.raceId.match(/^\d{12}$/)) {
+      return NextResponse.json({ error: "レースIDが不正です" }, { status: 400 });
+    }
+    const raceData = await fetchRaceData(body.raceId);
+    if (!raceData) {
+      return NextResponse.json({ error: "レースデータの取得に失敗しました。しばらく経ってから再試行してください。" }, { status: 502 });
+    }
+    promptInfo = raceData.info;
+    promptHorses = raceData.horses;
+  } else {
+    // 手動入力モード
+    const { venue, raceNo, raceClass, surface, distance, horses } = body;
+    if (!horses?.trim()) {
+      return NextResponse.json({ error: "出走馬情報を入力してください" }, { status: 400 });
+    }
+    if (horses.length > 3000) {
+      return NextResponse.json({ error: "出走馬情報が長すぎます（3000文字以内）" }, { status: 400 });
+    }
+    promptInfo = `${venue || ""} ${raceNo || ""}R ${raceClass || ""} ${surface || ""}${distance || ""}m`;
+    promptHorses = horses;
   }
 
   const prompt = `以下の競馬レース情報を分析して、予想を提供してください。
 
-レース: ${raceData.info}
+レース: ${promptInfo}
 出走馬情報:
-${raceData.horses}
+${promptHorses}
 
 以下の形式で回答してください：
 【本命（◎）】馬名と選んだ理由
@@ -148,7 +158,7 @@ ${raceData.horses}
 
     const prediction = message.content[0].type === "text" ? message.content[0].text : "";
     const newCount = cookieCount + 1;
-    const response = NextResponse.json({ prediction, raceInfo: raceData.info, count: newCount });
+    const response = NextResponse.json({ prediction, raceInfo: promptInfo.trim(), count: newCount });
 
     if (!isPremium) {
       response.cookies.set(COOKIE_KEY, String(newCount), {
