@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 55; // Vercel hobby max 60s
 
 const FREE_LIMIT = 1;
 const COOKIE_KEY = "keiba_predict_count";
@@ -29,11 +30,10 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
-const HTML_HEADERS = {
+const BASE_HEADERS = {
   "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
   "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
   "Accept-Language": "ja,en;q=0.5",
-  "Referer": "https://sp.netkeiba.com/",
 };
 
 const JSON_HEADERS = {
@@ -54,55 +54,243 @@ async function decodeBuffer(buffer: ArrayBuffer): Promise<string> {
   return new TextDecoder("utf-8", { fatal: false }).decode(buffer);
 }
 
-function parseHorsesFromHtml(html: string): string[] {
-  const lines: string[] = [];
+// ─── Horse data types ───────────────────────────────────────────────────────
+
+interface HorseBasic {
+  num: string;
+  name: string;
+  jockey?: string;
+  weight?: string;   // 斤量
+  horseId?: string;  // netkeiba horse ID (10-12 digits)
+}
+
+// ─── Parse shutuba HTML → horse list with IDs ────────────────────────────────
+
+function parseHorsesBasic(html: string): HorseBasic[] {
+  const horses: HorseBasic[] = [];
   let m;
 
-  // netkeiba shutuba HTML: <tr class="HorseList">
+  // PC shutuba: <tr class="HorseList">
   const rowPattern = /<tr[^>]*class="[^"]*HorseList[^"]*"[^>]*>([\s\S]*?)<\/tr>/g;
   while ((m = rowPattern.exec(html)) !== null) {
     const row = m[1];
 
-    // 馬名: 新構造 class="Horse HorseLink" の <dt> または旧構造 class="HorseName"
     const name =
       row.match(/class="[^"]*HorseLink[^"]*"[^>]*>[\s\S]*?<a[^>]*>\s*([^\s<][^<]*?)\s*<\/a>/)?.[1]?.trim() ||
       row.match(/class="HorseName"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/)?.[1]?.trim();
     if (!name) continue;
 
-    // 馬番: URL の &i=N (0始まり→+1) または Umaban クラス
+    // Horse ID from href (e.g. /horse/2021105016/ or horse_id=2021105016)
+    const horseId =
+      row.match(/href="[^"]*\/horse\/(\d{10,12})(?:\/|[?#"])/)?.[1] ||
+      row.match(/horse_id=(\d{10,12})/)?.[1];
+
+    // Horse number: from &i=N (0-indexed) or Umaban class
     const iParam = row.match(/[?&]i=(\d+)/)?.[1];
     const num =
       iParam !== undefined
         ? String(parseInt(iParam) + 1)
         : row.match(/class="Umaban[^"]*"[^>]*>[\s\S]*?(\d+)/)?.[1] ?? "?";
 
-    // 騎手: クラス名・URLパターン両方で試みる
     const jockey =
       row.match(/class="[^"]*Jockey[^"]*"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/)?.[1]?.trim() ||
       row.match(/<a[^>]*href="[^"]*(?:jockey|kishu)[^"]*"[^>]*>([^<\s][^<]{1,15}?)\s*<\/a>/i)?.[1]?.trim() ||
       row.match(/<dd[^>]*>[\s\S]{0,100}?<a[^>]*href="[^"]*(?:jockey|kishu)[^"]*"[^>]*>([^<]+)<\/a>/i)?.[1]?.trim();
 
-    // 斤量
     const weight =
       row.match(/class="[^"]*Futan[^"]*"[^>]*>[\s\S]{0,30}?(\d{2}(?:\.\d)?)/)?.[1] ||
       row.match(/class="[^"]*Weight[^"]*"[^>]*>[\s\S]{0,30}?(\d{2}(?:\.\d)?)/)?.[1];
 
-    lines.push(`${num}番 ${name}${jockey ? `  騎手:${jockey}` : ""}${weight ? `  斤量:${weight}` : ""}`);
+    horses.push({ num, name, jockey, weight, horseId });
   }
-  if (lines.length > 0) return lines;
+  if (horses.length > 0) return horses;
 
-  // SP版: <li class="RaceHorse..."> 要素
+  // SP fallback: <li class="RaceHorse...">
   const spPattern = /<li[^>]*class="[^"]*RaceHorse[^"]*"[^>]*>([\s\S]*?)<\/li>/g;
   while ((m = spPattern.exec(html)) !== null) {
     const row = m[1];
     const num = row.match(/<span[^>]*class="[^"]*Num[^"]*"[^>]*>(\d+)<\/span>/)?.[1];
-    const name = (row.match(/<span[^>]*class="[^"]*HorseName[^"]*"[^>]*>([^<]+)<\/span>/) ||
-                  row.match(/<a[^>]*class="[^"]*HorseName[^"]*"[^>]*>([^<]+)<\/a>/))?.[1]?.trim();
+    const name = (
+      row.match(/<span[^>]*class="[^"]*HorseName[^"]*"[^>]*>([^<]+)<\/span>/) ||
+      row.match(/<a[^>]*class="[^"]*HorseName[^"]*"[^>]*>([^<]+)<\/a>/)
+    )?.[1]?.trim();
     const jockey = row.match(/<span[^>]*class="[^"]*Jockey[^"]*"[^>]*>([^<]+)<\/span>/)?.[1]?.trim();
-    if (name) lines.push(`${num ?? "?"}番 ${name}  騎手:${jockey ?? "不明"}`);
+    const horseId =
+      row.match(/href="[^"]*\/horse\/(\d{10,12})(?:\/|[?#"])/)?.[1] ||
+      row.match(/horse_id=(\d{10,12})/)?.[1];
+    if (name) horses.push({ num: num ?? "?", name, jockey, horseId });
   }
-  return lines;
+  return horses;
 }
+
+// ─── Fetch shutuba page → HorseBasic[] ───────────────────────────────────────
+
+async function fetchShutuba(raceId: string, log: string[]): Promise<HorseBasic[] | null> {
+  const urls = [
+    `https://race.netkeiba.com/race/shutuba_popup.html?race_id=${raceId}`,
+    `https://race.netkeiba.com/race/shutuba.html?race_id=${raceId}`,
+    `https://sp.netkeiba.com/race/shutuba.html?race_id=${raceId}`,
+  ];
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, {
+        headers: { ...BASE_HEADERS, Referer: "https://race.netkeiba.com/" },
+        signal: AbortSignal.timeout(10000),
+      });
+      const key = url.replace(/https?:\/\/[^/]+/, "").replace(/\?.*/, "");
+      log.push(`shutuba ${key}: HTTP ${res.status}`);
+      if (!res.ok) continue;
+
+      const buffer = await res.arrayBuffer();
+      const html = await decodeBuffer(buffer);
+      log.push(`shutuba ${key}: len=${html.length}`);
+
+      const horses = parseHorsesBasic(html);
+      const withId = horses.filter(h => h.horseId).length;
+      log.push(`shutuba ${key}: horses=${horses.length} withId=${withId}`);
+
+      if (horses.length === 0) {
+        const firstRow = html.match(/<tr[^>]*class="[^"]*HorseList[^"]*"[^>]*>([\s\S]*?)<\/tr>/)?.[1];
+        if (firstRow) log.push(`first_row=${firstRow.slice(0, 400).replace(/\s+/g, " ")}`);
+        continue;
+      }
+      const garbage = [...horses.map(h => h.name).join("")].filter(c => c === "\uFFFD").length;
+      if (garbage > 5) { log.push(`shutuba ${key}: garbage chars=${garbage}`); continue; }
+
+      return horses;
+    } catch (e) {
+      log.push(`shutuba error: ${e instanceof Error ? e.message.slice(0, 60) : "unknown"}`);
+    }
+  }
+  return null;
+}
+
+// ─── Parse db.netkeiba.com horse past results ────────────────────────────────
+
+function parseHorsePastResults(html: string): string[] {
+  // Table: <table class="race_table_01 nk_tb_common">
+  // Columns (0-indexed): 0:日付, 1:開催, 2:天気, 3:R, 4:レース名, 5:映像,
+  //   6:頭数, 7:枠, 8:馬番, 9:オッズ, 10:人気, 11:着順, 12:騎手,
+  //   13:斤量, 14:コース, 15:タイム, 16:着差, 17:タイム指数, 18:通過,
+  //   19:ペース, 20:上り, 21:馬体重
+  const tableMatch = html.match(/<table[^>]*class="[^"]*race_table_01[^"]*"[^>]*>([\s\S]*?)<\/table>/);
+  if (!tableMatch) return [];
+
+  const results: string[] = [];
+  let m;
+  const rowPattern = /<tr[^>]*>([\s\S]*?)<\/tr>/g;
+  let dataRows = 0;
+
+  while ((m = rowPattern.exec(tableMatch[1])) !== null && dataRows < 5) {
+    const cells = [...m[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(c =>
+      c[1].replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim()
+    );
+    if (cells.length < 16) continue; // skip header or incomplete rows
+
+    const date = cells[0];
+    const raceName = cells[4];
+    const position = cells[11]; // 着順
+    const jockey = cells[12];
+    const course = cells[14];   // e.g. "芝1600" "ダ1200"
+    const time = cells[15];
+    const margin = cells[16];   // 着差
+    const horseWeight = cells[21]; // 馬体重
+
+    if (!date || !raceName || !position || position === "着順") continue;
+
+    const posStr = position === "1" ? "1着" : `${position}着`;
+    const marginStr = margin && margin !== "0.0" && margin !== "" ? `(${margin})` : "";
+    const weightStr = horseWeight ? ` 馬体重${horseWeight}` : "";
+    results.push(`${date} ${raceName} [${course}] ${posStr}${marginStr} ${time} 騎手:${jockey}${weightStr}`);
+    dataRows++;
+  }
+  return results;
+}
+
+// ─── Fetch single horse detail from db.netkeiba.com ──────────────────────────
+
+function formatBasic(h: HorseBasic): string {
+  let s = `${h.num}番 ${h.name}`;
+  if (h.jockey) s += `  騎手:${h.jockey}`;
+  if (h.weight) s += `  斤量:${h.weight}`;
+  return s;
+}
+
+async function fetchHorseDetail(horse: HorseBasic): Promise<string> {
+  if (!horse.horseId) return formatBasic(horse);
+
+  try {
+    const url = `https://db.netkeiba.com/horse/${horse.horseId}/`;
+    const res = await fetch(url, {
+      headers: {
+        ...BASE_HEADERS,
+        Referer: "https://db.netkeiba.com/",
+      },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!res.ok) return formatBasic(horse);
+
+    const buffer = await res.arrayBuffer();
+    const html = await decodeBuffer(buffer);
+
+    const pastResults = parseHorsePastResults(html);
+
+    // Age + sex (e.g. "4歳牡")
+    const ageSex = html.match(/(\d+)歳([牡牝セ騸])/)?.[0] ?? "";
+    // Trainer
+    const trainer = html.match(/href="[^"]*\/trainer\/[^"]*">([^<]{2,8})<\/a>/)?.[1] ?? "";
+
+    let info = `${horse.num}番 ${horse.name}`;
+    if (ageSex) info += `  ${ageSex}`;
+    if (horse.jockey) info += `  騎手:${horse.jockey}`;
+    if (horse.weight) info += `  斤量:${horse.weight}`;
+    if (trainer) info += `  調教師:${trainer}`;
+    if (pastResults.length > 0) {
+      info += `\n  【過去成績（直近${pastResults.length}走）】\n`;
+      info += pastResults.map(r => `    ${r}`).join("\n");
+    }
+    return info;
+  } catch {
+    return formatBasic(horse);
+  }
+}
+
+// ─── Batch-fetch all horse details ───────────────────────────────────────────
+
+async function fetchAllHorseDetails(horses: HorseBasic[], log: string[]): Promise<string[]> {
+  const results: string[] = new Array(horses.length).fill("");
+  const BATCH_SIZE = 4;
+  const BATCH_DELAY_MS = 300;
+  const DEADLINE = Date.now() + 22000; // 22s budget for horse details
+
+  for (let i = 0; i < horses.length; i += BATCH_SIZE) {
+    if (Date.now() > DEADLINE) {
+      // Budget exhausted: fill remaining with basic info
+      for (let j = i; j < horses.length; j++) {
+        results[j] = formatBasic(horses[j]);
+      }
+      log.push(`horse_detail: budget exceeded at batch ${Math.floor(i / BATCH_SIZE)}, rest filled basic`);
+      break;
+    }
+
+    const batch = horses.slice(i, Math.min(i + BATCH_SIZE, horses.length));
+    const batchResults = await Promise.all(batch.map(h => fetchHorseDetail(h)));
+    for (let j = 0; j < batch.length; j++) {
+      results[i + j] = batchResults[j];
+    }
+
+    if (i + BATCH_SIZE < horses.length) {
+      await new Promise(r => setTimeout(r, BATCH_DELAY_MS));
+    }
+  }
+
+  const withDetail = results.filter(r => r.includes("過去成績")).length;
+  log.push(`horse_detail: ${withDetail}/${horses.length} horses with past results`);
+  return results;
+}
+
+// ─── Main race data fetch ─────────────────────────────────────────────────────
 
 type FetchResult = { data: { info: string; horses: string } | null; debugLog: string[] };
 
@@ -111,93 +299,65 @@ async function fetchRaceData(raceId: string): Promise<FetchResult> {
   const trackCode = raceId.substring(4, 6);
   const raceNo = parseInt(raceId.substring(10, 12), 10);
   const venue = TRACK_NAMES[trackCode] || "不明";
+  const raceInfo = `${venue} ${raceNo}R`;
 
-  // ── Strategy 1: netkeiba JSON odds API (b1=単勝) ──
-  // このエンドポイントはAJAX用なのでHTMLページより軽量でブロックされにくい
-  const jsonApiUrls = [
-    `https://race.netkeiba.com/api/api_get_jra_odds.html?type=b1&race_id=${raceId}&json=1`,
-    `https://race.netkeiba.com/api/api_get_shutuba_table.html?race_id=${raceId}&json=1`,
-  ];
-  for (const url of jsonApiUrls) {
-    try {
-      const res = await fetch(url, { headers: JSON_HEADERS, signal: AbortSignal.timeout(8000) });
-      const key = url.includes("shutuba_table") ? "json_shutuba" : "json_odds";
-      log.push(`${key}: HTTP ${res.status}`);
-      if (!res.ok) continue;
-      const text = await res.text();
-      log.push(`${key}: len=${text.length} preview=${text.slice(0, 120).replace(/\n/g, " ")}`);
-      const json = JSON.parse(text);
+  // ── Try JSON odds API first (fast, gives horse names + jockey) ──
+  let baseHorses: HorseBasic[] | null = null;
 
-      // 単勝オッズ形式: data.OddsInfo = [[num, name, odds, popular, jockey?], ...]
+  try {
+    const url = `https://race.netkeiba.com/api/api_get_jra_odds.html?type=b1&race_id=${raceId}&json=1`;
+    const res = await fetch(url, { headers: JSON_HEADERS, signal: AbortSignal.timeout(6000) });
+    log.push(`json_odds: HTTP ${res.status}`);
+    if (res.ok) {
+      const json = JSON.parse(await res.text());
       const oddsInfo = json?.data?.OddsInfo;
       if (Array.isArray(oddsInfo) && oddsInfo.length > 0) {
-        const lines = oddsInfo.map((item: string[]) =>
-          `${item[0]}番 ${item[1]}${item[4] ? `  騎手:${item[4]}` : ""}  単勝:${item[2]}倍`
-        );
-        log.push(`${key}: horses=${lines.length}`);
-        return { data: { info: `${venue} ${raceNo}R`, horses: lines.join("\n") }, debugLog: log };
+        baseHorses = oddsInfo.map((item: string[]) => ({
+          num: item[0],
+          name: item[1],
+          jockey: item[4] || undefined,
+        }));
+        log.push(`json_odds: ${baseHorses.length} horses`);
       }
-
-      // 出走表形式の可能性: data.HorseList = [{HorseNum, HorseName, JockeyName}, ...]
-      const horseList = json?.data?.HorseList || json?.data?.horses;
-      if (Array.isArray(horseList) && horseList.length > 0) {
-        const lines = horseList.map((h: Record<string, string>) =>
-          `${h.HorseNum ?? h.num ?? "?"}番 ${h.HorseName ?? h.name ?? "不明"}  騎手:${h.JockeyName ?? h.jockey ?? "不明"}`
-        );
-        log.push(`${key}: horses=${lines.length}`);
-        return { data: { info: `${venue} ${raceNo}R`, horses: lines.join("\n") }, debugLog: log };
-      }
-    } catch (e) {
-      log.push(`json_api error: ${e instanceof Error ? e.message.slice(0, 60) : "unknown"}`);
     }
+  } catch (e) {
+    log.push(`json_odds error: ${e instanceof Error ? e.message.slice(0, 60) : "unknown"}`);
   }
 
-  // ── Strategy 2: HTML pages ──
-  const htmlUrls = [
-    `https://sp.netkeiba.com/race/shutuba.html?race_id=${raceId}`,
-    `https://race.netkeiba.com/race/shutuba_popup.html?race_id=${raceId}`,
-    `https://race.netkeiba.com/race/shutuba.html?race_id=${raceId}`,
-  ];
-  for (const url of htmlUrls) {
-    try {
-      const res = await fetch(url, { headers: HTML_HEADERS, signal: AbortSignal.timeout(10000) });
-      const key = url.replace(/https?:\/\/[^/]+/, "").replace(/\?.*/, "");
-      log.push(`${key}: HTTP ${res.status}`);
-      if (!res.ok) continue;
+  // ── Fetch shutuba HTML to get horse IDs (always needed for detail fetch) ──
+  const shutubaHorses = await fetchShutuba(raceId, log);
 
-      const buffer = await res.arrayBuffer();
-      const html = await decodeBuffer(buffer);
-      log.push(`${key}: len=${html.length}`);
+  if (!shutubaHorses && !baseHorses) {
+    return { data: null, debugLog: log };
+  }
 
-      const raceName = html.match(/<title>([^<]+)<\/title>/)?.[1]?.replace(/\s*[-|].*$/, "").trim() ?? "";
-      const horseLines = parseHorsesFromHtml(html);
-      log.push(`${key}: horses=${horseLines.length}`);
-      if (horseLines.length === 0) {
-        // HorseList行の実際の内容を取得してパース失敗原因を特定
-        const firstRow = html.match(/<tr[^>]*class="[^"]*HorseList[^"]*"[^>]*>([\s\S]*?)<\/tr>/)?.[1];
-        if (firstRow) {
-          log.push(`${key}: first_row_800=${firstRow.slice(0, 800).replace(/\s+/g, " ")}`);
-        } else {
-          const rawTr = html.match(/<tr[^>]*HorseList[^>]*>/)?.[0];
-          log.push(`${key}: raw_tr_tag=${rawTr ?? "NOT_FOUND"}`);
+  // Prefer shutuba (has horse IDs). Merge odds data if shutuba is missing jockey info.
+  let horses: HorseBasic[];
+  if (shutubaHorses && shutubaHorses.length > 0) {
+    horses = shutubaHorses;
+    // Merge jockey from odds API if shutuba didn't capture it
+    if (baseHorses) {
+      for (const h of horses) {
+        if (!h.jockey) {
+          const match = baseHorses.find(o => o.num === h.num);
+          if (match?.jockey) h.jockey = match.jockey;
         }
-        continue;
       }
-
-      const garbage = [...horseLines.join("")].filter(c => c === "\uFFFD" || c === "?").length;
-      if (garbage > 5) { log.push(`${key}: too many garbage chars (${garbage})`); continue; }
-
-      return {
-        data: { info: `${venue} ${raceNo}R${raceName ? ` ${raceName}` : ""}`, horses: horseLines.join("\n") },
-        debugLog: log,
-      };
-    } catch (e) {
-      log.push(`html error: ${e instanceof Error ? e.message.slice(0, 60) : "unknown"}`);
     }
+  } else {
+    horses = baseHorses!;
   }
 
-  return { data: null, debugLog: log };
+  // ── Fetch per-horse past results from db.netkeiba.com ──
+  const horseDetails = await fetchAllHorseDetails(horses, log);
+
+  return {
+    data: { info: raceInfo, horses: horseDetails.join("\n\n") },
+    debugLog: log,
+  };
 }
+
+// ─── API Route ────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for") || "unknown";
@@ -215,65 +375,54 @@ export async function POST(req: NextRequest) {
   try { body = await req.json(); }
   catch { return NextResponse.json({ error: "リクエストの形式が正しくありません" }, { status: 400 }); }
 
-  let promptInfo = "";
-  let promptHorses = "";
-
-  if (body.raceId) {
-    // 自動取得モード
-    if (!body.raceId.match(/^\d{12}$/)) {
-      return NextResponse.json({ error: "レースIDが不正です" }, { status: 400 });
-    }
-    const { data: raceData, debugLog } = await fetchRaceData(body.raceId);
-    if (!raceData) {
-      console.error("fetchRaceData failed:", debugLog);
-      const trackCode = body.raceId.substring(4, 6);
-      const raceNo = parseInt(body.raceId.substring(10, 12), 10);
-      const venue = TRACK_NAMES[trackCode] || "";
-      return NextResponse.json(
-        { error: "FETCH_FAILED", venue, raceNo, debugLog },
-        { status: 502 }
-      );
-    }
-    promptInfo = raceData.info;
-    promptHorses = raceData.horses;
-  } else {
-    return NextResponse.json({ error: "raceIdが必要です" }, { status: 400 });
+  if (!body.raceId || !body.raceId.match(/^\d{12}$/)) {
+    return NextResponse.json({ error: "レースIDが不正です" }, { status: 400 });
   }
 
-  const prompt = `以下の競馬レース情報を分析して、必ず予想を出力してください。
+  const { data: raceData, debugLog } = await fetchRaceData(body.raceId);
+  if (!raceData) {
+    console.error("fetchRaceData failed:", debugLog);
+    const trackCode = body.raceId.substring(4, 6);
+    const raceNo = parseInt(body.raceId.substring(10, 12), 10);
+    const venue = TRACK_NAMES[trackCode] || "";
+    return NextResponse.json({ error: "FETCH_FAILED", venue, raceNo, debugLog }, { status: 502 });
+  }
 
-レース: ${promptInfo}
-出走馬情報:
-${promptHorses}
+  const prompt = `以下の競馬レース情報を分析して、具体的な予想を出力してください。
 
-【重要】データが限られていても必ず予想を出力すること。謝罪・説明・追加情報の要求は一切不要。
-馬名・番号・枠順・騎手名などから推測し、以下の形式で即座に回答する：
+レース: ${raceData.info}
 
-【本命（◎）】馬名と選んだ理由（枠・騎手・名前のイメージ等から推測）
-【対抗（○）】馬名と選んだ理由
-【単穴（▲）】馬名と選んだ理由
-【推奨買い目】馬券種別と組み合わせ（例：馬連1-3、三連複1-3-5）
-【レース展開予想】逃げ・先行・差しの展開予測
-【注意点】荒れる可能性や注意すべき馬`;
+出走馬詳細情報:
+${raceData.horses}
+
+上記の出走馬の過去成績・騎手・斤量・馬齢・調教師情報をもとに、以下の形式で予想を出力してください：
+
+【本命（◎）】馬番・馬名 — 選んだ理由（過去成績・騎手・コース適性・近走の状態等）
+【対抗（○）】馬番・馬名 — 選んだ理由
+【単穴（▲））】馬番・馬名 — 選んだ理由
+【推奨買い目】具体的な馬番の組み合わせ（例：馬連◎-○、三連複◎-○-▲）
+【レース展開予想】逃げ・先行・差しの展開とペース予測
+【総評】このレースのポイントと穴馬候補
+
+※過去成績データがない馬は騎手や斤量から判断すること。謝罪や追加情報の要求は不要。`;
 
   try {
     const message = await getClient().messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 1500,
-      system: "あなたは競馬予想の専門家です。提供された出走馬情報（馬名・騎手・枠番など）のみを使い、必ず予想を出力してください。データが不完全でも推測・仮定で補い、本命・対抗・単穴・買い目・展開・注意点を必ず記述します。情報不足の謝罪や追加データの要求は絶対にしません。",
+      max_tokens: 2000,
+      system: "あなたはプロの競馬予想家です。提供された出走馬の過去成績・騎手・斤量・馬齢・調教師情報を精密に分析し、必ず具体的な予想を出力してください。データが不完全な馬があっても推測で補い、全ての予想項目（本命・対抗・単穴・買い目・展開・総評）を必ず出力します。情報不足の謝罪や追加データの要求は絶対にしません。",
       messages: [{ role: "user", content: prompt }],
     });
 
     const prediction = message.content[0].type === "text" ? message.content[0].text : "";
 
-    // Claudeが予想を拒否した場合はカウントしない（長短問わず）
-    const hasRequiredSections = prediction.includes("本命") || prediction.includes("◎") || prediction.includes("買い目");
+    const hasRequiredSections =
+      prediction.includes("本命") || prediction.includes("◎") || prediction.includes("買い目");
     const isRefusal = !hasRequiredSections && (
       prediction.includes("申し訳") ||
       prediction.includes("予想提供ができません") ||
       prediction.includes("情報が不足") ||
       prediction.includes("必要な情報") ||
-      prediction.includes("データが") ||
       prediction.includes("判読できない")
     );
     if (isRefusal) {
@@ -284,7 +433,12 @@ ${promptHorses}
     }
 
     const newCount = cookieCount + 1;
-    const response = NextResponse.json({ prediction, raceInfo: promptInfo.trim(), count: newCount, horsesData: promptHorses.slice(0, 300) });
+    const response = NextResponse.json({
+      prediction,
+      raceInfo: raceData.info.trim(),
+      count: newCount,
+      debugLog, // remove this line once stable
+    });
 
     if (!isPremium) {
       response.cookies.set(COOKIE_KEY, String(newCount), {
