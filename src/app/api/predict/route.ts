@@ -76,11 +76,16 @@ function parseHorsesFromHtml(html: string): string[] {
         ? String(parseInt(iParam) + 1)
         : row.match(/class="Umaban[^"]*"[^>]*>[\s\S]*?(\d+)/)?.[1] ?? "?";
 
-    // 騎手
-    const jockey = row.match(/class="[^"]*Jockey[^"]*"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/)?.[1]?.trim();
+    // 騎手: クラス名・URLパターン両方で試みる
+    const jockey =
+      row.match(/class="[^"]*Jockey[^"]*"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/)?.[1]?.trim() ||
+      row.match(/<a[^>]*href="[^"]*(?:jockey|kishu)[^"]*"[^>]*>([^<\s][^<]{1,15}?)\s*<\/a>/i)?.[1]?.trim() ||
+      row.match(/<dd[^>]*>[\s\S]{0,100}?<a[^>]*href="[^"]*(?:jockey|kishu)[^"]*"[^>]*>([^<]+)<\/a>/i)?.[1]?.trim();
 
     // 斤量
-    const weight = row.match(/class="[^"]*Futan[^"]*"[^>]*>[\s\S]{0,30}?(\d{2}(?:\.\d)?)/)?.[1];
+    const weight =
+      row.match(/class="[^"]*Futan[^"]*"[^>]*>[\s\S]{0,30}?(\d{2}(?:\.\d)?)/)?.[1] ||
+      row.match(/class="[^"]*Weight[^"]*"[^>]*>[\s\S]{0,30}?(\d{2}(?:\.\d)?)/)?.[1];
 
     lines.push(`${num}番 ${name}${jockey ? `  騎手:${jockey}` : ""}${weight ? `  斤量:${weight}` : ""}`);
   }
@@ -171,9 +176,8 @@ async function fetchRaceData(raceId: string): Promise<FetchResult> {
         // HorseList行の実際の内容を取得してパース失敗原因を特定
         const firstRow = html.match(/<tr[^>]*class="[^"]*HorseList[^"]*"[^>]*>([\s\S]*?)<\/tr>/)?.[1];
         if (firstRow) {
-          log.push(`${key}: first_row_preview=${firstRow.slice(0, 400).replace(/\s+/g, " ")}`);
+          log.push(`${key}: first_row_800=${firstRow.slice(0, 800).replace(/\s+/g, " ")}`);
         } else {
-          // <tr>が見つからない場合: 生のマッチ確認
           const rawTr = html.match(/<tr[^>]*HorseList[^>]*>/)?.[0];
           log.push(`${key}: raw_tr_tag=${rawTr ?? "NOT_FOUND"}`);
         }
@@ -280,7 +284,7 @@ ${promptHorses}
     }
 
     const newCount = cookieCount + 1;
-    const response = NextResponse.json({ prediction, raceInfo: promptInfo.trim(), count: newCount });
+    const response = NextResponse.json({ prediction, raceInfo: promptInfo.trim(), count: newCount, horsesData: promptHorses.slice(0, 300) });
 
     if (!isPremium) {
       response.cookies.set(COOKIE_KEY, String(newCount), {
