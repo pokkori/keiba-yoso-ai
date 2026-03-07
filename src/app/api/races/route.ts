@@ -26,24 +26,47 @@ function getTodayJST(): string {
   return `${y}${m}${d}`;
 }
 
-function extractRaceIds(html: string): string[] {
-  const raceIds = new Set<string>();
-  // 複数パターンで12桁race_idを抽出
-  const patterns = [
-    /race_id=(\d{12})/g,
-    /shutuba\.html\?[^"']*race_id=(\d{12})/g,
+function extractRaces(html: string): Array<{ raceId: string; raceName: string }> {
+  const seen = new Set<string>();
+  const results: Array<{ raceId: string; raceName: string }> = [];
+
+  const pattern = /race_id=(\d{12})/g;
+  let match;
+  while ((match = pattern.exec(html)) !== null) {
+    const raceId = match[1];
+    if (seen.has(raceId)) continue;
+    seen.add(raceId);
+
+    // race_idの前後500文字からレース名を探す
+    const ctx = html.substring(Math.max(0, match.index - 300), match.index + 400);
+
+    // クラス名から: RaceName, ItemTitle, race_name 等
+    const classMatch = ctx.match(/class="[^"]*(?:RaceName|ItemTitle|RaceTitle|race_name|RaceList_ItemTitle)[^"]*"[^>]*>\s*([^<\s][^<]{0,30}?)\s*<\//i);
+    // 重賞・特別競走名パターン
+    const titleMatch = ctx.match(/title="([^"]{2,30}(?:賞|ステークス|カップ|特別|記念|ハンデ|ダービー|オークス|皐月|菊花|天皇|ジャパン|スプリント|マイル|牝馬)[^"]*)"/i);
+    // テキストノード内のレース名（2文字以上の日本語）
+    const textMatch = ctx.match(/>([^\s<]{2,20}(?:賞|ステークス|カップ|特別|記念|ダービー|オークス|皐月|菊花|天皇|マイル|スプリント))</);
+
+    const raceName = (classMatch?.[1] || titleMatch?.[1] || textMatch?.[1] || "").trim();
+    results.push({ raceId, raceName });
+  }
+
+  // 追加パターン（data属性など）
+  const extra = [
     /"race_id"\s*:\s*"(\d{12})"/g,
     /data-race-id="(\d{12})"/g,
-    /\/race\/(\d{12})\//g,
   ];
-  for (const pattern of patterns) {
-    let match;
-    pattern.lastIndex = 0;
-    while ((match = pattern.exec(html)) !== null) {
-      raceIds.add(match[1]);
+  for (const p of extra) {
+    let m;
+    while ((m = p.exec(html)) !== null) {
+      if (!seen.has(m[1])) {
+        seen.add(m[1]);
+        results.push({ raceId: m[1], raceName: "" });
+      }
     }
   }
-  return Array.from(raceIds);
+
+  return results;
 }
 
 async function tryFetch(url: string): Promise<string | null> {
@@ -75,15 +98,18 @@ export async function GET(req: NextRequest) {
     const html = await tryFetch(url);
     if (!html) continue;
 
-    const ids = extractRaceIds(html);
-    if (ids.length === 0) continue;
+    const extracted = extractRaces(html);
+    if (extracted.length === 0) continue;
 
-    const races = ids
-      .map((id) => {
-        const trackCode = id.substring(4, 6);
-        const raceNo = parseInt(id.substring(10, 12), 10);
+    const races = extracted
+      .map(({ raceId, raceName }) => {
+        const trackCode = raceId.substring(4, 6);
+        const raceNo = parseInt(raceId.substring(10, 12), 10);
         const venue = TRACK_NAMES[trackCode] || "不明";
-        return { raceId: id, venue, raceNo, label: `${venue} ${raceNo}R` };
+        const label = raceName
+          ? `${venue} ${raceNo}R  ${raceName}`
+          : `${venue} ${raceNo}R`;
+        return { raceId, venue, raceNo, raceName, label };
       })
       .sort((a, b) => a.raceId.localeCompare(b.raceId) || a.raceNo - b.raceNo);
 

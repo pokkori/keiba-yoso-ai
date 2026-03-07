@@ -171,6 +171,10 @@ ${promptHorses}
     return response;
   } catch (err) {
     console.error(err);
+    const msg = err instanceof Error ? err.message : "";
+    if (msg.includes("api_key") || msg.includes("authentication") || msg.includes("API key")) {
+      return NextResponse.json({ error: "AIサービスの設定エラーです。管理者にお問い合わせください。" }, { status: 500 });
+    }
     return NextResponse.json({ error: "予想中にエラーが発生しました。しばらく待ってから再試行してください。" }, { status: 500 });
   }
 }
