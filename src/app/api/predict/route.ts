@@ -151,7 +151,20 @@ async function fetchRaceData(raceId: string): Promise<FetchResult> {
       const raceName = html.match(/<title>([^<]+)<\/title>/)?.[1]?.replace(/\s*[-|].*$/, "").trim() ?? "";
       const horseLines = parseHorsesFromHtml(html);
       log.push(`${key}: horses=${horseLines.length}`);
-      if (horseLines.length === 0) continue;
+      if (horseLines.length === 0) {
+        // 診断: クラス名の存在確認
+        log.push(`${key}: hasHorseList=${html.includes("HorseList")} hasUmaban=${html.includes("Umaban")}`);
+        // <tr class="..."> のクラス名サンプル
+        const trClasses = [...html.matchAll(/<tr[^>]+class="([^"]+)"/g)].slice(0, 8).map(m => m[1]);
+        if (trClasses.length > 0) log.push(`${key}: tr_classes=${trClasses.join("|").slice(0, 300)}`);
+        // 出走馬テキスト周辺
+        const idx = html.indexOf("出走馬");
+        if (idx >= 0) log.push(`${key}: 出走馬_ctx=${html.slice(idx, idx + 150).replace(/\s+/g, " ")}`);
+        // <script>内にJSON形式のデータがないか
+        const scriptData = html.match(/<script[^>]*>[\s\S]{0,50}(?:HorseList|horseList|horse_list)([\s\S]{0,200})/i);
+        if (scriptData) log.push(`${key}: script_horse=${scriptData[0].slice(0, 200).replace(/\s+/g, " ")}`);
+        continue;
+      }
 
       const garbage = [...horseLines.join("")].filter(c => c === "\uFFFD" || c === "?").length;
       if (garbage > 5) { log.push(`${key}: too many garbage chars (${garbage})`); continue; }
