@@ -152,17 +152,15 @@ async function fetchRaceData(raceId: string): Promise<FetchResult> {
       const horseLines = parseHorsesFromHtml(html);
       log.push(`${key}: horses=${horseLines.length}`);
       if (horseLines.length === 0) {
-        // 診断: クラス名の存在確認
-        log.push(`${key}: hasHorseList=${html.includes("HorseList")} hasUmaban=${html.includes("Umaban")}`);
-        // <tr class="..."> のクラス名サンプル
-        const trClasses = [...html.matchAll(/<tr[^>]+class="([^"]+)"/g)].slice(0, 8).map(m => m[1]);
-        if (trClasses.length > 0) log.push(`${key}: tr_classes=${trClasses.join("|").slice(0, 300)}`);
-        // 出走馬テキスト周辺
-        const idx = html.indexOf("出走馬");
-        if (idx >= 0) log.push(`${key}: 出走馬_ctx=${html.slice(idx, idx + 150).replace(/\s+/g, " ")}`);
-        // <script>内にJSON形式のデータがないか
-        const scriptData = html.match(/<script[^>]*>[\s\S]{0,50}(?:HorseList|horseList|horse_list)([\s\S]{0,200})/i);
-        if (scriptData) log.push(`${key}: script_horse=${scriptData[0].slice(0, 200).replace(/\s+/g, " ")}`);
+        // HorseList行の実際の内容を取得してパース失敗原因を特定
+        const firstRow = html.match(/<tr[^>]*class="[^"]*HorseList[^"]*"[^>]*>([\s\S]*?)<\/tr>/)?.[1];
+        if (firstRow) {
+          log.push(`${key}: first_row_preview=${firstRow.slice(0, 400).replace(/\s+/g, " ")}`);
+        } else {
+          // <tr>が見つからない場合: 生のマッチ確認
+          const rawTr = html.match(/<tr[^>]*HorseList[^>]*>/)?.[0];
+          log.push(`${key}: raw_tr_tag=${rawTr ?? "NOT_FOUND"}`);
+        }
         continue;
       }
 
