@@ -236,14 +236,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "raceIdが必要です" }, { status: 400 });
   }
 
-  const prompt = `以下の競馬レース情報を分析して、予想を提供してください。
+  const prompt = `以下の競馬レース情報を分析して、必ず予想を出力してください。
 
 レース: ${promptInfo}
 出走馬情報:
 ${promptHorses}
 
-以下の形式で回答してください：
-【本命（◎）】馬名と選んだ理由
+【重要】データが限られていても必ず予想を出力すること。謝罪・説明・追加情報の要求は一切不要。
+馬名・番号・枠順・騎手名などから推測し、以下の形式で即座に回答する：
+
+【本命（◎）】馬名と選んだ理由（枠・騎手・名前のイメージ等から推測）
 【対抗（○）】馬名と選んだ理由
 【単穴（▲）】馬名と選んだ理由
 【推奨買い目】馬券種別と組み合わせ（例：馬連1-3、三連複1-3-5）
@@ -254,18 +256,21 @@ ${promptHorses}
     const message = await getClient().messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 1500,
-      system: "あなたは20年以上の経験を持つ競馬予想のプロフェッショナルです。データに基づいた分析と独自の視点で、的中率の高い予想を提供します。",
+      system: "あなたは競馬予想の専門家です。提供された出走馬情報（馬名・騎手・枠番など）のみを使い、必ず予想を出力してください。データが不完全でも推測・仮定で補い、本命・対抗・単穴・買い目・展開・注意点を必ず記述します。情報不足の謝罪や追加データの要求は絶対にしません。",
       messages: [{ role: "user", content: prompt }],
     });
 
     const prediction = message.content[0].type === "text" ? message.content[0].text : "";
 
-    // Claudeが拒否・謝罪した場合はカウントしない
-    const isRefusal = prediction.length < 300 && (
+    // Claudeが予想を拒否した場合はカウントしない（長短問わず）
+    const hasRequiredSections = prediction.includes("本命") || prediction.includes("◎") || prediction.includes("買い目");
+    const isRefusal = !hasRequiredSections && (
       prediction.includes("申し訳") ||
       prediction.includes("予想提供ができません") ||
-      prediction.includes("判読できない") ||
-      prediction.includes("データが不完全")
+      prediction.includes("情報が不足") ||
+      prediction.includes("必要な情報") ||
+      prediction.includes("データが") ||
+      prediction.includes("判読できない")
     );
     if (isRefusal) {
       return NextResponse.json(
