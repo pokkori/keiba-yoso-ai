@@ -11,6 +11,7 @@ interface Race {
   venue: string;
   raceNo: number;
   label: string;
+  startTime?: string; // "HH:MM" JST
 }
 
 async function startCheckout(plan: string) {
@@ -32,6 +33,25 @@ function getTodayJST(): string {
   return `${y}-${m}-${d}`;
 }
 
+function getNowJST(): { dateStr: string; minutes: number } {
+  const now = new Date();
+  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const y = jst.getUTCFullYear();
+  const mo = String(jst.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(jst.getUTCDate()).padStart(2, "0");
+  return {
+    dateStr: `${y}-${mo}-${d}`,
+    minutes: jst.getUTCHours() * 60 + jst.getUTCMinutes(),
+  };
+}
+
+function isRacePast(race: Race, selectedDate: string): boolean {
+  if (!race.startTime) return false;
+  const { dateStr, minutes } = getNowJST();
+  if (dateStr !== selectedDate) return false; // 過去/未来日付は制限しない
+  const [h, m] = race.startTime.split(":").map(Number);
+  return minutes >= h * 60 + m;
+}
 
 export default function PredictPage() {
   const [date, setDate] = useState(getTodayJST());
@@ -65,14 +85,21 @@ export default function PredictPage() {
       .then((data) => {
         if (data.races && data.races.length > 0) {
           setRaces(data.races);
-          setSelectedRaceId(data.races[0].raceId);
+          // 最初の未発走レースを選択、なければ先頭
+          const upcoming = data.races.find((r: Race) => !isRacePast(r, date));
+          setSelectedRaceId((upcoming ?? data.races[0]).raceId);
         }
       })
       .catch(() => {})
       .finally(() => setRacesLoading(false));
   }, [date]);
 
+  const selectedRace = races.find((r) => r.raceId === selectedRaceId);
+  const racePast = selectedRace ? isRacePast(selectedRace, date) : false;
+
   const handlePredict = async () => {
+    if (racePast) return;
+
     if (!isPremium && usageCount >= FREE_LIMIT) {
       setShowPaywall(true);
       return;
@@ -89,17 +116,14 @@ export default function PredictPage() {
     setRaceInfo("");
 
     try {
-      const body = { raceId: selectedRaceId };
-
       const res = await fetch("/api/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ raceId: selectedRaceId }),
       });
       if (res.status === 429) { setShowPaywall(true); return; }
       const data = await res.json();
 
-      // 出走表取得失敗
       if (res.status === 502 && data.error === "FETCH_FAILED") {
         setError("出走表の自動取得ができませんでした。時間をおいてから別のレースを選択してください。");
         return;
@@ -187,14 +211,19 @@ export default function PredictPage() {
             {races.length > 0 ? (
               <select
                 value={selectedRaceId}
-                onChange={(e) => setSelectedRaceId(e.target.value)}
+                onChange={(e) => { setSelectedRaceId(e.target.value); setResult(""); setError(""); }}
                 className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:border-green-500 bg-white"
               >
                 {Object.entries(venueGroups).map(([venue, venueRaces]) => (
                   <optgroup key={venue} label={`── ${venue} ──`}>
-                    {venueRaces.map((r) => (
-                      <option key={r.raceId} value={r.raceId}>{r.label}</option>
-                    ))}
+                    {venueRaces.map((r) => {
+                      const past = isRacePast(r, date);
+                      return (
+                        <option key={r.raceId} value={r.raceId}>
+                          {past ? `[発走済] ${r.label}` : r.label}
+                        </option>
+                      );
+                    })}
                   </optgroup>
                 ))}
               </select>
@@ -204,12 +233,19 @@ export default function PredictPage() {
           </div>
         )}
 
+        {/* 発走済み警告 */}
+        {racePast && (
+          <div className="mb-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
+            このレースはすでに発走済みのため予想できません。別のレースを選択してください。
+          </div>
+        )}
+
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
         <button
           onClick={handlePredict}
-          disabled={loading || (!selectedRaceId && !racesLoading)}
-          className="w-full bg-green-700 hover:bg-green-800 disabled:bg-gray-300 text-white font-bold py-4 rounded-xl text-lg transition-colors"
+          disabled={loading || racePast || (!selectedRaceId && !racesLoading)}
+          className="w-full bg-green-700 hover:bg-green-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-lg transition-colors"
         >
           {loading ? "🤖 出走馬データ取得 & AI分析中..." : "🏇 このレースを予想する"}
         </button>

@@ -26,9 +26,9 @@ function getTodayJST(): string {
   return `${y}${m}${d}`;
 }
 
-function extractRaces(html: string): Array<{ raceId: string; raceName: string }> {
+function extractRaces(html: string): Array<{ raceId: string; raceName: string; startTime?: string }> {
   const seen = new Set<string>();
-  const results: Array<{ raceId: string; raceName: string }> = [];
+  const results: Array<{ raceId: string; raceName: string; startTime?: string }> = [];
 
   const pattern = /race_id=(\d{12})/g;
   let match;
@@ -37,7 +37,7 @@ function extractRaces(html: string): Array<{ raceId: string; raceName: string }>
     if (seen.has(raceId)) continue;
     seen.add(raceId);
 
-    // race_idの前後500文字からレース名を探す
+    // race_idの前後500文字からレース名・発走時刻を探す
     const ctx = html.substring(Math.max(0, match.index - 300), match.index + 400);
 
     // クラス名から: RaceName, ItemTitle, race_name 等
@@ -48,7 +48,12 @@ function extractRaces(html: string): Array<{ raceId: string; raceName: string }>
     const textMatch = ctx.match(/>([^\s<]{2,20}(?:賞|ステークス|カップ|特別|記念|ダービー|オークス|皐月|菊花|天皇|マイル|スプリント))</);
 
     const raceName = (classMatch?.[1] || titleMatch?.[1] || textMatch?.[1] || "").trim();
-    results.push({ raceId, raceName });
+
+    // 発走時刻: "15:35" or "15:35発走" の形式
+    const timeMatch = ctx.match(/(\d{1,2}:\d{2})(?:発走)?/);
+    const startTime = timeMatch?.[1];
+
+    results.push({ raceId, raceName, startTime });
   }
 
   // 追加パターン（data属性など）
@@ -114,14 +119,15 @@ export async function GET(req: NextRequest) {
     if (extracted.length === 0) continue;
 
     const races = extracted
-      .map(({ raceId, raceName }) => {
+      .map(({ raceId, raceName, startTime }) => {
         const trackCode = raceId.substring(4, 6);
         const raceNo = parseInt(raceId.substring(10, 12), 10);
         const venue = TRACK_NAMES[trackCode] || "不明";
+        const timeLabel = startTime ? ` ${startTime}` : "";
         const label = raceName
-          ? `${venue} ${raceNo}R  ${raceName}`
-          : `${venue} ${raceNo}R`;
-        return { raceId, venue, raceNo, raceName, label };
+          ? `${venue} ${raceNo}R${timeLabel}  ${raceName}`
+          : `${venue} ${raceNo}R${timeLabel}`;
+        return { raceId, venue, raceNo, raceName, startTime, label };
       })
       .sort((a, b) => a.raceId.localeCompare(b.raceId) || a.raceNo - b.raceNo);
 
