@@ -26,9 +26,9 @@ function getTodayJST(): string {
   return `${y}${m}${d}`;
 }
 
-function extractRaces(html: string): Array<{ raceId: string; raceName: string; startTime?: string }> {
+function extractRaces(html: string): Array<{ raceId: string; raceName: string; startTime?: string; isPast: boolean }> {
   const seen = new Set<string>();
-  const results: Array<{ raceId: string; raceName: string; startTime?: string }> = [];
+  const results: Array<{ raceId: string; raceName: string; startTime?: string; isPast: boolean }> = [];
 
   const pattern = /race_id=(\d{12})/g;
   let match;
@@ -37,8 +37,12 @@ function extractRaces(html: string): Array<{ raceId: string; raceName: string; s
     if (seen.has(raceId)) continue;
     seen.add(raceId);
 
-    // race_idの前後500文字からレース名・発走時刻を探す
-    const ctx = html.substring(Math.max(0, match.index - 300), match.index + 400);
+    // race_idの前60文字（URLパス部分）と後400文字（レース情報）
+    const preCtx = html.substring(Math.max(0, match.index - 60), match.index);
+    const ctx = html.substring(Math.max(0, match.index - 300), match.index + 500);
+
+    // 発走済み判定: result.html へのリンクなら発走済み、shutuba.html なら未発走
+    const isPast = preCtx.includes("result.html");
 
     // クラス名から: RaceName, ItemTitle, race_name 等
     const classMatch = ctx.match(/class="[^"]*(?:RaceName|ItemTitle|RaceTitle|race_name|RaceList_ItemTitle)[^"]*"[^>]*>\s*([^<\s][^<]{0,30}?)\s*<\//i);
@@ -49,11 +53,14 @@ function extractRaces(html: string): Array<{ raceId: string; raceName: string; s
 
     const raceName = (classMatch?.[1] || titleMatch?.[1] || textMatch?.[1] || "").trim();
 
-    // 発走時刻: "15:35" or "15:35発走" の形式
-    const timeMatch = ctx.match(/(\d{1,2}:\d{2})(?:発走)?/);
+    // 発走時刻: "15:35発走" を優先し、なければ "15:35" 形式（4桁の時刻のみ）
+    const timeMatch =
+      ctx.match(/(\d{1,2}:\d{2})発走/) ||
+      ctx.match(/>(\d{1,2}:\d{2})</) ||
+      ctx.match(/["'\s](\d{1,2}:\d{2})["'\s]/);
     const startTime = timeMatch?.[1];
 
-    results.push({ raceId, raceName, startTime });
+    results.push({ raceId, raceName, startTime, isPast });
   }
 
   // 追加パターン（data属性など）
@@ -66,7 +73,7 @@ function extractRaces(html: string): Array<{ raceId: string; raceName: string; s
     while ((m = p.exec(html)) !== null) {
       if (!seen.has(m[1])) {
         seen.add(m[1]);
-        results.push({ raceId: m[1], raceName: "" });
+        results.push({ raceId: m[1], raceName: "", isPast: false });
       }
     }
   }
@@ -119,7 +126,7 @@ export async function GET(req: NextRequest) {
     if (extracted.length === 0) continue;
 
     const races = extracted
-      .map(({ raceId, raceName, startTime }) => {
+      .map(({ raceId, raceName, startTime, isPast }) => {
         const trackCode = raceId.substring(4, 6);
         const raceNo = parseInt(raceId.substring(10, 12), 10);
         const venue = TRACK_NAMES[trackCode] || "不明";
@@ -127,7 +134,7 @@ export async function GET(req: NextRequest) {
         const label = raceName
           ? `${venue} ${raceNo}R${timeLabel}  ${raceName}`
           : `${venue} ${raceNo}R${timeLabel}`;
-        return { raceId, venue, raceNo, raceName, startTime, label };
+        return { raceId, venue, raceNo, raceName, startTime, isPast, label };
       })
       .sort((a, b) => a.raceId.localeCompare(b.raceId) || a.raceNo - b.raceNo);
 

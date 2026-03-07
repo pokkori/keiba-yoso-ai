@@ -371,13 +371,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "LIMIT_REACHED" }, { status: 429 });
   }
 
-  let body: { raceId?: string };
+  let body: { raceId?: string; budget?: number };
   try { body = await req.json(); }
   catch { return NextResponse.json({ error: "リクエストの形式が正しくありません" }, { status: 400 }); }
 
   if (!body.raceId || !body.raceId.match(/^\d{12}$/)) {
     return NextResponse.json({ error: "レースIDが不正です" }, { status: 400 });
   }
+
+  const budget = typeof body.budget === "number" && body.budget >= 100 ? Math.min(body.budget, 1000000) : null;
 
   const { data: raceData, debugLog } = await fetchRaceData(body.raceId);
   if (!raceData) {
@@ -388,19 +390,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "FETCH_FAILED", venue, raceNo, debugLog }, { status: 502 });
   }
 
+  const budgetSection = budget
+    ? `\n【軍資金】${budget.toLocaleString()}円\n上記の軍資金を前提に、各馬券の具体的な購入金額（○○円）まで含めた配分を必ず記載すること。`
+    : "";
+
   const prompt = `以下の競馬レース情報を分析して、具体的な予想を出力してください。
 
 レース: ${raceData.info}
 
 出走馬詳細情報:
 ${raceData.horses}
-
+${budgetSection}
 上記の出走馬の過去成績・騎手・斤量・馬齢・調教師情報をもとに、以下の形式で予想を出力してください：
 
 【本命（◎）】馬番・馬名 — 選んだ理由（過去成績・騎手・コース適性・近走の状態等）
 【対抗（○）】馬番・馬名 — 選んだ理由
-【単穴（▲））】馬番・馬名 — 選んだ理由
-【推奨買い目】具体的な馬番の組み合わせ（例：馬連◎-○、三連複◎-○-▲）
+【単穴（▲）】馬番・馬名 — 選んだ理由
+【推奨買い目】具体的な馬番の組み合わせ${budget ? `と購入金額（合計${budget.toLocaleString()}円以内）` : ""}
 【レース展開予想】逃げ・先行・差しの展開とペース予測
 【総評】このレースのポイントと穴馬候補
 

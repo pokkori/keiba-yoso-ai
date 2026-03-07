@@ -11,7 +11,8 @@ interface Race {
   venue: string;
   raceNo: number;
   label: string;
-  startTime?: string; // "HH:MM" JST
+  startTime?: string;
+  isPast: boolean;
 }
 
 async function startCheckout(plan: string) {
@@ -33,31 +34,12 @@ function getTodayJST(): string {
   return `${y}-${m}-${d}`;
 }
 
-function getNowJST(): { dateStr: string; minutes: number } {
-  const now = new Date();
-  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
-  const y = jst.getUTCFullYear();
-  const mo = String(jst.getUTCMonth() + 1).padStart(2, "0");
-  const d = String(jst.getUTCDate()).padStart(2, "0");
-  return {
-    dateStr: `${y}-${mo}-${d}`,
-    minutes: jst.getUTCHours() * 60 + jst.getUTCMinutes(),
-  };
-}
-
-function isRacePast(race: Race, selectedDate: string): boolean {
-  if (!race.startTime) return false;
-  const { dateStr, minutes } = getNowJST();
-  if (dateStr !== selectedDate) return false; // 過去/未来日付は制限しない
-  const [h, m] = race.startTime.split(":").map(Number);
-  return minutes >= h * 60 + m;
-}
-
 export default function PredictPage() {
   const [date, setDate] = useState(getTodayJST());
   const [races, setRaces] = useState<Race[]>([]);
   const [selectedRaceId, setSelectedRaceId] = useState("");
   const [racesLoading, setRacesLoading] = useState(false);
+  const [budget, setBudget] = useState("");
 
   const [result, setResult] = useState("");
   const [raceInfo, setRaceInfo] = useState("");
@@ -86,7 +68,7 @@ export default function PredictPage() {
         if (data.races && data.races.length > 0) {
           setRaces(data.races);
           // 最初の未発走レースを選択、なければ先頭
-          const upcoming = data.races.find((r: Race) => !isRacePast(r, date));
+          const upcoming = data.races.find((r: Race) => !r.isPast);
           setSelectedRaceId((upcoming ?? data.races[0]).raceId);
         }
       })
@@ -95,7 +77,7 @@ export default function PredictPage() {
   }, [date]);
 
   const selectedRace = races.find((r) => r.raceId === selectedRaceId);
-  const racePast = selectedRace ? isRacePast(selectedRace, date) : false;
+  const racePast = selectedRace?.isPast ?? false;
 
   const handlePredict = async () => {
     if (racePast) return;
@@ -116,10 +98,11 @@ export default function PredictPage() {
     setRaceInfo("");
 
     try {
+      const budgetNum = budget ? parseInt(budget.replace(/,/g, ""), 10) : undefined;
       const res = await fetch("/api/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ raceId: selectedRaceId }),
+        body: JSON.stringify({ raceId: selectedRaceId, budget: budgetNum }),
       });
       if (res.status === 429) { setShowPaywall(true); return; }
       const data = await res.json();
@@ -216,14 +199,11 @@ export default function PredictPage() {
               >
                 {Object.entries(venueGroups).map(([venue, venueRaces]) => (
                   <optgroup key={venue} label={`── ${venue} ──`}>
-                    {venueRaces.map((r) => {
-                      const past = isRacePast(r, date);
-                      return (
-                        <option key={r.raceId} value={r.raceId}>
-                          {past ? `[発走済] ${r.label}` : r.label}
-                        </option>
-                      );
-                    })}
+                    {venueRaces.map((r) => (
+                      <option key={r.raceId} value={r.raceId}>
+                        {r.isPast ? `[発走済] ${r.label}` : r.label}
+                      </option>
+                    ))}
                   </optgroup>
                 ))}
               </select>
@@ -232,6 +212,27 @@ export default function PredictPage() {
             )}
           </div>
         )}
+
+        {/* 軍資金入力 */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            軍資金（任意）
+            <span className="ml-2 text-xs text-gray-400">入力すると具体的な購入金額を提案します</span>
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">¥</span>
+            <input
+              type="number"
+              value={budget}
+              onChange={(e) => setBudget(e.target.value)}
+              placeholder="例: 3000"
+              min={100}
+              max={1000000}
+              className="w-full border border-gray-300 rounded-lg pl-8 pr-16 py-3 focus:outline-none focus:border-green-500"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">円</span>
+          </div>
+        </div>
 
         {/* 発走済み警告 */}
         {racePast && (
