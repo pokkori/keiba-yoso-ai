@@ -30,8 +30,8 @@ const plans = [
   },
   {
     name: "ベーシック",
-    price: "2,980",
-    features: ["全レース予想", "推奨馬券提示", "回収率トラッキング"],
+    price: "980",
+    features: ["全レース予想", "推奨馬券提示", "軍資金別買い目提案"],
     cta: "始める",
     stripeKey: "basic",
     href: null,
@@ -39,8 +39,8 @@ const plans = [
   },
   {
     name: "プロ",
-    price: "5,980",
-    features: ["全レース予想", "推奨馬券提示", "回収率トラッキング", "過去データ検索", "重賞特別分析"],
+    price: "2,980",
+    features: ["全レース予想", "推奨馬券提示", "軍資金別買い目提案", "過去成績分析", "重賞特別分析"],
     cta: "おすすめ",
     stripeKey: "pro",
     href: null,
@@ -48,7 +48,7 @@ const plans = [
   },
   {
     name: "年間プラン",
-    price: "49,800",
+    price: "19,800",
     features: ["プロ全機能", "2ヶ月分お得", "優先サポート"],
     cta: "お得",
     stripeKey: "annual",

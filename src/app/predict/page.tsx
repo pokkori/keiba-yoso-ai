@@ -148,13 +148,13 @@ export default function PredictPage() {
               onClick={() => startCheckout("pro")}
               className="w-full bg-gradient-to-r from-green-700 to-green-600 text-white py-3 rounded-xl font-bold hover:from-green-800 hover:to-green-700 transition-all mb-3"
             >
-              プロプランで続ける（¥5,980/月）
+              プロプランで続ける（¥2,980/月）
             </button>
             <button
               onClick={() => startCheckout("basic")}
               className="w-full border border-green-300 text-green-700 py-2 rounded-xl text-sm font-medium hover:bg-green-50 transition-colors mb-3"
             >
-              ベーシックプラン（¥2,980/月）
+              ベーシックプラン（¥980/月）
             </button>
             <button onClick={() => setShowPaywall(false)} className="text-xs text-gray-400 hover:text-gray-600">
               閉じる
