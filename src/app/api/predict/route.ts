@@ -58,15 +58,31 @@ function parseHorsesFromHtml(html: string): string[] {
   const lines: string[] = [];
   let m;
 
-  // PC版: class="HorseList" の <tr> 行
-  const pcPattern = /<tr[^>]*class="[^"]*HorseList[^"]*"[^>]*>([\s\S]*?)<\/tr>/g;
-  while ((m = pcPattern.exec(html)) !== null) {
+  // netkeiba shutuba HTML: <tr class="HorseList">
+  const rowPattern = /<tr[^>]*class="[^"]*HorseList[^"]*"[^>]*>([\s\S]*?)<\/tr>/g;
+  while ((m = rowPattern.exec(html)) !== null) {
     const row = m[1];
-    const num = row.match(/class="Umaban[^"]*"[^>]*><span>(\d+)<\/span>/)?.[1];
-    const name = row.match(/class="HorseName"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/)?.[1]?.trim();
-    const jockey = row.match(/class="Jockey"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/)?.[1]?.trim();
-    const weight = row.match(/class="Futan[^"]*"[^>]*><span>([^<]+)<\/span>/)?.[1]?.trim();
-    if (name) lines.push(`${num ?? "?"}番 ${name}  騎手:${jockey ?? "不明"}${weight ? ` 斤量${weight}kg` : ""}`);
+
+    // 馬名: 新構造 class="Horse HorseLink" の <dt> または旧構造 class="HorseName"
+    const name =
+      row.match(/class="[^"]*HorseLink[^"]*"[^>]*>[\s\S]*?<a[^>]*>\s*([^\s<][^<]*?)\s*<\/a>/)?.[1]?.trim() ||
+      row.match(/class="HorseName"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/)?.[1]?.trim();
+    if (!name) continue;
+
+    // 馬番: URL の &i=N (0始まり→+1) または Umaban クラス
+    const iParam = row.match(/[?&]i=(\d+)/)?.[1];
+    const num =
+      iParam !== undefined
+        ? String(parseInt(iParam) + 1)
+        : row.match(/class="Umaban[^"]*"[^>]*>[\s\S]*?(\d+)/)?.[1] ?? "?";
+
+    // 騎手
+    const jockey = row.match(/class="[^"]*Jockey[^"]*"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/)?.[1]?.trim();
+
+    // 斤量
+    const weight = row.match(/class="[^"]*Futan[^"]*"[^>]*>[\s\S]{0,30}?(\d{2}(?:\.\d)?)/)?.[1];
+
+    lines.push(`${num}番 ${name}${jockey ? `  騎手:${jockey}` : ""}${weight ? `  斤量:${weight}` : ""}`);
   }
   if (lines.length > 0) return lines;
 
