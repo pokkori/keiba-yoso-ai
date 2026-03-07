@@ -44,7 +44,17 @@ async function fetchRaceData(raceId: string): Promise<{ info: string; horses: st
       }
     );
     if (!res.ok) return null;
-    const html = await res.text();
+
+    // エンコーディング自動検出（netkeiba は EUC-JP の場合あり）
+    const buffer = await res.arrayBuffer();
+    const sniff = new TextDecoder("utf-8", { fatal: false }).decode(buffer.slice(0, 2000));
+    const cs = (sniff.match(/charset=["']?\s*([a-zA-Z0-9_-]+)/i)?.[1] || "utf-8")
+      .toLowerCase().replace(/[_-]/g, "");
+    const html = cs === "eucjp" || cs === "xeucjp"
+      ? new TextDecoder("euc-jp").decode(buffer)
+      : cs === "shiftjis" || cs === "xsjis" || cs === "sjis"
+        ? new TextDecoder("shift_jis").decode(buffer)
+        : new TextDecoder("utf-8", { fatal: false }).decode(buffer);
 
     const trackCode = raceId.substring(4, 6);
     const raceNo = parseInt(raceId.substring(10, 12), 10);

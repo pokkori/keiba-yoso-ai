@@ -69,6 +69,18 @@ function extractRaces(html: string): Array<{ raceId: string; raceName: string }>
   return results;
 }
 
+async function decodeResponse(res: Response): Promise<string> {
+  const buffer = await res.arrayBuffer();
+  // 最初の2KBでcharset宣言を確認
+  const sniff = new TextDecoder("utf-8", { fatal: false }).decode(buffer.slice(0, 2000));
+  const charsetMatch = sniff.match(/charset=["']?\s*([a-zA-Z0-9_-]+)/i);
+  const cs = (charsetMatch?.[1] || "utf-8").toLowerCase().replace(/[_-]/g, "");
+  if (cs === "eucjp" || cs === "xeucjp") return new TextDecoder("euc-jp").decode(buffer);
+  if (cs === "shiftjis" || cs === "xsjis" || cs === "sjis" || cs === "windows31j")
+    return new TextDecoder("shift_jis").decode(buffer);
+  return new TextDecoder("utf-8", { fatal: false }).decode(buffer);
+}
+
 async function tryFetch(url: string): Promise<string | null> {
   try {
     const res = await fetch(url, {
@@ -76,7 +88,7 @@ async function tryFetch(url: string): Promise<string | null> {
       signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) return null;
-    return await res.text();
+    return await decodeResponse(res);
   } catch {
     return null;
   }
