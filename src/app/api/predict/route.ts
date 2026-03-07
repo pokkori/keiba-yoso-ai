@@ -6,6 +6,12 @@ export const dynamic = "force-dynamic";
 const FREE_LIMIT = 1;
 const COOKIE_KEY = "keiba_predict_count";
 
+const TRACK_NAMES: Record<string, string> = {
+  "01": "札幌", "02": "函館", "03": "福島", "04": "新潟",
+  "05": "東京", "06": "中山", "07": "中京", "08": "京都",
+  "09": "阪神", "10": "小倉",
+};
+
 function getClient() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 }
@@ -23,6 +29,74 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
+async function fetchRaceData(raceId: string): Promise<{ info: string; horses: string } | null> {
+  try {
+    const res = await fetch(
+      `https://race.netkeiba.com/race/shutuba.html?race_id=${raceId}`,
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Accept": "text/html,application/xhtml+xml",
+          "Accept-Language": "ja,en;q=0.5",
+          "Referer": "https://race.netkeiba.com/",
+        },
+        signal: AbortSignal.timeout(10000),
+      }
+    );
+
+    if (!res.ok) return null;
+    const html = await res.text();
+
+    // レース名
+    const raceNameMatch = html.match(/<title>([^<]+)<\/title>/);
+    const rawTitle = raceNameMatch ? raceNameMatch[1] : "";
+    const raceName = rawTitle.replace(/\s*[-|]\s*netkei.*$/i, "").trim();
+
+    // 開催場・レース番号
+    const trackCode = raceId.substring(4, 6);
+    const raceNo = parseInt(raceId.substring(10, 12), 10);
+    const venue = TRACK_NAMES[trackCode] || "不明";
+
+    // コース情報（例: 芝1600m）
+    const courseMatch = html.match(/芝|ダート[\d,]+m/);
+    const courseInfo = courseMatch ? courseMatch[0] : "";
+
+    // 出走馬パース（HorseListの各行）
+    const horseLines: string[] = [];
+    const rowPattern = /<tr[^>]*class="[^"]*HorseList[^"]*"[^>]*>([\s\S]*?)<\/tr>/g;
+    let rowMatch;
+    while ((rowMatch = rowPattern.exec(html)) !== null) {
+      const row = rowMatch[1];
+
+      // 馬番
+      const numMatch = row.match(/class="Umaban[^"]*"[^>]*><span>(\d+)<\/span>/);
+      // 馬名
+      const nameMatch = row.match(/class="HorseName"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/);
+      // 騎手
+      const jockeyMatch = row.match(/class="Jockey"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/);
+      // 斤量
+      const weightMatch = row.match(/class="Futan[^"]*"[^>]*><span>([^<]+)<\/span>/);
+
+      if (nameMatch) {
+        const num = numMatch ? numMatch[1] : "?";
+        const name = nameMatch[1].trim();
+        const jockey = jockeyMatch ? jockeyMatch[1].trim() : "不明";
+        const weight = weightMatch ? `${weightMatch[1].trim()}kg` : "";
+        horseLines.push(`${num}番 ${name}  騎手:${jockey}${weight ? `  斤量:${weight}` : ""}`);
+      }
+    }
+
+    if (horseLines.length === 0) return null;
+
+    return {
+      info: `${venue} ${raceNo}R${raceName ? ` ${raceName}` : ""}${courseInfo ? ` (${courseInfo})` : ""}`,
+      horses: horseLines.join("\n"),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for") || "unknown";
   if (!checkRateLimit(ip)) {
@@ -36,22 +110,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "LIMIT_REACHED" }, { status: 429 });
   }
 
-  let body: { venue?: string; raceNo?: string; raceClass?: string; surface?: string; distance?: string; horses?: string };
+  let body: { raceId?: string };
   try { body = await req.json(); }
   catch { return NextResponse.json({ error: "リクエストの形式が正しくありません" }, { status: 400 }); }
 
-  const { venue, raceNo, raceClass, surface, distance, horses } = body;
-  if (!horses?.trim()) return NextResponse.json({ error: "出走馬情報を入力してください" }, { status: 400 });
-  if (horses.length > 3000) return NextResponse.json({ error: "出走馬情報が長すぎます（3000文字以内）" }, { status: 400 });
+  const { raceId } = body;
+  if (!raceId?.match(/^\d{12}$/)) {
+    return NextResponse.json({ error: "レースIDが不正です" }, { status: 400 });
+  }
+
+  const raceData = await fetchRaceData(raceId);
+  if (!raceData) {
+    return NextResponse.json({ error: "レースデータの取得に失敗しました。しばらく経ってから再試行してください。" }, { status: 502 });
+  }
 
   const prompt = `以下の競馬レース情報を分析して、予想を提供してください。
 
-開催場: ${venue}
-レース: ${raceNo}R
-クラス: ${raceClass}
-コース: ${surface}${distance}m
+レース: ${raceData.info}
 出走馬情報:
-${horses}
+${raceData.horses}
 
 以下の形式で回答してください：
 【本命（◎）】馬名と選んだ理由
@@ -71,17 +148,17 @@ ${horses}
 
     const prediction = message.content[0].type === "text" ? message.content[0].text : "";
     const newCount = cookieCount + 1;
-    const res = NextResponse.json({ prediction, count: newCount });
+    const response = NextResponse.json({ prediction, raceInfo: raceData.info, count: newCount });
 
     if (!isPremium) {
-      res.cookies.set(COOKIE_KEY, String(newCount), {
+      response.cookies.set(COOKIE_KEY, String(newCount), {
         maxAge: 60 * 60 * 24 * 30,
         sameSite: "lax",
         httpOnly: true,
         secure: true,
       });
     }
-    return res;
+    return response;
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "予想中にエラーが発生しました。しばらく待ってから再試行してください。" }, { status: 500 });
