@@ -119,6 +119,16 @@ export default function PredictPage() {
       });
       if (res.status === 429) { setShowPaywall(true); return; }
       const data = await res.json();
+
+      // 出走表取得失敗 → 手動入力モードに切り替え
+      if (res.status === 502 && data.error === "FETCH_FAILED") {
+        setIsFallback(true);
+        if (data.venue) setManualVenue(data.venue);
+        if (data.raceNo) setManualRaceNo(String(data.raceNo));
+        setError("出走表の自動取得ができませんでした。馬名・騎手名などを手動で入力してください。");
+        return;
+      }
+
       if (data.error) throw new Error(data.error);
       setResult(data.prediction);
       setRaceInfo(data.raceInfo || "");

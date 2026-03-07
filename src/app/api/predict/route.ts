@@ -132,7 +132,14 @@ export async function POST(req: NextRequest) {
     }
     const raceData = await fetchRaceData(body.raceId);
     if (!raceData) {
-      return NextResponse.json({ error: "レースデータの取得に失敗しました。しばらく経ってから再試行してください。" }, { status: 502 });
+      // 出走表取得失敗 → 手動入力へ誘導
+      const trackCode = body.raceId.substring(4, 6);
+      const raceNo = parseInt(body.raceId.substring(10, 12), 10);
+      const venue = TRACK_NAMES[trackCode] || "";
+      return NextResponse.json(
+        { error: "FETCH_FAILED", venue, raceNo },
+        { status: 502 }
+      );
     }
     promptInfo = raceData.info;
     promptHorses = raceData.horses;
