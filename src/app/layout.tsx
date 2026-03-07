@@ -7,9 +7,28 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
+const SITE_URL = "https://keiba-yoso-ai.vercel.app";
+const TITLE = "競馬予想AI｜リアルデータをAIが30秒分析・本命◎対抗○単穴▲を即提案";
+const DESC = "netkeiba出走馬データをAIが自動取得・分析。本命◎対抗○単穴▲と推奨買い目を30秒で提案。軍資金別配分・回収率トラッキング付き。無料1レースから。";
+
 export const metadata: Metadata = {
-  title: "競馬予想AI - AIが導く、勝利への道",
-  description: "最新AIが全レースを分析。本命・対抗・買い目を即座に提案。回収率トラッキングで成績管理も完結。",
+  title: TITLE,
+  description: DESC,
+  openGraph: {
+    title: TITLE,
+    description: DESC,
+    url: SITE_URL,
+    siteName: "競馬予想AI",
+    locale: "ja_JP",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESC,
+    site: "@keiba_yoso_ai",
+  },
+  metadataBase: new URL(SITE_URL),
 };
 
 export default function RootLayout({
