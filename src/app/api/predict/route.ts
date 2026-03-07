@@ -29,76 +29,120 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
-async function fetchRaceData(raceId: string): Promise<{ info: string; horses: string } | null> {
-  try {
-    const res = await fetch(
-      `https://race.netkeiba.com/race/shutuba.html?race_id=${raceId}`,
-      {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          "Accept": "text/html,application/xhtml+xml",
-          "Accept-Language": "ja,en;q=0.5",
-          "Referer": "https://race.netkeiba.com/",
-        },
-        signal: AbortSignal.timeout(10000),
-      }
-    );
-    if (!res.ok) return null;
+const FETCH_HEADERS = {
+  "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+  "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "Accept-Language": "ja,en;q=0.5",
+  "Accept-Encoding": "gzip, deflate, br",
+  "Referer": "https://sp.netkeiba.com/",
+};
 
-    // エンコーディング自動検出（netkeiba は EUC-JP の場合あり）
-    const buffer = await res.arrayBuffer();
-    const sniff = new TextDecoder("utf-8", { fatal: false }).decode(buffer.slice(0, 2000));
-    const cs = (sniff.match(/charset=["']?\s*([a-zA-Z0-9_-]+)/i)?.[1] || "utf-8")
-      .toLowerCase().replace(/[_-]/g, "");
-    const html = cs === "eucjp" || cs === "xeucjp"
-      ? new TextDecoder("euc-jp").decode(buffer)
-      : cs === "shiftjis" || cs === "xsjis" || cs === "sjis"
-        ? new TextDecoder("shift_jis").decode(buffer)
-        : new TextDecoder("utf-8", { fatal: false }).decode(buffer);
+async function decodeBuffer(buffer: ArrayBuffer): Promise<string> {
+  const sniff = new TextDecoder("utf-8", { fatal: false }).decode(buffer.slice(0, 2000));
+  const cs = (sniff.match(/charset=["']?\s*([a-zA-Z0-9_-]+)/i)?.[1] || "utf-8")
+    .toLowerCase().replace(/[_-]/g, "");
+  if (cs === "eucjp" || cs === "xeucjp") return new TextDecoder("euc-jp").decode(buffer);
+  if (cs === "shiftjis" || cs === "xsjis" || cs === "sjis" || cs === "windows31j")
+    return new TextDecoder("shift_jis").decode(buffer);
+  return new TextDecoder("utf-8", { fatal: false }).decode(buffer);
+}
 
-    const trackCode = raceId.substring(4, 6);
-    const raceNo = parseInt(raceId.substring(10, 12), 10);
-    const venue = TRACK_NAMES[trackCode] || "不明";
+function parseHorses(html: string): string[] {
+  const horseLines: string[] = [];
 
-    // レース名をtitleから抽出
-    const titleMatch = html.match(/<title>([^<]+)<\/title>/);
-    const raceName = titleMatch
-      ? titleMatch[1].replace(/\s*[-|].*$/, "").trim()
-      : "";
-
-    // 出走馬テーブルをパース
-    const horseLines: string[] = [];
-    const rowPattern = /<tr[^>]*class="[^"]*HorseList[^"]*"[^>]*>([\s\S]*?)<\/tr>/g;
-    let rowMatch;
-    while ((rowMatch = rowPattern.exec(html)) !== null) {
-      const row = rowMatch[1];
-      const numMatch = row.match(/class="Umaban[^"]*"[^>]*><span>(\d+)<\/span>/);
-      const nameMatch = row.match(/class="HorseName"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/);
-      const jockeyMatch = row.match(/class="Jockey"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/);
-      const weightMatch = row.match(/class="Futan[^"]*"[^>]*><span>([^<]+)<\/span>/);
-      if (nameMatch) {
-        const num = numMatch ? numMatch[1] : "?";
-        const name = nameMatch[1].trim();
-        const jockey = jockeyMatch ? jockeyMatch[1].trim() : "不明";
-        const weight = weightMatch ? ` 斤量${weightMatch[1].trim()}kg` : "";
-        horseLines.push(`${num}番 ${name}  騎手:${jockey}${weight}`);
-      }
+  // PC版: class="HorseList"の<tr>行をパース
+  const rowPattern = /<tr[^>]*class="[^"]*HorseList[^"]*"[^>]*>([\s\S]*?)<\/tr>/g;
+  let rowMatch;
+  while ((rowMatch = rowPattern.exec(html)) !== null) {
+    const row = rowMatch[1];
+    const numMatch = row.match(/class="Umaban[^"]*"[^>]*><span>(\d+)<\/span>/);
+    const nameMatch = row.match(/class="HorseName"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/);
+    const jockeyMatch = row.match(/class="Jockey"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/);
+    const weightMatch = row.match(/class="Futan[^"]*"[^>]*><span>([^<]+)<\/span>/);
+    if (nameMatch) {
+      const num = numMatch ? numMatch[1] : "?";
+      const name = nameMatch[1].trim();
+      const jockey = jockeyMatch ? jockeyMatch[1].trim() : "不明";
+      const weight = weightMatch ? ` 斤量${weightMatch[1].trim()}kg` : "";
+      horseLines.push(`${num}番 ${name}  騎手:${jockey}${weight}`);
     }
-
-    if (horseLines.length === 0) return null;
-
-    // 文字化けチェック：馬名に置換文字(U+FFFD)や"?"が多すぎる場合は無効
-    const combined = horseLines.join("");
-    const garbageCount = [...combined].filter(c => c === "\uFFFD" || c === "?").length;
-    if (garbageCount > 5) return null;
-
-    return {
-      info: `${venue} ${raceNo}R${raceName ? ` ${raceName}` : ""}`,
-      horses: horseLines.join("\n"),
-    };
-  } catch {
-    return null;
   }
+  if (horseLines.length > 0) return horseLines;
+
+  // SP版: class="HorseInfo"等 (sp.netkeiba.com)
+  const spPattern = /<li[^>]*class="[^"]*RaceHorse[^"]*"[^>]*>([\s\S]*?)<\/li>/g;
+  while ((rowMatch = spPattern.exec(html)) !== null) {
+    const row = rowMatch[1];
+    const numMatch = row.match(/<span[^>]*class="[^"]*Num[^"]*"[^>]*>(\d+)<\/span>/);
+    const nameMatch = row.match(/<span[^>]*class="[^"]*HorseName[^"]*"[^>]*>([^<]+)<\/span>/) ||
+                      row.match(/<a[^>]*class="[^"]*HorseName[^"]*"[^>]*>([^<]+)<\/a>/);
+    const jockeyMatch = row.match(/<span[^>]*class="[^"]*Jockey[^"]*"[^>]*>([^<]+)<\/span>/);
+    if (nameMatch) {
+      const num = numMatch ? numMatch[1] : "?";
+      const name = nameMatch[1].trim();
+      const jockey = jockeyMatch ? jockeyMatch[1].trim() : "不明";
+      horseLines.push(`${num}番 ${name}  騎手:${jockey}`);
+    }
+  }
+  if (horseLines.length > 0) return horseLines;
+
+  // 汎用フォールバック: data-horse-num等
+  const genericPattern = /data-horse-num="(\d+)"[^>]*>[\s\S]{0,500}?<[^>]*class="[^"]*name[^"]*"[^>]*>([^<]+)<\/[^>]+>/gi;
+  while ((rowMatch = genericPattern.exec(html)) !== null) {
+    horseLines.push(`${rowMatch[1]}番 ${rowMatch[2].trim()}`);
+  }
+
+  return horseLines;
+}
+
+async function fetchRaceData(raceId: string): Promise<{ info: string; horses: string } | null> {
+  const trackCode = raceId.substring(4, 6);
+  const raceNo = parseInt(raceId.substring(10, 12), 10);
+  const venue = TRACK_NAMES[trackCode] || "不明";
+
+  // 試すURLリスト（SP版を優先 → PC版 → ポップアップ版）
+  const urls = [
+    `https://sp.netkeiba.com/race/shutuba.html?race_id=${raceId}`,
+    `https://sp.netkeiba.com/race/card.html?race_id=${raceId}`,
+    `https://race.netkeiba.com/race/shutuba_popup.html?race_id=${raceId}`,
+    `https://race.netkeiba.com/race/shutuba.html?race_id=${raceId}`,
+  ];
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, {
+        headers: FETCH_HEADERS,
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!res.ok) continue;
+
+      const buffer = await res.arrayBuffer();
+      const html = await decodeBuffer(buffer);
+
+      // レース名抽出
+      const titleMatch = html.match(/<title>([^<]+)<\/title>/);
+      const raceName = titleMatch
+        ? titleMatch[1].replace(/\s*[-|].*$/, "").trim()
+        : "";
+
+      const horseLines = parseHorses(html);
+      if (horseLines.length === 0) continue;
+
+      // 文字化けチェック
+      const combined = horseLines.join("");
+      const garbageCount = [...combined].filter(c => c === "\uFFFD" || c === "?").length;
+      if (garbageCount > 5) continue;
+
+      return {
+        info: `${venue} ${raceNo}R${raceName ? ` ${raceName}` : ""}`,
+        horses: horseLines.join("\n"),
+      };
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
 }
 
 export async function POST(req: NextRequest) {

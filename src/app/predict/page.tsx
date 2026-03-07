@@ -32,23 +32,12 @@ function getTodayJST(): string {
   return `${y}-${m}-${d}`;
 }
 
-const VENUES = ["東京", "中山", "京都", "阪神", "札幌", "函館", "福島", "新潟", "中京", "小倉"];
-const RACE_CLASSES = ["重賞", "オープン", "3勝クラス", "2勝クラス", "1勝クラス", "未勝利", "新馬"];
 
 export default function PredictPage() {
   const [date, setDate] = useState(getTodayJST());
   const [races, setRaces] = useState<Race[]>([]);
   const [selectedRaceId, setSelectedRaceId] = useState("");
   const [racesLoading, setRacesLoading] = useState(false);
-  const [isFallback, setIsFallback] = useState(false);
-
-  // 手動入力モード用
-  const [manualVenue, setManualVenue] = useState("東京");
-  const [manualRaceNo, setManualRaceNo] = useState("11");
-  const [manualClass, setManualClass] = useState("重賞");
-  const [manualSurface, setManualSurface] = useState("芝");
-  const [manualDistance, setManualDistance] = useState("2000");
-  const [manualHorses, setManualHorses] = useState("");
 
   const [result, setResult] = useState("");
   const [raceInfo, setRaceInfo] = useState("");
@@ -67,7 +56,6 @@ export default function PredictPage() {
     if (!date) return;
     setRaces([]);
     setSelectedRaceId("");
-    setIsFallback(false);
     setResult("");
     setRacesLoading(true);
 
@@ -78,12 +66,9 @@ export default function PredictPage() {
         if (data.races && data.races.length > 0) {
           setRaces(data.races);
           setSelectedRaceId(data.races[0].raceId);
-          setIsFallback(false);
-        } else {
-          setIsFallback(true);
         }
       })
-      .catch(() => setIsFallback(true))
+      .catch(() => {})
       .finally(() => setRacesLoading(false));
   }, [date]);
 
@@ -93,11 +78,7 @@ export default function PredictPage() {
       return;
     }
 
-    if (isFallback && !manualHorses.trim()) {
-      setError("出走馬情報を入力してください");
-      return;
-    }
-    if (!isFallback && !selectedRaceId) {
+    if (!selectedRaceId) {
       setError("レースを選択してください");
       return;
     }
@@ -108,9 +89,7 @@ export default function PredictPage() {
     setRaceInfo("");
 
     try {
-      const body = isFallback
-        ? { venue: manualVenue, raceNo: manualRaceNo, raceClass: manualClass, surface: manualSurface, distance: manualDistance, horses: manualHorses }
-        : { raceId: selectedRaceId };
+      const body = { raceId: selectedRaceId };
 
       const res = await fetch("/api/predict", {
         method: "POST",
@@ -120,12 +99,9 @@ export default function PredictPage() {
       if (res.status === 429) { setShowPaywall(true); return; }
       const data = await res.json();
 
-      // 出走表取得失敗 → 手動入力モードに切り替え
+      // 出走表取得失敗
       if (res.status === 502 && data.error === "FETCH_FAILED") {
-        setIsFallback(true);
-        if (data.venue) setManualVenue(data.venue);
-        if (data.raceNo) setManualRaceNo(String(data.raceNo));
-        setError("出走表の自動取得ができませんでした。馬名・騎手名などを手動で入力してください。");
+        setError("出走表の自動取得ができませんでした。時間をおいてから別のレースを選択してください。");
         return;
       }
 
@@ -148,7 +124,7 @@ export default function PredictPage() {
     return acc;
   }, {});
 
-  const shareLabel = raceInfo || (isFallback ? `${manualVenue}${manualRaceNo}R` : "競馬");
+  const shareLabel = raceInfo || "競馬";
 
   return (
     <div className="min-h-screen bg-white">
@@ -205,8 +181,7 @@ export default function PredictPage() {
           <div className="flex items-center gap-2 text-gray-500 text-sm py-4">
             <span className="animate-spin inline-block">⟳</span> レース一覧を取得中...
           </div>
-        ) : !isFallback ? (
-          /* 自動取得モード */
+        ) : (
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-600 mb-1">レース選択</label>
             {races.length > 0 ? (
@@ -227,71 +202,16 @@ export default function PredictPage() {
               <p className="text-gray-400 text-sm py-2">レースが見つかりませんでした</p>
             )}
           </div>
-        ) : (
-          /* 手動入力モード（自動取得失敗時のフォールバック） */
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-            <p className="text-yellow-700 text-xs mb-4">
-              ⚠ レース一覧の自動取得ができませんでした。レース情報を手動で入力してください。
-            </p>
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">開催場</label>
-                <select value={manualVenue} onChange={(e) => setManualVenue(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-green-500">
-                  {VENUES.map((v) => <option key={v}>{v}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">レース番号</label>
-                <select value={manualRaceNo} onChange={(e) => setManualRaceNo(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-green-500">
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
-                    <option key={n} value={String(n)}>{n}R</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">クラス</label>
-                <select value={manualClass} onChange={(e) => setManualClass(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-green-500">
-                  {RACE_CLASSES.map((c) => <option key={c}>{c}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">コース</label>
-                <div className="flex gap-1">
-                  <select value={manualSurface} onChange={(e) => setManualSurface(e.target.value)}
-                    className="flex-1 border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-green-500">
-                    <option>芝</option><option>ダート</option>
-                  </select>
-                  <input type="text" value={manualDistance} onChange={(e) => setManualDistance(e.target.value)}
-                    placeholder="距離m"
-                    className="flex-1 border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-green-500" />
-                </div>
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">出走馬情報（馬名・騎手・オッズ等）</label>
-              <textarea
-                value={manualHorses}
-                onChange={(e) => setManualHorses(e.target.value)}
-                placeholder={"例:\n1番 ディープインパクト 武豊 2.3倍\n2番 オルフェーヴル 福永 4.5倍"}
-                className="w-full h-32 border border-gray-300 rounded-lg p-3 text-sm font-mono focus:outline-none focus:border-green-500"
-              />
-            </div>
-          </div>
         )}
 
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
         <button
           onClick={handlePredict}
-          disabled={loading || (!isFallback && !selectedRaceId && !racesLoading)}
+          disabled={loading || (!selectedRaceId && !racesLoading)}
           className="w-full bg-green-700 hover:bg-green-800 disabled:bg-gray-300 text-white font-bold py-4 rounded-xl text-lg transition-colors"
         >
-          {loading
-            ? (isFallback ? "🤖 AI分析中..." : "🤖 出走馬データ取得 & AI分析中...")
-            : "🏇 このレースを予想する"}
+          {loading ? "🤖 出走馬データ取得 & AI分析中..." : "🏇 このレースを予想する"}
         </button>
 
         {/* 予想結果 */}
