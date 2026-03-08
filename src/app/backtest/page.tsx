@@ -71,9 +71,10 @@ function isSkipRecommended(prediction: string): boolean {
 function extractAIPick(prediction: string, mode: "fukusho" | "standard"): AIPick {
   let section: string;
   if (mode === "fukusho") {
-    // 【複勝推奨】セクションが存在する場合のみ抽出。全文フォールバックは行わない
+    // 【複勝推奨】セクションを抽出
     const sectionMatch = prediction.match(/【複勝推奨】([\s\S]*?)(?=【|$)/);
-    if (!sectionMatch) {
+    if (!sectionMatch || !sectionMatch[1].trim()) {
+      // セクション未検出 or 空の場合は全文の先頭300文字を表示用に返す
       return { horseName: "", horseNum: "", rawText: prediction.slice(0, 300) };
     }
     section = sectionMatch[1].trim();
@@ -82,7 +83,7 @@ function extractAIPick(prediction: string, mode: "fukusho" | "standard"): AIPick
     const sectionMatch =
       prediction.match(/【本命[（(◎)）】][^】]*】([\s\S]*?)(?=【|$)/) ||
       prediction.match(/本命[（(◎)）\s]*([^\n]{0,80})/);
-    if (!sectionMatch) {
+    if (!sectionMatch || !sectionMatch[1].trim()) {
       return { horseName: "", horseNum: "", rawText: prediction.slice(0, 300) };
     }
     section = sectionMatch[1].trim();

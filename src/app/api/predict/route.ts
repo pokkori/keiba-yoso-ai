@@ -64,6 +64,39 @@ interface HorseBasic {
   horseId?: string;  // netkeiba horse ID (10-12 digits)
 }
 
+// ─── Parse db.netkeiba.com/race/{id}/ result table → horse list ──────────────
+// race_table_01 columns: 着順, 枠番, 馬番, 馬名, 性齢, 斤量, 騎手, タイム, 着差, 単勝, 人気, 馬体重
+
+function parseHorsesFromDBResultPage(html: string): HorseBasic[] {
+  const horses: HorseBasic[] = [];
+  const tableMatch = html.match(/<table[^>]*class="[^"]*race_table_01[^"]*"[^>]*>([\s\S]*?)<\/table>/);
+  if (!tableMatch) return [];
+
+  const getText = (h: string) => h.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+
+  let m;
+  const rowPattern = /<tr[^>]*>([\s\S]*?)<\/tr>/g;
+  while ((m = rowPattern.exec(tableMatch[1])) !== null) {
+    const rowHtml = m[1];
+    if (/<th/.test(rowHtml)) continue; // skip header rows
+
+    const cellsRaw = [...rowHtml.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)];
+    if (cellsRaw.length < 7) continue;
+
+    const num = getText(cellsRaw[2][1]);
+    const name = getText(cellsRaw[3][1]);
+    if (!num.match(/^\d{1,2}$/) || !name || name === "馬名") continue;
+
+    const horseId =
+      cellsRaw[3][1].match(/href="[^"]*\/horse\/(\d{10,12})(?:\/|[?#"])/)?.[1];
+    const jockey = getText(cellsRaw[6][1]) || undefined;
+    const weight = getText(cellsRaw[5][1]).match(/\d{2}(?:\.\d)?/)?.[0];
+
+    horses.push({ num, name, jockey, weight, horseId });
+  }
+  return horses;
+}
+
 // ─── Parse shutuba HTML → horse list with IDs ────────────────────────────────
 
 function parseHorsesBasic(html: string): HorseBasic[] {
@@ -149,7 +182,14 @@ async function fetchShutuba(raceId: string, log: string[]): Promise<ShutubResult
       const html = await decodeBuffer(buffer);
       log.push(`shutuba ${key}: len=${html.length}`);
 
-      const horses = parseHorsesBasic(html);
+      let horses = parseHorsesBasic(html);
+      // db.netkeiba.com / result.html は race_table_01 形式 → 専用パーサーで再試行
+      if (horses.length === 0) {
+        horses = parseHorsesFromDBResultPage(html);
+        if (horses.length > 0) {
+          log.push(`shutuba ${key}: db_result_format=${horses.length}`);
+        }
+      }
       const withId = horses.filter(h => h.horseId).length;
       log.push(`shutuba ${key}: horses=${horses.length} withId=${withId}`);
 
@@ -447,10 +487,11 @@ ${budgetLine}
 ・距離・馬場・コース適性がデータで裏付けられる
 ・想定複勝払戻が2.0倍以上（1.8倍未満の馬は候補から外す）
 
-以下の形式で必ず出力してください：
+以下の形式で必ず出力してください（セクションの順序・形式を厳守）：
 
 【推奨判定】買い推奨 or スキップ推奨（理由を一言で）
-【複勝推奨】馬番 馬名（想定人気：〇番人気）— 推奨理由（近走成績・騎手・適性・なぜアンダーバリューかを具体的に）
+【複勝推奨】X番 馬名（想定人気：〇番人気）— 推奨理由（近走成績・騎手・適性・なぜアンダーバリューかを具体的に）
+※買い推奨の場合は必ず「X番 馬名」の形式で馬番から記入すること。スキップ推奨の場合はこの行を省略可。
 【期待値評価】複勝オッズ想定X.X〜X.X倍 / 3着内確率推定XX% → 期待値X.X（1.0以上が買い）
 【レース安定度】★★★★☆ — 荒れにくい/荒れやすい理由
 【リスク要因】複勝を外す可能性がある要因・注意すべきライバル馬
