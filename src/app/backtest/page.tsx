@@ -181,9 +181,14 @@ export default function BacktestPage() {
           ? `レースデータ取得失敗（${predictData.venue ?? ""}${predictData.raceNo ?? ""}R）`
           : predictData?.error ?? "AI予想API失敗")
         : undefined;
-      const skip = betMode === "fukusho" && rawPrediction ? isSkipRecommended(rawPrediction) : false;
-      // スキップ時は馬推奨を無視（AIが矛盾した出力をしても混乱しないよう）
-      const aiPick = rawPrediction && !skip ? extractAIPick(rawPrediction, betMode) : undefined;
+      // まず馬推奨を抽出し、推奨馬がいる場合はスキップ扱いにしない
+      const aiPickRaw = rawPrediction ? extractAIPick(rawPrediction, betMode) : undefined;
+      const hasHorsePick = !!aiPickRaw?.horseNum;
+      // スキップ = AIがスキップ推奨 かつ 推奨馬なし（矛盾を防ぐ）
+      const skip = betMode === "fukusho" && rawPrediction
+        ? isSkipRecommended(rawPrediction) && !hasHorsePick
+        : false;
+      const aiPick = hasHorsePick ? aiPickRaw : undefined;
 
       let hit: boolean | undefined;
       let payout: number | undefined;
