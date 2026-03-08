@@ -82,12 +82,27 @@ function HitBadge({ hit, profit }: { hit: boolean; profit: number }) {
   return <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600">✗ 外れ -¥1,000</span>;
 }
 
+async function startCheckout(plan: string) {
+  const res = await fetch("/api/stripe/checkout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ plan }),
+  });
+  const data = await res.json();
+  if (data.url) window.location.href = data.url;
+}
+
 export default function BacktestPage() {
   const [date, setDate] = useState(getJSTDateStr());
   const [races, setRaces] = useState<Race[]>([]);
   const [racesLoading, setRacesLoading] = useState(false);
   const [rows, setRows] = useState<RaceRow[]>([]);
   const [runningAll, setRunningAll] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/status").then(r => r.json()).then(d => setIsPremium(d.isPremium));
+  }, []);
 
   // レース一覧を取得
   useEffect(() => {
@@ -117,27 +132,22 @@ export default function BacktestPage() {
     setRows(prev => prev.map((r, i) => i === idx ? { ...r, status: "loading" } : r));
 
     try {
-      const [predictRes, resultRes] = await Promise.all([
-        fetch("/api/predict", {
+      // 非プレミアムは結果のみ取得、プレミアムはAI+結果を並列取得
+      const fetches: Promise<Response>[] = [fetch(`/api/result?raceId=${row.race.raceId}`)];
+      if (isPremium) {
+        fetches.push(fetch("/api/predict", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ raceId: row.race.raceId, mode: "fukusho" }),
-        }),
-        fetch(`/api/result?raceId=${row.race.raceId}`),
-      ]);
-
-      const predictData = await predictRes.json();
-      const resultData = resultRes.ok ? await resultRes.json() : null;
-
-      if (predictData.error && !resultData) {
-        setRows(prev => prev.map((r, i) => i === idx
-          ? { ...r, status: "error", errorMsg: predictData.error }
-          : r));
-        return;
+        }));
       }
 
-      const aiPick = predictData.prediction ? extractAIPick(predictData.prediction) : undefined;
+      const [resultRes, predictRes] = await Promise.all(fetches);
+      const resultData = resultRes.ok ? await resultRes.json() : null;
+      const predictData = predictRes ? (predictRes.status === 429 ? { error: "LIMIT_REACHED" } : await predictRes.json()) : null;
+
       const result: RaceResult | undefined = resultData?.top3 ? resultData : undefined;
+      const aiPick = predictData?.prediction ? extractAIPick(predictData.prediction) : undefined;
 
       let hit: boolean | undefined;
       let payout: number | undefined;
@@ -149,7 +159,6 @@ export default function BacktestPage() {
         if (hit) {
           const payoutInfo = result.fukusho.find(f => f.num === aiPick.horseNum);
           payout = payoutInfo?.payout ?? 0;
-          // ¥1,000 bet: profit = (payout / 100) * 1000 - 1000
           profit = Math.round((payout / 100) * 1000 - 1000);
         } else {
           payout = 0;
@@ -157,8 +166,10 @@ export default function BacktestPage() {
         }
       }
 
+      const errorMsg = !result ? "結果データ取得失敗" : undefined;
+
       setRows(prev => prev.map((r, i) => i === idx
-        ? { ...r, status: "done", result, aiPick, hit, payout, profit }
+        ? { ...r, status: result ? "done" : "error", result, aiPick, hit, payout, profit, errorMsg }
         : r));
     } catch (e) {
       setRows(prev => prev.map((r, i) => i === idx
@@ -252,6 +263,20 @@ export default function BacktestPage() {
           </div>
         ) : (
           <>
+            {/* プレミアム促進バナー（非プレミアム向け） */}
+            {!isPremium && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-bold text-amber-800">🎯 AI的中照合はプレミアム限定</p>
+                  <p className="text-xs text-amber-600 mt-0.5">無料では実際の結果確認のみ。プレミアムでAI予想との照合・的中率・収支計算が使えます。</p>
+                </div>
+                <button onClick={() => startCheckout("basic")}
+                  className="shrink-0 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-2 rounded-lg whitespace-nowrap">
+                  ¥980/月で有効化
+                </button>
+              </div>
+            )}
+
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm text-gray-600">発走済み {races.length}レース</p>
               <button
@@ -259,8 +284,8 @@ export default function BacktestPage() {
                 disabled={runningAll || rows.every(r => r.status === "done")}
                 className="text-sm bg-green-700 hover:bg-green-800 disabled:bg-gray-300 text-white px-4 py-2 rounded-xl font-bold transition-colors">
                 {runningAll ? (
-                  <span className="flex items-center gap-1.5"><span className="animate-spin">⟳</span>分析中...</span>
-                ) : "全レース一括分析"}
+                  <span className="flex items-center gap-1.5"><span className="animate-spin">⟳</span>取得中...</span>
+                ) : isPremium ? "全レース一括分析" : "全レース結果を確認"}
               </button>
             </div>
 
@@ -279,8 +304,8 @@ export default function BacktestPage() {
                       )}
                       {row.status === "idle" && (
                         <button onClick={() => analyzeRace(idx)}
-                          className="text-xs bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-lg font-bold">
-                          🎯 分析
+                          className={`text-xs text-white px-3 py-1 rounded-lg font-bold ${isPremium ? "bg-amber-500 hover:bg-amber-600" : "bg-green-600 hover:bg-green-700"}`}>
+                          {isPremium ? "🎯 AI分析" : "📋 結果確認"}
                         </button>
                       )}
                       {row.status === "error" && (
@@ -294,19 +319,21 @@ export default function BacktestPage() {
 
                   {/* 結果表示 */}
                   {row.status === "done" && (
-                    <div className="grid grid-cols-2 gap-3 mt-2 text-xs">
-                      {/* AI予想 */}
-                      <div className="bg-amber-50 rounded-lg p-3">
-                        <div className="font-bold text-amber-800 mb-1">🎯 AI複勝推奨</div>
-                        {row.aiPick?.horseNum ? (
-                          <div>
-                            <span className="text-gray-800 font-medium">{row.aiPick.horseNum}番 {row.aiPick.horseName}</span>
-                            <p className="text-gray-500 mt-1 leading-snug line-clamp-3">{row.aiPick.rawText}</p>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">取得失敗</span>
-                        )}
-                      </div>
+                    <div className={`grid gap-3 mt-2 text-xs ${isPremium ? "grid-cols-2" : "grid-cols-1"}`}>
+                      {/* AI予想（プレミアムのみ） */}
+                      {isPremium && (
+                        <div className="bg-amber-50 rounded-lg p-3">
+                          <div className="font-bold text-amber-800 mb-1">🎯 AI複勝推奨</div>
+                          {row.aiPick?.horseNum ? (
+                            <div>
+                              <span className="text-gray-800 font-medium">{row.aiPick.horseNum}番 {row.aiPick.horseName}</span>
+                              <p className="text-gray-500 mt-1 leading-snug line-clamp-3">{row.aiPick.rawText}</p>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-xs">AI予想の取得に失敗しました</span>
+                          )}
+                        </div>
+                      )}
 
                       {/* 実際の結果 */}
                       <div className={`rounded-lg p-3 ${row.hit ? "bg-green-50" : "bg-gray-50"}`}>
