@@ -34,9 +34,10 @@ interface RaceRow {
   result?: RaceResult;
   aiPick?: AIPick;
   errorMsg?: string;
+  skip?: boolean;        // true = AI recommended skipping this race
   hit?: boolean;         // true = AI pick placed (top3)
-  payout?: number;       // actual fukusho payout for AI pick
-  profit?: number;       // payout - 1000 (per ¥1,000 bet)
+  payout?: number;       // actual fukusho payout for AI pick (undefined = unknown)
+  profit?: number;       // net profit (undefined = unknown payout)
 }
 
 function getJSTDateStr(offset = 0): string {
@@ -55,6 +56,12 @@ function extractHorseNum(text: string): string {
   return m ? m[1] : "";
 }
 
+// スキップ推奨かどうかを判定
+function isSkipRecommended(prediction: string): boolean {
+  const judgement = prediction.match(/【推奨判定】([^\n]*)/)?.[1] ?? "";
+  return judgement.includes("スキップ") || judgement.includes("skip");
+}
+
 // AI予想から複勝推奨セクションを抽出
 function extractAIPick(prediction: string): AIPick {
   const section = prediction.match(/【複勝推奨】([\s\S]*?)(?=【|$)/)?.[1]?.trim() ?? prediction;
@@ -71,11 +78,17 @@ function StatusBadge({ status }: { status: RaceStatus }) {
   return null;
 }
 
-function HitBadge({ hit, profit }: { hit: boolean; profit: number }) {
+function HitBadge({ hit, profit, skip }: { hit: boolean; profit?: number; skip?: boolean }) {
+  if (skip) {
+    return <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">― 推奨なし</span>;
+  }
   if (hit) {
+    if (profit === undefined) {
+      return <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">✓ 的中（払戻不明）</span>;
+    }
     return (
-      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${profit > 0 ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
-        ✓ 的中 {profit > 0 ? `+¥${profit}` : `¥${profit}`}
+      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${profit >= 0 ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+        ✓ 的中 {profit >= 0 ? `+¥${profit.toLocaleString()}` : `±¥0`}
       </span>
     );
   }
@@ -147,21 +160,22 @@ export default function BacktestPage() {
       const predictData = predictRes ? (predictRes.status === 429 ? { error: "LIMIT_REACHED" } : await predictRes.json()) : null;
 
       const result: RaceResult | undefined = resultData?.top3 ? resultData : undefined;
-      const aiPick = predictData?.prediction ? extractAIPick(predictData.prediction) : undefined;
+      const rawPrediction: string | undefined = predictData?.prediction;
+      const aiPick = rawPrediction ? extractAIPick(rawPrediction) : undefined;
+      const skip = rawPrediction ? isSkipRecommended(rawPrediction) : false;
 
       let hit: boolean | undefined;
       let payout: number | undefined;
       let profit: number | undefined;
 
-      if (aiPick && result && aiPick.horseNum) {
+      if (!skip && aiPick && result && aiPick.horseNum) {
         const finisher = result.top3.find(f => f.num === aiPick.horseNum);
         hit = !!finisher;
         if (hit) {
           const payoutInfo = result.fukusho.find(f => f.num === aiPick.horseNum);
-          payout = payoutInfo?.payout ?? 0;
-          profit = Math.round((payout / 100) * 1000 - 1000);
+          payout = payoutInfo?.payout; // undefined = parsing failed
+          profit = payout !== undefined ? Math.round((payout / 100) * 1000 - 1000) : undefined;
         } else {
-          payout = 0;
           profit = -1000;
         }
       }
@@ -169,7 +183,7 @@ export default function BacktestPage() {
       const errorMsg = !result ? "結果データ取得失敗" : undefined;
 
       setRows(prev => prev.map((r, i) => i === idx
-        ? { ...r, status: result ? "done" : "error", result, aiPick, hit, payout, profit, errorMsg }
+        ? { ...r, status: result ? "done" : "error", result, aiPick, skip, hit, payout, profit, errorMsg }
         : r));
     } catch (e) {
       setRows(prev => prev.map((r, i) => i === idx
@@ -189,11 +203,15 @@ export default function BacktestPage() {
     setRunningAll(false);
   }
 
-  // 集計
-  const doneRows = rows.filter(r => r.status === "done" && r.hit !== undefined);
-  const hitCount = doneRows.filter(r => r.hit).length;
-  const totalProfit = doneRows.reduce((acc, r) => acc + (r.profit ?? -1000), 0);
-  const totalBet = doneRows.length * 1000;
+  // 集計（スキップ推奨レースはP&L対象外）
+  const doneRows = rows.filter(r => r.status === "done");
+  const bettingRows = doneRows.filter(r => !r.skip && r.hit !== undefined);
+  const skipCount = doneRows.filter(r => r.skip).length;
+  const hitCount = bettingRows.filter(r => r.hit).length;
+  // profit undefined（払戻不明）の的中は +0 として計算
+  const totalProfit = bettingRows.reduce((acc, r) =>
+    acc + (r.profit !== undefined ? r.profit : r.hit ? 0 : -1000), 0);
+  const totalBet = bettingRows.length * 1000;
   const roi = totalBet > 0 ? Math.round((totalProfit / totalBet) * 100) : 0;
 
   return (
@@ -232,9 +250,9 @@ export default function BacktestPage() {
         {doneRows.length > 0 && (
           <div className="grid grid-cols-4 gap-3 mb-5">
             {[
-              { label: "分析済み", value: `${doneRows.length}R`, color: "text-gray-800" },
+              { label: "ベット", value: `${bettingRows.length}R`, color: "text-gray-800" },
               { label: "的中", value: `${hitCount}R`, color: "text-green-700" },
-              { label: "的中率", value: `${Math.round((hitCount / doneRows.length) * 100)}%`, color: hitCount / doneRows.length >= 0.7 ? "text-green-700" : "text-red-600" },
+              { label: "的中率", value: bettingRows.length > 0 ? `${Math.round((hitCount / bettingRows.length) * 100)}%` : "-", color: bettingRows.length > 0 && hitCount / bettingRows.length >= 0.7 ? "text-green-700" : "text-red-600" },
               { label: "収支", value: `${totalProfit >= 0 ? "+" : ""}¥${totalProfit.toLocaleString()}`, color: totalProfit >= 0 ? "text-green-700" : "text-red-600" },
             ].map(item => (
               <div key={item.label} className="bg-white rounded-xl border border-gray-200 p-3 text-center shadow-sm">
@@ -248,7 +266,7 @@ export default function BacktestPage() {
           <div className="bg-white rounded-xl border border-gray-200 px-4 py-2 mb-5 text-xs text-gray-500 flex justify-between">
             <span>投資総額: ¥{totalBet.toLocaleString()}</span>
             <span>回収率: {roi >= 0 ? "+" : ""}{roi}%</span>
-            <span>※ 複勝¥1,000×{doneRows.length}レース</span>
+            <span>{skipCount > 0 ? `スキップ${skipCount}R含む` : `複勝¥1,000×${bettingRows.length}R`}</span>
           </div>
         )}
 
@@ -285,8 +303,8 @@ export default function BacktestPage() {
                     <span className="font-bold text-sm text-gray-800">{row.race.label}</span>
                     <div className="flex items-center gap-2">
                       <StatusBadge status={row.status} />
-                      {row.status === "done" && row.hit !== undefined && (
-                        <HitBadge hit={row.hit} profit={row.profit ?? -1000} />
+                      {row.status === "done" && (row.skip || row.hit !== undefined) && (
+                        <HitBadge hit={row.hit ?? false} profit={row.profit} skip={row.skip} />
                       )}
                       {row.status === "idle" && (
                         <button onClick={() => analyzeRace(idx)}
@@ -307,9 +325,11 @@ export default function BacktestPage() {
                   {row.status === "done" && (
                     <div className="grid grid-cols-2 gap-3 mt-2 text-xs">
                       {/* AI予想 */}
-                      <div className="bg-amber-50 rounded-lg p-3">
-                        <div className="font-bold text-amber-800 mb-1">🎯 AI複勝推奨</div>
-                        {row.aiPick?.horseNum ? (
+                      <div className={`rounded-lg p-3 ${row.skip ? "bg-gray-50" : "bg-amber-50"}`}>
+                        <div className={`font-bold mb-1 ${row.skip ? "text-gray-500" : "text-amber-800"}`}>🎯 AI複勝推奨</div>
+                        {row.skip ? (
+                          <span className="text-gray-400 text-xs">このレースはスキップ推奨（ベット対象外）</span>
+                        ) : row.aiPick?.horseNum ? (
                           <div>
                             <span className="text-gray-800 font-medium">{row.aiPick.horseNum}番 {row.aiPick.horseName}</span>
                             <p className="text-gray-500 mt-1 leading-snug line-clamp-3">{row.aiPick.rawText}</p>
@@ -331,7 +351,7 @@ export default function BacktestPage() {
                                 <div key={f.pos}
                                   className={`flex items-center justify-between ${isAIPick ? "font-bold text-green-700" : "text-gray-600"}`}>
                                   <span>{f.pos}着 {f.num}番 {f.name} {isAIPick ? "← AI推奨" : ""}</span>
-                                  {payout ? <span className="text-gray-500">¥{payout}</span> : null}
+                                  {payout !== undefined ? <span className="text-gray-500">¥{payout}</span> : isAIPick && row.hit ? <span className="text-gray-400 text-xs">払戻不明</span> : null}
                                 </div>
                               );
                             })}
