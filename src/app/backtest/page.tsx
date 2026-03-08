@@ -49,11 +49,17 @@ function getJSTDateStr(offset = 0): string {
 
 // AI出力から馬番を抽出
 function extractHorseNum(text: string): string {
-  // 「複勝推奨】X番 馬名」パターン
   const m =
-    text.match(/複勝推奨[】\s]*(\d{1,2})番/) ||
-    text.match(/^(\d{1,2})番/) ||
-    text.match(/(\d{1,2})番\s*[^\d]/);
+    // 「複勝推奨】X番」パターン（マークダウン記号を許容）
+    text.match(/複勝推奨[】\s*\*]*(\d{1,2})番/) ||
+    // 行頭「X番」（マークダウン **X番** を含む）
+    text.match(/^[\s*]*(\d{1,2})番/) ||
+    // 「推奨】X番」など
+    text.match(/推奨[】\s*\*]*(\d{1,2})番/) ||
+    // 「X番 馬名（カタカナ）」
+    text.match(/(\d{1,2})番\s+[\u30A0-\u30FF]/) ||
+    // 任意の「X番」+ 非数字
+    text.match(/(\d{1,2})番[^\d目番台帯]/);
   return m ? m[1] : "";
 }
 
@@ -188,7 +194,8 @@ export default function BacktestPage() {
       const skip = betMode === "fukusho" && rawPrediction
         ? isSkipRecommended(rawPrediction) && !hasHorsePick
         : false;
-      const aiPick = hasHorsePick ? aiPickRaw : undefined;
+      // スキップでなければ aiPick を保持（horseNum が空でも rawText 表示のため）
+      const aiPick = !skip ? aiPickRaw : undefined;
 
       let hit: boolean | undefined;
       let payout: number | undefined;
@@ -376,6 +383,9 @@ export default function BacktestPage() {
                             <span className="text-gray-800 font-medium">{row.aiPick.horseNum}番 {row.aiPick.horseName}</span>
                             <p className="text-gray-500 mt-1 leading-snug line-clamp-3">{row.aiPick.rawText}</p>
                           </div>
+                        ) : row.aiPick?.rawText ? (
+                          // 馬番抽出失敗 — AI予想テキストをそのまま表示
+                          <p className="text-gray-500 text-xs leading-snug line-clamp-4">{row.aiPick.rawText}</p>
                         ) : (
                           <span className="text-gray-400 text-xs">
                             {row.predictError ?? "AI予想の取得に失敗しました"}
