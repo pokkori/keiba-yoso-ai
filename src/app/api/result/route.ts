@@ -42,13 +42,10 @@ function stripTags(s: string): string {
   return s.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
 }
 
-function parseResultHtml(html: string, raceId: string): RaceResultData {
+function parseTop3(html: string): FinisherRow[] {
   const top3: FinisherRow[] = [];
-  const fukusho: FukushoPayout[] = [];
 
-  // ── 着順テーブルをパース ──────────────────────────────────────
-  // netkeibaの結果テーブルは <table class="RaceTable"> 内の
-  // <tr class="HorseList"> or <tr class="Oops"> 等
+  // ── race.netkeiba.com: <tr class="HorseList"> ──
   const tableM = html.match(/<table[^>]*class="[^"]*RaceTable[^"]*"[^>]*>([\s\S]*?)<\/table>/);
   const tableHtml = tableM ? tableM[1] : html;
 
@@ -57,80 +54,150 @@ function parseResultHtml(html: string, raceId: string): RaceResultData {
   while ((rowM = rowPattern.exec(tableHtml)) !== null) {
     const cells = [...rowM[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(c => stripTags(c[1]));
     if (cells.length < 5) continue;
-
-    // 着順は最初の数値セル
     const posCell = cells.find(c => /^\d{1,2}$/.test(c.trim()));
     const pos = posCell ? parseInt(posCell) : NaN;
     if (isNaN(pos) || pos > 3) continue;
-
-    // 馬番は1〜2桁の数値、着順と別のもの
     const numCell = cells.filter(c => /^\d{1,2}$/.test(c.trim()) && c !== posCell)[0] ?? "";
-
-    // 馬名: カタカナ/漢字交じり、3文字以上
     const nameCell = cells.find(c => /^[\u30A0-\u30FF\u4E00-\u9FFF\u3040-\u309F][\s\S]{2,20}$/.test(c.trim())) ?? "";
+    if (numCell && nameCell) top3.push({ pos, num: numCell.trim(), name: nameCell.trim() });
+  }
+  if (top3.length > 0) { top3.sort((a, b) => a.pos - b.pos); return top3; }
 
-    if (numCell && nameCell) {
-      top3.push({ pos, num: numCell.trim(), name: nameCell.trim() });
+  // ── db.netkeiba.com: race_table_01 形式 ──
+  const dbTableM = html.match(/<table[^>]*class="[^"]*race_table_01[^"]*"[^>]*>([\s\S]*?)<\/table>/);
+  if (dbTableM) {
+    const dbRowPat = /<tr[^>]*>([\s\S]*?)<\/tr>/g;
+    let dr: RegExpExecArray | null;
+    while ((dr = dbRowPat.exec(dbTableM[1])) !== null) {
+      if (/<th/.test(dr[1])) continue;
+      const cells = [...dr[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(c =>
+        c[1].replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim()
+      );
+      if (cells.length < 7) continue;
+      const pos = parseInt(cells[0]);
+      if (isNaN(pos) || pos > 3) continue;
+      const num = cells[2]; // 馬番
+      const name = cells[3]; // 馬名
+      if (/^\d{1,2}$/.test(num) && name) top3.push({ pos, num, name });
     }
   }
   top3.sort((a, b) => a.pos - b.pos);
+  return top3;
+}
 
-  // ── 複勝払戻テーブルをパース ─────────────────────────────────
-  const rawPayoutSection =
+function parseFukushoPayout(html: string, top3: FinisherRow[]): FukushoPayout[] {
+  const fukusho: FukushoPayout[] = [];
+
+  // ── Method 1: UmaNum + Payout span（race.netkeiba.com の標準形式）──
+  // 複勝セクション（単勝の次、枠連の前）を特定してから抽出
+  const fukushoBlockM =
+    html.match(/class="[^"]*Pay_Fukusho[^"]*"[^>]*>([\s\S]*?)(?=class="[^"]*Pay_|$)/) ||
+    html.match(/複勝[\s\S]{0,100}<\/(?:dt|th)>([\s\S]*?)(?=<(?:dt|th)|枠連|馬連|ワイド|$)/);
+
+  const searchHtml = fukushoBlockM ? fukushoBlockM[1] : html;
+
+  // <span class="UmaNum">X</span> と <span class="Payout">XXX</span> のペアを探す
+  // netkeibaでは <li> 内に馬番→払戻の順で並ぶ
+  const liPattern = /<li[^>]*>([\s\S]*?)<\/li>/g;
+  let liM: RegExpExecArray | null;
+  while ((liM = liPattern.exec(searchHtml)) !== null && fukusho.length < 3) {
+    const liHtml = liM[1];
+    const umaNum = liHtml.match(/<span[^>]*class="[^"]*UmaNum[^"]*"[^>]*>(\d{1,2})<\/span>/)?.[1];
+    const payoutRaw = liHtml.match(/<span[^>]*class="[^"]*Payout[^"]*"[^>]*>([\d,]+)<\/span>/)?.[1];
+    if (umaNum && payoutRaw) {
+      const payout = parseInt(payoutRaw.replace(/,/g, ""));
+      if (payout >= 100) {
+        const fin = top3.find(f => f.num === umaNum);
+        fukusho.push({ num: umaNum, name: fin?.name ?? "不明", payout });
+      }
+    }
+  }
+  if (fukusho.length > 0) return fukusho;
+
+  // ── Method 2: Payout_Detail_Table の td セル内の馬番・払戻 ──
+  // 複勝行: <th>複勝</th><td>馬番リスト</td><td>払戻リスト</td>
+  const pDetailM = html.match(/<th[^>]*>複勝<\/th>([\s\S]*?)(?=<th|$)/);
+  if (pDetailM) {
+    const tds = [...pDetailM[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(c => c[1]);
+    if (tds.length >= 2) {
+      const nums = tds[0].replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").trim()
+        .split(/[\n\s]+/).filter(n => /^\d{1,2}$/.test(n));
+      const amts = tds[1].replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")
+        .replace(/,/g, "").trim().split(/[\n\s]+/)
+        .map(n => parseInt(n)).filter(n => !isNaN(n) && n >= 100);
+      nums.slice(0, 3).forEach((num, i) => {
+        if (amts[i]) {
+          const fin = top3.find(f => f.num === num);
+          fukusho.push({ num, name: fin?.name ?? "不明", payout: amts[i] });
+        }
+      });
+    }
+  }
+  if (fukusho.length > 0) return fukusho;
+
+  // ── Method 3: db.netkeiba.com の race_payback テーブル ──
+  const paybackM = html.match(/<table[^>]*class="[^"]*race_payback[^"]*"[^>]*>([\s\S]*?)<\/table>/);
+  if (paybackM) {
+    const rowPat = /<tr[^>]*>([\s\S]*?)<\/tr>/g;
+    let rm: RegExpExecArray | null;
+    while ((rm = rowPat.exec(paybackM[1])) !== null) {
+      if (!rm[1].includes("複勝")) continue;
+      const tds = [...rm[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(c => c[1]);
+      if (tds.length < 2) continue;
+      const nums = tds[0].replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").trim()
+        .split(/[\n\s]+/).filter(n => /^\d{1,2}$/.test(n));
+      const amts = tds[1].replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")
+        .replace(/,/g, "").trim().split(/[\n\s]+/)
+        .map(n => parseInt(n)).filter(n => !isNaN(n) && n >= 100);
+      nums.slice(0, 3).forEach((num, i) => {
+        if (amts[i]) {
+          const fin = top3.find(f => f.num === num);
+          fukusho.push({ num, name: fin?.name ?? "不明", payout: amts[i] });
+        }
+      });
+      break;
+    }
+  }
+  if (fukusho.length > 0) return fukusho;
+
+  // ── Method 4: テキストベースの汎用パース（カンマ除去対応）──
+  const rawSection =
     html.match(/複勝([\s\S]*?)(?:枠連|馬連|馬単|三連複|三連単|ワイド)/)?.[1] ??
-    html.match(/複勝([\s\S]{0,600}?)$/)?.[1] ?? "";
-  const payoutText = stripTags(rawPayoutSection).replace(/\s+/g, " ").trim();
-
-  if (payoutText) {
-    // Try 1: "馬番 払戻金" ペアパターン（例: "5 140" "3 200"）
-    const pairPat = /\b(\d{1,2})\b\s+(\d{3,5})\b/g;
+    html.match(/複勝([\s\S]{0,800}?)$/)?.[1] ?? "";
+  if (rawSection) {
+    // カンマを除去してから stripTags
+    const payoutText = stripTags(rawSection.replace(/,/g, "")).replace(/\s+/g, " ").trim();
     const seenNums = new Set<string>();
+    const pairPat = /\b(\d{1,2})\b\s+(\d{3,5})\b/g;
     let pm: RegExpExecArray | null;
-    while ((pm = pairPat.exec(payoutText)) !== null) {
-      const num = pm[1];
-      const amt = parseInt(pm[2]);
+    while ((pm = pairPat.exec(payoutText)) !== null && fukusho.length < 3) {
+      const num = pm[1]; const amt = parseInt(pm[2]);
       const numI = parseInt(num);
       if (numI >= 1 && numI <= 18 && amt >= 100 && amt <= 99999 && !seenNums.has(num)) {
         seenNums.add(num);
         const fin = top3.find(f => f.num === num);
         fukusho.push({ num, name: fin?.name ?? "不明", payout: amt });
-        if (fukusho.length >= 3) break;
-      }
-    }
-
-    // Try 2: 馬番と金額を別々に取り出して順番で対応付け
-    if (fukusho.length === 0) {
-      const nums = [...payoutText.matchAll(/\b(\d{1,2})\b/g)]
-        .map(m => m[1]).filter(n => { const i = parseInt(n); return i >= 1 && i <= 18; });
-      const amts = [...payoutText.matchAll(/\b(\d{3,5})\b/g)]
-        .map(m => parseInt(m[1])).filter(n => n >= 100 && n <= 99999);
-      const uniqNums = [...new Set(nums)];
-      for (let i = 0; i < Math.min(3, uniqNums.length, amts.length); i++) {
-        const fin = top3.find(f => f.num === uniqNums[i]);
-        fukusho.push({ num: uniqNums[i], name: fin?.name ?? "不明", payout: amts[i] });
       }
     }
   }
+  if (fukusho.length > 0) return fukusho;
 
-  // Fallback: top3馬番に紐づく「XXX円」をページ全体から探す
-  if (fukusho.length === 0 && top3.length > 0) {
-    for (const f of top3.slice(0, 3)) {
-      const m = html.match(new RegExp(`[^\\d]${f.num}[^\\d][\\s\\S]{0,80}?(\\d{3,5})円`));
-      if (m) {
-        const amt = parseInt(m[1]);
-        if (amt >= 100 && amt <= 99999) fukusho.push({ num: f.num, name: f.name, payout: amt });
-      }
+  // ── Method 5: 各 top3 馬番の近くにある金額をページ全体から探す ──
+  for (const f of top3.slice(0, 3)) {
+    const m = html.replace(/,/g, "").match(
+      new RegExp(`[^\\d]${f.num}[^\\d][\\s\\S]{0,100}?(\\d{3,5})円`)
+    );
+    if (m) {
+      const amt = parseInt(m[1]);
+      if (amt >= 100 && amt <= 99999) fukusho.push({ num: f.num, name: f.name, payout: amt });
     }
   }
+  return fukusho;
+}
 
-  // Final fallback: ページ全体の 複勝らしい金額を top3 順に割り当て
-  if (fukusho.length === 0 && top3.length > 0) {
-    const allAmts = [...html.matchAll(/(\d{3,5})円/g)]
-      .map(m => parseInt(m[1])).filter(n => n >= 100 && n <= 9900).slice(0, 3);
-    top3.slice(0, allAmts.length).forEach((f, i) => {
-      fukusho.push({ num: f.num, name: f.name, payout: allAmts[i] });
-    });
-  }
+function parseResultHtml(html: string, raceId: string): RaceResultData {
+  const top3 = parseTop3(html);
+  const fukusho = top3.length > 0 ? parseFukushoPayout(html, top3) : [];
 
   return {
     raceId,
@@ -160,7 +227,7 @@ export async function GET(req: NextRequest) {
       const html = await decodeBuffer(await res.arrayBuffer());
 
       // 結果が存在するかチェック（発走前はテーブルがない）
-      if (!html.includes("HorseList") && !html.includes("RaceTable")) continue;
+      if (!html.includes("HorseList") && !html.includes("RaceTable") && !html.includes("race_table_01")) continue;
 
       const data = parseResultHtml(html, raceId);
       if (data.top3.length === 0) continue;
