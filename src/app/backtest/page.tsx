@@ -47,19 +47,17 @@ function getJSTDateStr(offset = 0): string {
   return `${jst.getUTCFullYear()}-${String(jst.getUTCMonth() + 1).padStart(2, "0")}-${String(jst.getUTCDate()).padStart(2, "0")}`;
 }
 
-// AI出力から馬番を抽出
-function extractHorseNum(text: string): string {
+// AI出力から馬番を抽出（セクションの先頭にある "X番 馬名" のみを対象）
+// 説明文中の「1番人気」「3番手」などは誤検出しないよう先頭限定
+function extractHorseNum(sectionText: string): string {
+  // スキップ推奨の場合は馬番なしとして扱う
+  if (/^[\s*]*スキップ/.test(sectionText)) return "";
+
   const m =
-    // 「複勝推奨】X番」パターン（マークダウン記号を許容）
-    text.match(/複勝推奨[】\s*\*]*(\d{1,2})番/) ||
-    // 行頭「X番」（マークダウン **X番** を含む）
-    text.match(/^[\s*]*(\d{1,2})番/) ||
-    // 「推奨】X番」など
-    text.match(/推奨[】\s*\*]*(\d{1,2})番/) ||
-    // 「X番 馬名（カタカナ）」
-    text.match(/(\d{1,2})番\s+[\u30A0-\u30FF]/) ||
-    // 任意の「X番」+ 非数字
-    text.match(/(\d{1,2})番[^\d目番台帯]/);
+    // 先頭の "X番 カタカナ/漢字" パターン（最も確実）
+    sectionText.match(/^[\s*]*(\d{1,2})番\s*[\u30A0-\u30FF\u4E00-\u9FFF]/) ||
+    // 先頭の "X番" + 何らかの文字
+    sectionText.match(/^[\s*【]*(\d{1,2})番[^0-9目人気]/);
   return m ? m[1] : "";
 }
 
@@ -73,12 +71,21 @@ function isSkipRecommended(prediction: string): boolean {
 function extractAIPick(prediction: string, mode: "fukusho" | "standard"): AIPick {
   let section: string;
   if (mode === "fukusho") {
-    section = prediction.match(/【複勝推奨】([\s\S]*?)(?=【|$)/)?.[1]?.trim() ?? prediction;
+    // 【複勝推奨】セクションが存在する場合のみ抽出。全文フォールバックは行わない
+    const sectionMatch = prediction.match(/【複勝推奨】([\s\S]*?)(?=【|$)/);
+    if (!sectionMatch) {
+      return { horseName: "", horseNum: "", rawText: prediction.slice(0, 300) };
+    }
+    section = sectionMatch[1].trim();
   } else {
     // 通常モード: 本命(◎) を抽出
-    section = prediction.match(/【本命[（(◎)）】][^】]*】([\s\S]*?)(?=【|$)/)?.[1]?.trim() ??
-              prediction.match(/本命[（(◎)）\s]*([^\n]{0,80})/)?.[0]?.trim() ??
-              prediction;
+    const sectionMatch =
+      prediction.match(/【本命[（(◎)）】][^】]*】([\s\S]*?)(?=【|$)/) ||
+      prediction.match(/本命[（(◎)）\s]*([^\n]{0,80})/);
+    if (!sectionMatch) {
+      return { horseName: "", horseNum: "", rawText: prediction.slice(0, 300) };
+    }
+    section = sectionMatch[1].trim();
   }
   const horseNum = extractHorseNum(section);
   const nameM = section.match(/\d{1,2}番\s*([\u30A0-\u30FF\u4E00-\u9FFF\u3040-\u309F]{2,15})/);
