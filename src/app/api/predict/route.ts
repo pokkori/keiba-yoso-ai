@@ -367,11 +367,12 @@ export async function POST(req: NextRequest) {
 
   const isPremium = req.cookies.get("stripe_premium")?.value === "1";
   const cookieCount = parseInt(req.cookies.get(COOKIE_KEY)?.value || "0");
-  if (!isPremium && cookieCount >= FREE_LIMIT) {
+  // バックテストは過去レース検証のためカウント不要
+  if (!isPremium && !isBacktest && cookieCount >= FREE_LIMIT) {
     return NextResponse.json({ error: "LIMIT_REACHED" }, { status: 429 });
   }
 
-  let body: { raceId?: string; budget?: number; mode?: string };
+  let body: { raceId?: string; budget?: number; mode?: string; backtest?: boolean };
   try { body = await req.json(); }
   catch { return NextResponse.json({ error: "リクエストの形式が正しくありません" }, { status: 400 }); }
 
@@ -381,6 +382,8 @@ export async function POST(req: NextRequest) {
 
   const budget = typeof body.budget === "number" && body.budget >= 100 ? Math.min(body.budget, 1000000) : null;
   const mode = body.mode === "fukusho" ? "fukusho" : "standard";
+  // バックテスト（過去レース検証）は無料枠カウント対象外
+  const isBacktest = body.backtest === true;
 
   const { data: raceData, debugLog } = await fetchRaceData(body.raceId);
   if (!raceData) {
@@ -485,7 +488,7 @@ ${budgetSection}
       debugLog, // remove this line once stable
     });
 
-    if (!isPremium) {
+    if (!isPremium && !isBacktest) {
       response.cookies.set(COOKIE_KEY, String(newCount), {
         maxAge: 60 * 60 * 24 * 30,
         sameSite: "lax",
