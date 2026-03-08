@@ -60,8 +60,10 @@ interface HorseBasic {
   num: string;
   name: string;
   jockey?: string;
-  weight?: string;   // 斤量
-  horseId?: string;  // netkeiba horse ID (10-12 digits)
+  weight?: string;    // 斤量
+  horseId?: string;   // netkeiba horse ID (10-12 digits)
+  tanshOdds?: string; // 単勝オッズ (from result or odds API)
+  popularity?: string;// 人気順位
 }
 
 // ─── Parse db.netkeiba.com/race/{id}/ result table → horse list ──────────────
@@ -91,8 +93,11 @@ function parseHorsesFromDBResultPage(html: string): HorseBasic[] {
       cellsRaw[3][1].match(/href="[^"]*\/horse\/(\d{10,12})(?:\/|[?#"])/)?.[1];
     const jockey = getText(cellsRaw[6][1]) || undefined;
     const weight = getText(cellsRaw[5][1]).match(/\d{2}(?:\.\d)?/)?.[0];
+    // 単勝オッズ(列9)・人気(列10) — レース結果ページから取得できる
+    const tanshOdds = cellsRaw[9] ? getText(cellsRaw[9][1]).match(/[\d.]+/)?.[0] : undefined;
+    const popularity = cellsRaw[10] ? getText(cellsRaw[10][1]).match(/\d+/)?.[0] : undefined;
 
-    horses.push({ num, name, jockey, weight, horseId });
+    horses.push({ num, name, jockey, weight, horseId, tanshOdds, popularity });
   }
   return horses;
 }
@@ -217,16 +222,21 @@ type ShutubResult = { horses: HorseBasic[]; racePageHtml: string | null } | null
 
 // ─── Parse db.netkeiba.com horse past results ────────────────────────────────
 
-function parseHorsePastResults(html: string): string[] {
+interface PastRaceRow {
+  line: string;
+  pos: number; // 着順 (NaN if 中止/除外)
+}
+
+function parseHorsePastResults(html: string): { rows: PastRaceRow[]; summary: string } {
   // Table: <table class="race_table_01 nk_tb_common">
   // Columns (0-indexed): 0:日付, 1:開催, 2:天気, 3:R, 4:レース名, 5:映像,
   //   6:頭数, 7:枠, 8:馬番, 9:オッズ, 10:人気, 11:着順, 12:騎手,
   //   13:斤量, 14:コース, 15:タイム, 16:着差, 17:タイム指数, 18:通過,
   //   19:ペース, 20:上り, 21:馬体重
   const tableMatch = html.match(/<table[^>]*class="[^"]*race_table_01[^"]*"[^>]*>([\s\S]*?)<\/table>/);
-  if (!tableMatch) return [];
+  if (!tableMatch) return { rows: [], summary: "" };
 
-  const results: string[] = [];
+  const rows: PastRaceRow[] = [];
   let m;
   const rowPattern = /<tr[^>]*>([\s\S]*?)<\/tr>/g;
   let dataRows = 0;
@@ -235,32 +245,50 @@ function parseHorsePastResults(html: string): string[] {
     const cells = [...m[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(c =>
       c[1].replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim()
     );
-    if (cells.length < 16) continue; // skip header or incomplete rows
+    if (cells.length < 16) continue;
 
     const date = cells[0];
     const raceName = cells[4];
+    const odds = cells[9];      // オッズ
+    const popular = cells[10];  // 人気
     const position = cells[11]; // 着順
     const jockey = cells[12];
-    const course = cells[14];   // e.g. "芝1600" "ダ1200"
+    const course = cells[14];
     const time = cells[15];
-    const margin = cells[16];   // 着差
-    const horseWeight = cells[21]; // 馬体重
+    const margin = cells[16];
+    const horseWeight = cells[21];
 
     if (!date || !raceName || !position || position === "着順") continue;
 
+    const posNum = parseInt(position);
     const posStr = position === "1" ? "1着" : `${position}着`;
     const marginStr = margin && margin !== "0.0" && margin !== "" ? `(${margin})` : "";
     const weightStr = horseWeight ? ` 馬体重${horseWeight}` : "";
-    results.push(`${date} ${raceName} [${course}] ${posStr}${marginStr} ${time} 騎手:${jockey}${weightStr}`);
+    const popularStr = popular && odds ? ` [${popular}番人気 ${odds}倍]` : popular ? ` [${popular}番人気]` : "";
+    rows.push({
+      line: `${date} ${raceName} [${course}] ${posStr}${marginStr}${popularStr} ${time} 騎手:${jockey}${weightStr}`,
+      pos: posNum,
+    });
     dataRows++;
   }
-  return results;
+
+  // 複勝率サマリー計算
+  const valid = rows.filter(r => !isNaN(r.pos));
+  const placed = valid.filter(r => r.pos <= 3).length;
+  const wins = valid.filter(r => r.pos === 1).length;
+  const summary = valid.length > 0
+    ? `直近${valid.length}走: 1着${wins}回 / 3着内${placed}回 (複勝率${Math.round(placed / valid.length * 100)}%)`
+    : "";
+
+  return { rows, summary };
 }
 
 // ─── Fetch single horse detail from db.netkeiba.com ──────────────────────────
 
 function formatBasic(h: HorseBasic): string {
   let s = `${h.num}番 ${h.name}`;
+  if (h.popularity) s += `  【${h.popularity}番人気】`;
+  if (h.tanshOdds) s += `  単勝${h.tanshOdds}倍`;
   if (h.jockey) s += `  騎手:${h.jockey}`;
   if (h.weight) s += `  斤量:${h.weight}`;
   return s;
@@ -283,7 +311,7 @@ async function fetchHorseDetail(horse: HorseBasic): Promise<string> {
     const buffer = await res.arrayBuffer();
     const html = await decodeBuffer(buffer);
 
-    const pastResults = parseHorsePastResults(html);
+    const { rows: pastResults, summary: formSummary } = parseHorsePastResults(html);
 
     // Age + sex (e.g. "4歳牡")
     const ageSex = html.match(/(\d+)歳([牡牝セ騸])/)?.[0] ?? "";
@@ -291,13 +319,16 @@ async function fetchHorseDetail(horse: HorseBasic): Promise<string> {
     const trainer = html.match(/href="[^"]*\/trainer\/[^"]*">([^<]{2,8})<\/a>/)?.[1] ?? "";
 
     let info = `${horse.num}番 ${horse.name}`;
+    if (horse.popularity) info += `  【${horse.popularity}番人気】`;
+    if (horse.tanshOdds) info += `  単勝${horse.tanshOdds}倍`;
     if (ageSex) info += `  ${ageSex}`;
     if (horse.jockey) info += `  騎手:${horse.jockey}`;
     if (horse.weight) info += `  斤量:${horse.weight}`;
     if (trainer) info += `  調教師:${trainer}`;
+    if (formSummary) info += `  ★${formSummary}`;
     if (pastResults.length > 0) {
       info += `\n  【過去成績（直近${pastResults.length}走）】\n`;
-      info += pastResults.map(r => `    ${r}`).join("\n");
+      info += pastResults.map(r => `    ${r.line}`).join("\n");
     }
     return info;
   } catch {
@@ -372,12 +403,22 @@ async function fetchRaceData(raceId: string): Promise<FetchResult> {
       const json = JSON.parse(await res.text());
       const oddsInfo = json?.data?.OddsInfo;
       if (Array.isArray(oddsInfo) && oddsInfo.length > 0) {
-        baseHorses = oddsInfo.map((item: string[]) => ({
-          num: item[0],
-          name: item[1],
-          jockey: item[4] || undefined,
-        }));
-        log.push(`json_odds: ${baseHorses.length} horses`);
+        // OddsInfo columns vary by API type. Known: [0]=馬番, [1]=馬名, [4]=騎手
+        // Additional fields may include 単勝オッズ and 人気順位 at higher indices
+        baseHorses = oddsInfo.map((item: string[]) => {
+          // Try to find 単勝オッズ: first numeric-looking field after index 4
+          let tanshOdds: string | undefined;
+          for (let i = 5; i < item.length; i++) {
+            if (/^\d+\.\d+$/.test(String(item[i]))) { tanshOdds = String(item[i]); break; }
+          }
+          return { num: item[0], name: item[1], jockey: item[4] || undefined, tanshOdds };
+        });
+        // Sort by odds to assign popularity rank (lowest odds = 1番人気)
+        const withOdds = baseHorses.filter(h => h.tanshOdds).sort(
+          (a, b) => parseFloat(a.tanshOdds!) - parseFloat(b.tanshOdds!)
+        );
+        withOdds.forEach((h, i) => { h.popularity = String(i + 1); });
+        log.push(`json_odds: ${baseHorses.length} horses, ${withOdds.length} with odds`);
       }
     }
   } catch (e) {
@@ -465,7 +506,6 @@ export async function POST(req: NextRequest) {
   if (mode === "fukusho") {
     if (isBacktest) {
       // ─── バックテスト専用プロンプト ───
-      // オッズデータなし・データ不足でも必ず1頭選ぶ
       prompt = `以下の競馬レース情報を分析し、複勝（3着以内）に入る可能性が最も高い馬を1頭選んでください。
 
 レース: ${raceData.info}
@@ -473,20 +513,31 @@ export async function POST(req: NextRequest) {
 出走馬詳細情報:
 ${raceData.horses}
 
-【分析の観点（優先順）】
-1. 近走成績：前走・2走前で3着以内の実績がある馬を優先
-2. コース適性：今回の距離・馬場（芝/ダート）での過去実績
-3. 騎手力：リーディング上位騎手（ルメール・川田・武豊・横山武史）乗替は加点
-4. 斤量：前走より軽い馬は有利
+【★最重要★ 分析の優先順位】
+1. 【人気・単勝オッズ】各馬の「X番人気」「単勝X.X倍」が表示されている場合、これを最も重視すること。
+   - 市場オッズ＝プロの馬主・調教師・記者・愛好家全員の総合判断。個人の判断より遥かに精度が高い。
+   - 1〜3番人気の馬が複勝3着内に入る確率は約60〜70%。
+   - ただし「1番人気でも複勝率が低い馬」(近走不振・コース不適)は除外し、2〜3番人気の好調馬を選ぶケースも有効。
 
-※過去成績データがない馬（3歳未勝利・デビュー直後）の場合、騎手・斤量のみで判断すること。
-※オッズデータはなし。純粋にパフォーマンス分析・騎手・斤量で最も3着内確率が高い馬を選ぶこと。
+2. 【複勝率サマリー】「直近X走: 3着内X回 (複勝率XX%)」が示されている馬は、その数字を直接評価基準にすること。
+   - 複勝率50%以上 → 高評価
+   - 複勝率30%以下 → 低評価（人気でも慎重に）
+
+3. 【コース適性】今回の距離・馬場（芝/ダート）で過去に3着内実績がある馬を優先。
+
+4. 【騎手力】ルメール・川田・武豊・横山武史など上位騎手は加点。
+
+5. 【斤量】前走より2kg以上軽い場合は有利。
+
+【選択戦略】
+- 人気情報がある場合：1〜3番人気の中から、複勝率が最も高い馬を選ぶ。
+- 人気情報がない場合：近走3着内回数が最多の馬を選ぶ。騎手・コース適性で最終判断。
+
 ※必ず1頭推奨すること。データ不足を理由に断ることは絶対に禁止。
 
 以下の形式で出力してください：
 
-【推奨判定】買い推奨（理由を一言で）
-【複勝推奨】X番 馬名 — 選んだ理由（近走成績・騎手・コース適性を具体的に）
+【複勝推奨】X番 馬名 — 選んだ理由（人気・複勝率・コース適性・騎手を具体的に）
 【3着内確率】推定XX%
 【リスク要因】3着を外す可能性がある要因
 
@@ -505,17 +556,25 @@ ${raceData.horses}
 ${raceData.horses}
 ${budgetLine}
 
-【戦略の前提：期待値重視の複勝一点買い】
-・近走好調 + 今回の距離・馬場・騎手が好条件の馬を最優先
-・前走3着以内、または条件改善（斤量減・有力騎手乗替）の馬を狙う
-・出走頭数が少ない（7頭以下）場合は安定度が下がるため注意
+【★最重要★ 分析の優先順位】
+1. 【人気・単勝オッズ】各馬の「X番人気」「単勝X.X倍」が表示されている場合、これを最も重視すること。
+   - 1〜3番人気の馬が複勝3着内に入る確率は約60〜70%。
+   - ただし近走成績が悪い1番人気より、近走好調な2〜3番人気を選ぶこともある。
+
+2. 【複勝率サマリー】「直近X走: 3着内X回 (複勝率XX%)」→ 50%以上の馬を高評価。
+
+3. 【コース適性】今回の距離・馬場（芝/ダート）での過去3着内実績がある馬を優先。
+
+4. 【騎手力】ルメール・川田・武豊・横山武史など上位騎手への乗替は加点。
+
+5. 【斤量】前走より2kg以上軽い場合は有利。
 
 以下の形式で必ず出力してください（セクションの順序・形式を厳守）：
 
 【推奨判定】買い推奨（推奨理由を一言で）
-【複勝推奨】X番 馬名（想定人気：〇番人気）— 推奨理由（近走成績・騎手・適性を具体的に）
+【複勝推奨】X番 馬名（${`X`}番人気）— 推奨理由（人気・複勝率・コース適性・騎手を具体的に）
 ※必ず「X番 馬名」の形式で馬番から記入すること。
-【3着内確率】推定XX% — 根拠
+【3着内確率】推定XX% — 根拠（人気・複勝率を明記）
 【レース安定度】★★★★☆ — 荒れにくい/荒れやすい理由
 【リスク要因】複勝を外す可能性がある要因・注意すべきライバル馬
 【買い方提案】${budget ? `軍資金${budget.toLocaleString()}円を複勝1点に投資した場合の期待払戻額と推奨金額` : "推奨投資額と期待払戻の目安（例：1万円投資で想定X.X万円）"}
