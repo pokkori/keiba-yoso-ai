@@ -125,11 +125,14 @@ function parseHorsesBasic(html: string): HorseBasic[] {
 
 // ─── Fetch shutuba page → HorseBasic[] ───────────────────────────────────────
 
-async function fetchShutuba(raceId: string, log: string[]): Promise<HorseBasic[] | null> {
+async function fetchShutuba(raceId: string, log: string[]): Promise<ShutubResult> {
   const urls = [
     `https://race.netkeiba.com/race/shutuba_popup.html?race_id=${raceId}`,
     `https://race.netkeiba.com/race/shutuba.html?race_id=${raceId}`,
     `https://sp.netkeiba.com/race/shutuba.html?race_id=${raceId}`,
+    // 過去レース（バックテスト）用フォールバック: 結果ページにも出走馬情報がある
+    `https://db.netkeiba.com/race/${raceId}/`,
+    `https://race.netkeiba.com/race/result.html?race_id=${raceId}`,
   ];
 
   for (const url of urls) {
@@ -158,13 +161,19 @@ async function fetchShutuba(raceId: string, log: string[]): Promise<HorseBasic[]
       const garbage = [...horses.map(h => h.name).join("")].filter(c => c === "\uFFFD").length;
       if (garbage > 5) { log.push(`shutuba ${key}: garbage chars=${garbage}`); continue; }
 
-      return horses;
+      // 結果ページからレース情報を付加（db.netkeiba / result.html）
+      if (url.includes("db.netkeiba") || url.includes("result.html")) {
+        return { horses, racePageHtml: html };
+      }
+      return { horses, racePageHtml: null };
     } catch (e) {
       log.push(`shutuba error: ${e instanceof Error ? e.message.slice(0, 60) : "unknown"}`);
     }
   }
   return null;
 }
+
+type ShutubResult = { horses: HorseBasic[]; racePageHtml: string | null } | null;
 
 // ─── Parse db.netkeiba.com horse past results ────────────────────────────────
 
@@ -294,12 +303,23 @@ async function fetchAllHorseDetails(horses: HorseBasic[], log: string[]): Promis
 
 type FetchResult = { data: { info: string; horses: string } | null; debugLog: string[] };
 
+// 結果ページからレース情報（名称・距離・馬場）を取得
+function extractRaceInfoFromResultPage(html: string, venue: string, raceNo: number): string {
+  const stripped = (s: string) => s.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+  const raceName = stripped(html.match(/<h1[^>]*class="[^"]*RaceName[^"]*"[^>]*>([\s\S]*?)<\/h1>/)?.[1] ?? "");
+  const cond = stripped(html.match(/<div[^>]*class="[^"]*RaceData01[^"]*"[^>]*>([\s\S]*?)<\/div>/)?.[1] ?? "");
+  // e.g. "芝1200m / 晴 / 良" or "ダ1600m / 曇 / 稍重"
+  const condShort = cond.replace(/\s+/g, " ").slice(0, 60);
+  const base = `${venue} ${raceNo}R${raceName ? " " + raceName : ""}`;
+  return condShort ? `${base} (${condShort})` : base;
+}
+
 async function fetchRaceData(raceId: string): Promise<FetchResult> {
   const log: string[] = [];
   const trackCode = raceId.substring(4, 6);
   const raceNo = parseInt(raceId.substring(10, 12), 10);
   const venue = TRACK_NAMES[trackCode] || "不明";
-  const raceInfo = `${venue} ${raceNo}R`;
+  let raceInfo = `${venue} ${raceNo}R`;
 
   // ── Try JSON odds API first (fast, gives horse names + jockey) ──
   let baseHorses: HorseBasic[] | null = null;
@@ -325,10 +345,17 @@ async function fetchRaceData(raceId: string): Promise<FetchResult> {
   }
 
   // ── Fetch shutuba HTML to get horse IDs (always needed for detail fetch) ──
-  const shutubaHorses = await fetchShutuba(raceId, log);
+  const shutubaResult = await fetchShutuba(raceId, log);
+  const shutubaHorses = shutubaResult?.horses ?? null;
 
   if (!shutubaHorses && !baseHorses) {
     return { data: null, debugLog: log };
+  }
+
+  // 結果ページから取得した場合はレース情報を拡充
+  if (shutubaResult?.racePageHtml) {
+    raceInfo = extractRaceInfoFromResultPage(shutubaResult.racePageHtml, venue, raceNo);
+    log.push(`raceInfo from result page: ${raceInfo}`);
   }
 
   // Prefer shutuba (has horse IDs). Merge odds data if shutuba is missing jockey info.
