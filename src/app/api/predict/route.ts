@@ -371,7 +371,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "LIMIT_REACHED" }, { status: 429 });
   }
 
-  let body: { raceId?: string; budget?: number };
+  let body: { raceId?: string; budget?: number; mode?: string };
   try { body = await req.json(); }
   catch { return NextResponse.json({ error: "リクエストの形式が正しくありません" }, { status: 400 }); }
 
@@ -380,6 +380,7 @@ export async function POST(req: NextRequest) {
   }
 
   const budget = typeof body.budget === "number" && body.budget >= 100 ? Math.min(body.budget, 1000000) : null;
+  const mode = body.mode === "fukusho" ? "fukusho" : "standard";
 
   const { data: raceData, debugLog } = await fetchRaceData(body.raceId);
   if (!raceData) {
@@ -390,11 +391,42 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "FETCH_FAILED", venue, raceNo, debugLog }, { status: 502 });
   }
 
-  const budgetSection = budget
-    ? `\n【軍資金】${budget.toLocaleString()}円\n上記の軍資金を前提に、各馬券の具体的な購入金額（○○円）まで含めた配分を必ず記載すること。`
-    : "";
+  let prompt: string;
 
-  const prompt = `以下の競馬レース情報を分析して、具体的な予想を出力してください。
+  if (mode === "fukusho") {
+    const budgetLine = budget
+      ? `\n【軍資金】${budget.toLocaleString()}円（複勝1点に集中投資する前提で期待払戻を計算すること）`
+      : "";
+
+    prompt = `以下の競馬レース情報を分析して、「複勝一点買い戦略」に最適な予想を出力してください。
+
+レース: ${raceData.info}
+
+出走馬詳細情報:
+${raceData.horses}
+${budgetLine}
+
+【戦略の前提】
+・複勝（3着以内）に絞った堅実投資戦略
+・このレースが複勝狙いに向いているかを最初に判定する
+・人気馬の安定感・距離適性・騎手の実力を重視する
+・複勝オッズの下限〜上限レンジを推測する
+
+以下の形式で必ず出力してください（省略不可）：
+
+【複勝推奨】馬番 馬名（想定人気：〇番人気）— 推奨理由（過去成績・騎手・馬場適性・近走安定度を具体的に）
+【レース安定度】★★★★☆ — このレースが荒れにくい/荒れやすい理由（頭数・クラス・人気集中度・馬場状態を考慮）
+【複勝オッズ想定】X.X〜X.X倍（下限〜上限レンジと根拠）
+【リスク要因】複勝を外す可能性がある要因・注意すべきライバル馬
+【買い方提案】${budget ? `軍資金${budget.toLocaleString()}円を複勝1点に投資した場合の期待払戻額と推奨金額` : "推奨投資額と期待払戻の目安（例：1万円投資で想定X.X万円）"}
+
+※データが不完全な馬は騎手・斤量から推測すること。謝罪・追加情報要求は不要。`;
+  } else {
+    const budgetSection = budget
+      ? `\n【軍資金】${budget.toLocaleString()}円\n上記の軍資金を前提に、各馬券の具体的な購入金額（○○円）まで含めた配分を必ず記載すること。`
+      : "";
+
+    prompt = `以下の競馬レース情報を分析して、具体的な予想を出力してください。
 
 レース: ${raceData.info}
 
@@ -411,19 +443,25 @@ ${budgetSection}
 【総評】このレースのポイントと穴馬候補
 
 ※過去成績データがない馬は騎手や斤量から判断すること。謝罪や追加情報の要求は不要。`;
+  }
 
   try {
+    const systemPrompt = mode === "fukusho"
+      ? "あなたはプロの競馬予想家です。「複勝一点買い戦略」の専門家として、最も3着以内に入る可能性が高い馬を精密に分析します。レースの安定度評価・複勝オッズレンジの推測・リスク要因の特定を必ず行います。データが不完全な馬があっても推測で補い、全ての項目（複勝推奨・レース安定度・オッズ想定・リスク要因・買い方提案）を必ず出力します。謝罪や情報不足の言及は一切しません。"
+      : "あなたはプロの競馬予想家です。提供された出走馬の過去成績・騎手・斤量・馬齢・調教師情報を精密に分析し、必ず具体的な予想を出力してください。データが不完全な馬があっても推測で補い、全ての予想項目（本命・対抗・単穴・買い目・展開・総評）を必ず出力します。情報不足の謝罪や追加データの要求は絶対にしません。";
+
     const message = await getClient().messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 2000,
-      system: "あなたはプロの競馬予想家です。提供された出走馬の過去成績・騎手・斤量・馬齢・調教師情報を精密に分析し、必ず具体的な予想を出力してください。データが不完全な馬があっても推測で補い、全ての予想項目（本命・対抗・単穴・買い目・展開・総評）を必ず出力します。情報不足の謝罪や追加データの要求は絶対にしません。",
+      system: systemPrompt,
       messages: [{ role: "user", content: prompt }],
     });
 
     const prediction = message.content[0].type === "text" ? message.content[0].text : "";
 
-    const hasRequiredSections =
-      prediction.includes("本命") || prediction.includes("◎") || prediction.includes("買い目");
+    const hasRequiredSections = mode === "fukusho"
+      ? prediction.includes("複勝推奨") || prediction.includes("レース安定度")
+      : prediction.includes("本命") || prediction.includes("◎") || prediction.includes("買い目");
     const isRefusal = !hasRequiredSections && (
       prediction.includes("申し訳") ||
       prediction.includes("予想提供ができません") ||
@@ -443,6 +481,7 @@ ${budgetSection}
       prediction,
       raceInfo: raceData.info.trim(),
       count: newCount,
+      mode,
       debugLog, // remove this line once stable
     });
 

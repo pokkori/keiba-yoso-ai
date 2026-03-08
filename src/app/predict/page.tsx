@@ -28,7 +28,6 @@ function parsePredict(text: string): PredictionSection[] {
   ];
 
   const sections: PredictionSection[] = [];
-  // Split on 【...】 headers
   const parts = text.split(/(?=【[^】]+】)/);
   for (const part of parts) {
     const trimmed = part.trim();
@@ -45,6 +44,32 @@ function parsePredict(text: string): PredictionSection[] {
   return sections;
 }
 
+function parseFukusho(text: string): PredictionSection[] {
+  const defs = [
+    { key: "複勝推奨", icon: "🎯", label: "複勝推奨馬" },
+    { key: "レース安定度", icon: "⭐", label: "レース安定度" },
+    { key: "複勝オッズ想定", icon: "💴", label: "複勝オッズ想定" },
+    { key: "リスク要因", icon: "⚠️", label: "リスク要因" },
+    { key: "買い方提案", icon: "💡", label: "買い方提案" },
+  ];
+
+  const sections: PredictionSection[] = [];
+  const parts = text.split(/(?=【[^】]+】)/);
+  for (const part of parts) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    const matched = defs.find(d => trimmed.startsWith(`【${d.key}`));
+    if (matched) {
+      const content = trimmed.replace(/^【[^】]+】/, "").trim();
+      sections.push({ title: matched.label, icon: matched.icon, content });
+    }
+  }
+  if (sections.length < 2) {
+    return [{ title: "複勝予想結果", icon: "🎯", content: text }];
+  }
+  return sections;
+}
+
 async function startCheckout(plan: string) {
   const res = await fetch("/api/stripe/checkout", {
     method: "POST",
@@ -55,7 +80,7 @@ async function startCheckout(plan: string) {
   if (data.url) window.location.href = data.url;
 }
 
-function PredictionCard({ sections, raceInfo, rawText }: { sections: PredictionSection[]; raceInfo: string; rawText: string }) {
+function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: PredictionSection[]; raceInfo: string; rawText: string; isFukusho?: boolean }) {
   const [activeTab, setActiveTab] = useState(0);
   const [copied, setCopied] = useState(false);
   const [copiedAll, setCopiedAll] = useState(false);
@@ -68,11 +93,21 @@ function PredictionCard({ sections, raceInfo, rawText }: { sections: PredictionS
 
   const current = sections[activeTab];
 
+  const accent = isFukusho ? "amber" : "green";
+  const headerBg = isFukusho ? "bg-amber-600" : "bg-green-800";
+  const tabBg = isFukusho ? "bg-amber-50 border-amber-200" : "bg-green-50 border-green-200";
+  const tabActive = isFukusho ? "border-amber-600 text-amber-800 bg-white" : "border-green-700 text-green-800 bg-white";
+  const titleColor = isFukusho ? "text-amber-800" : "text-green-800";
+  const copyBg = isFukusho ? "bg-amber-50 hover:bg-amber-100 text-amber-700" : "bg-green-50 hover:bg-green-100 text-green-700";
+  const headerIcon = isFukusho ? "🎯" : "🏆";
+  const headerLabel = isFukusho ? "複勝予想結果" : "AI予想結果";
+  void accent;
+
   return (
-    <div className="mt-8 rounded-2xl border border-green-200 overflow-hidden">
+    <div className={`mt-8 rounded-2xl border ${isFukusho ? "border-amber-200" : "border-green-200"} overflow-hidden`}>
       {/* Header */}
-      <div className="bg-green-800 px-4 py-3 flex items-center justify-between">
-        <span className="text-white font-bold text-sm">🏆 {raceInfo} AI予想結果</span>
+      <div className={`${headerBg} px-4 py-3 flex items-center justify-between`}>
+        <span className="text-white font-bold text-sm">{headerIcon} {raceInfo} {headerLabel}</span>
         <button onClick={() => handleCopy(rawText, true)}
           className="text-xs bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg font-medium transition-colors">
           {copiedAll ? "✓ コピー済み" : "全文コピー"}
@@ -80,10 +115,10 @@ function PredictionCard({ sections, raceInfo, rawText }: { sections: PredictionS
       </div>
 
       {/* Tabs */}
-      <div className="flex overflow-x-auto bg-green-50 border-b border-green-200">
+      <div className={`flex overflow-x-auto border-b ${tabBg}`}>
         {sections.map((s, i) => (
           <button key={i} onClick={() => setActiveTab(i)}
-            className={`flex items-center gap-1 px-3 py-2.5 text-xs font-bold whitespace-nowrap transition-colors border-b-2 ${activeTab === i ? "border-green-700 text-green-800 bg-white" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+            className={`flex items-center gap-1 px-3 py-2.5 text-xs font-bold whitespace-nowrap transition-colors border-b-2 ${activeTab === i ? tabActive : "border-transparent text-gray-500 hover:text-gray-700"}`}>
             <span>{s.icon}</span>
             <span className="hidden sm:inline">{s.title}</span>
           </button>
@@ -93,9 +128,9 @@ function PredictionCard({ sections, raceInfo, rawText }: { sections: PredictionS
       {/* Content */}
       <div className="bg-white p-5">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-bold text-green-800">{current.icon} {current.title}</span>
+          <span className={`text-sm font-bold ${titleColor}`}>{current.icon} {current.title}</span>
           <button onClick={() => handleCopy(current.content)}
-            className="text-xs bg-green-50 hover:bg-green-100 text-green-700 px-3 py-1 rounded-lg font-medium transition-colors">
+            className={`text-xs ${copyBg} px-3 py-1 rounded-lg font-medium transition-colors`}>
             {copied ? "✓ コピー" : "コピー"}
           </button>
         </div>
@@ -115,6 +150,7 @@ export default function PredictPage() {
   const [selectedRaceId, setSelectedRaceId] = useState("");
   const [racesLoading, setRacesLoading] = useState(false);
   const [budget, setBudget] = useState("");
+  const [mode, setMode] = useState<"standard" | "fukusho">("standard");
 
   const [rawResult, setRawResult] = useState("");
   const [sections, setSections] = useState<PredictionSection[]>([]);
@@ -171,7 +207,7 @@ export default function PredictPage() {
       const res = await fetch("/api/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ raceId: selectedRaceId, budget: budgetNum }),
+        body: JSON.stringify({ raceId: selectedRaceId, budget: budgetNum, mode }),
       });
       if (res.status === 429) { setShowPaywall(true); return; }
       const data = await res.json();
@@ -183,7 +219,7 @@ export default function PredictPage() {
       if (data.error) throw new Error(data.error);
 
       setRawResult(data.prediction);
-      setSections(parsePredict(data.prediction));
+      setSections(data.mode === "fukusho" ? parseFukusho(data.prediction) : parsePredict(data.prediction));
       setRaceInfo(data.raceInfo || "");
       const next = data.count ?? usageCount + 1;
       setUsageCount(next);
@@ -286,6 +322,30 @@ export default function PredictPage() {
             </div>
           )}
 
+          {/* 予想モード */}
+          <div className="mb-5">
+            <label className="block text-sm font-medium text-gray-600 mb-1.5">予想モード</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setMode("standard")}
+                className={`py-2.5 rounded-xl text-sm font-bold border-2 transition-colors ${mode === "standard" ? "bg-green-700 text-white border-green-700" : "bg-white text-gray-500 border-gray-200 hover:border-green-300"}`}>
+                🏇 スタンダード
+                <span className="block text-xs font-normal mt-0.5">{mode === "standard" ? "◎○▲ + 買い目" : "◎○▲ + 買い目"}</span>
+              </button>
+              <button
+                onClick={() => setMode("fukusho")}
+                className={`py-2.5 rounded-xl text-sm font-bold border-2 transition-colors ${mode === "fukusho" ? "bg-amber-500 text-white border-amber-500" : "bg-white text-gray-500 border-gray-200 hover:border-amber-300"}`}>
+                🎯 複勝モード
+                <span className="block text-xs font-normal mt-0.5">{mode === "fukusho" ? "粗品式・堅実戦略" : "粗品式・堅実戦略"}</span>
+              </button>
+            </div>
+            {mode === "fukusho" && (
+              <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mt-2">
+                💡 複勝は3着以内で的中。的中率80〜90%の堅実戦略。オッズ1.1〜1.6倍を狙います。
+              </p>
+            )}
+          </div>
+
           {/* 軍資金 */}
           <div className="mb-5">
             <label className="block text-sm font-medium text-gray-600 mb-1.5">
@@ -311,13 +371,13 @@ export default function PredictPage() {
 
           <button onClick={handlePredict}
             disabled={loading || racePast || (!selectedRaceId && !racesLoading)}
-            className="w-full bg-green-700 hover:bg-green-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-base transition-colors">
+            className={`w-full disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-base transition-colors ${mode === "fukusho" ? "bg-amber-500 hover:bg-amber-600" : "bg-green-700 hover:bg-green-800"}`}>
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="animate-spin">⟳</span>
                 出走馬データ取得 & AI分析中...（20〜40秒）
               </span>
-            ) : "🏇 このレースを予想する"}
+            ) : mode === "fukusho" ? "🎯 複勝推奨馬を分析する" : "🏇 このレースを予想する"}
           </button>
 
           {!isPremium && (
@@ -330,7 +390,7 @@ export default function PredictPage() {
         {/* 予想結果 */}
         {sections.length > 0 && (
           <>
-            <PredictionCard sections={sections} raceInfo={raceInfo} rawText={rawResult} />
+            <PredictionCard sections={sections} raceInfo={raceInfo} rawText={rawResult} isFukusho={mode === "fukusho"} />
 
             <div className="mt-4 flex gap-3">
               <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`}
