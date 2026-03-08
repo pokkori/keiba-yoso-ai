@@ -365,13 +365,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "リクエストが多すぎます。しばらく待ってから再試行してください。" }, { status: 429 });
   }
 
-  const isPremium = req.cookies.get("stripe_premium")?.value === "1";
-  const cookieCount = parseInt(req.cookies.get(COOKIE_KEY)?.value || "0");
-  // バックテストは過去レース検証のためカウント不要
-  if (!isPremium && !isBacktest && cookieCount >= FREE_LIMIT) {
-    return NextResponse.json({ error: "LIMIT_REACHED" }, { status: 429 });
-  }
-
   let body: { raceId?: string; budget?: number; mode?: string; backtest?: boolean };
   try { body = await req.json(); }
   catch { return NextResponse.json({ error: "リクエストの形式が正しくありません" }, { status: 400 }); }
@@ -380,10 +373,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "レースIDが不正です" }, { status: 400 });
   }
 
-  const budget = typeof body.budget === "number" && body.budget >= 100 ? Math.min(body.budget, 1000000) : null;
-  const mode = body.mode === "fukusho" ? "fukusho" : "standard";
   // バックテスト（過去レース検証）は無料枠カウント対象外
   const isBacktest = body.backtest === true;
+  const isPremium = req.cookies.get("stripe_premium")?.value === "1";
+  const cookieCount = parseInt(req.cookies.get(COOKIE_KEY)?.value || "0");
+  if (!isPremium && !isBacktest && cookieCount >= FREE_LIMIT) {
+    return NextResponse.json({ error: "LIMIT_REACHED" }, { status: 429 });
+  }
+
+  const budget = typeof body.budget === "number" && body.budget >= 100 ? Math.min(body.budget, 1000000) : null;
+  const mode = body.mode === "fukusho" ? "fukusho" : "standard";
 
   const { data: raceData, debugLog } = await fetchRaceData(body.raceId);
   if (!raceData) {
