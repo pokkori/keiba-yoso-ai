@@ -34,6 +34,7 @@ interface RaceRow {
   result?: RaceResult;
   aiPick?: AIPick;
   errorMsg?: string;
+  predictError?: string; // reason AI prediction failed
   skip?: boolean;        // true = AI recommended skipping this race
   hit?: boolean;         // true = AI pick placed (top3)
   payout?: number;       // actual fukusho payout for AI pick (undefined = unknown)
@@ -175,8 +176,14 @@ export default function BacktestPage() {
 
       const result: RaceResult | undefined = resultData?.top3 ? resultData : undefined;
       const rawPrediction: string | undefined = predictData?.prediction;
-      const aiPick = rawPrediction ? extractAIPick(rawPrediction, betMode) : undefined;
+      const predictError: string | undefined = !rawPrediction
+        ? (predictData?.error === "FETCH_FAILED"
+          ? `レースデータ取得失敗（${predictData.venue ?? ""}${predictData.raceNo ?? ""}R）`
+          : predictData?.error ?? "AI予想API失敗")
+        : undefined;
       const skip = betMode === "fukusho" && rawPrediction ? isSkipRecommended(rawPrediction) : false;
+      // スキップ時は馬推奨を無視（AIが矛盾した出力をしても混乱しないよう）
+      const aiPick = rawPrediction && !skip ? extractAIPick(rawPrediction, betMode) : undefined;
 
       let hit: boolean | undefined;
       let payout: number | undefined;
@@ -197,7 +204,7 @@ export default function BacktestPage() {
       const errorMsg = !result ? "結果データ取得失敗" : undefined;
 
       setRows(prev => prev.map((r, i) => i === idx
-        ? { ...r, status: result ? "done" : "error", result, aiPick, skip, hit, payout, profit, errorMsg }
+        ? { ...r, status: result ? "done" : "error", result, aiPick, skip, hit, payout, profit, errorMsg, predictError }
         : r));
     } catch (e) {
       setRows(prev => prev.map((r, i) => i === idx
@@ -365,7 +372,9 @@ export default function BacktestPage() {
                             <p className="text-gray-500 mt-1 leading-snug line-clamp-3">{row.aiPick.rawText}</p>
                           </div>
                         ) : (
-                          <span className="text-gray-400 text-xs">AI予想の取得に失敗しました</span>
+                          <span className="text-gray-400 text-xs">
+                            {row.predictError ?? "AI予想の取得に失敗しました"}
+                          </span>
                         )}
                       </div>
 
@@ -375,7 +384,7 @@ export default function BacktestPage() {
                         {row.result?.top3.length ? (
                           <div className="space-y-0.5">
                             {row.result.top3.map(f => {
-                              const isAIPick = f.num === row.aiPick?.horseNum;
+                              const isAIPick = !row.skip && f.num === row.aiPick?.horseNum;
                               const payout = row.result?.fukusho.find(p => p.num === f.num)?.payout;
                               return (
                                 <div key={f.pos}
