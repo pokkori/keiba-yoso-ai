@@ -505,7 +505,7 @@ ${budgetLine}
 
 スキップ推奨の場合は【複勝推奨】以降の項目は省略可。
 
-※データが不完全な馬は騎手・斤量から推測すること。謝罪・追加情報要求は不要。`;
+※データが不完全な馬は騎手・斤量から推測すること。謝罪・追加情報要求は不要。${isBacktest ? "\n※これはバックテスト（事後検証）です。過去成績に当該レースの結果が含まれていても無視し、そのレース「直前」の状態として分析・予想してください。" : ""}`;
   } else {
     const budgetSection = budget
       ? `\n【軍資金】${budget.toLocaleString()}円\n上記の軍資金を前提に、各馬券の具体的な購入金額（○○円）まで含めた配分を必ず記載すること。`
@@ -527,7 +527,7 @@ ${budgetSection}
 【レース展開予想】逃げ・先行・差しの展開とペース予測
 【総評】このレースのポイントと穴馬候補
 
-※過去成績データがない馬は騎手や斤量から判断すること。謝罪や追加情報の要求は不要。`;
+※過去成績データがない馬は騎手や斤量から判断すること。謝罪や追加情報の要求は不要。${isBacktest ? "\n※これはバックテスト（事後検証）です。過去成績に当該レースの結果が含まれていても無視し、そのレース「直前」の状態として分析・予想してください。" : ""}`;
   }
 
   try {
@@ -544,21 +544,23 @@ ${budgetSection}
 
     const prediction = message.content[0].type === "text" ? message.content[0].text : "";
 
-    const hasRequiredSections = mode === "fukusho"
-      ? prediction.includes("複勝推奨") || prediction.includes("レース安定度")
-      : prediction.includes("本命") || prediction.includes("◎") || prediction.includes("買い目");
-    const isRefusal = !hasRequiredSections && (
-      prediction.includes("申し訳") ||
-      prediction.includes("予想提供ができません") ||
-      prediction.includes("情報が不足") ||
-      prediction.includes("必要な情報") ||
-      prediction.includes("判読できない")
-    );
-    if (isRefusal) {
-      return NextResponse.json(
-        { error: "レースデータが正しく取得できませんでした。別のレースを選択するか、しばらく待ってから再試行してください。" },
-        { status: 422 }
+    // バックテストはAIが何を返しても予想テキストとして返す（拒否チェックなし）
+    if (!isBacktest) {
+      const hasRequiredSections = mode === "fukusho"
+        ? prediction.includes("複勝推奨") || prediction.includes("レース安定度")
+        : prediction.includes("本命") || prediction.includes("◎") || prediction.includes("買い目");
+      // 明示的な全拒否のみ弾く（部分的な謝罪・情報不足言及は許容）
+      const isHardRefusal = !hasRequiredSections && (
+        prediction.includes("予想提供ができません") ||
+        prediction.includes("判読できない") ||
+        (prediction.includes("申し訳") && prediction.length < 200)
       );
+      if (isHardRefusal) {
+        return NextResponse.json(
+          { error: "レースデータが正しく取得できませんでした。別のレースを選択するか、しばらく待ってから再試行してください。" },
+          { status: 422 }
+        );
+      }
     }
 
     const newCount = cookieCount + 1;
