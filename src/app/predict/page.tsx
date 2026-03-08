@@ -276,6 +276,7 @@ export default function PredictPage() {
         <Link href="/" className="text-xl font-bold text-white">🏇 競馬予想AI</Link>
         <div className="flex items-center gap-4">
           <Link href="/tracker" className="text-sm text-green-300 hover:text-white">回収率管理</Link>
+          <Link href="/backtest" className="text-sm text-green-300 hover:text-white">的中検証</Link>
           {isPremium ? (
             <span className="text-xs bg-yellow-400 text-green-900 font-bold px-3 py-1 rounded-full">PRO</span>
           ) : (
