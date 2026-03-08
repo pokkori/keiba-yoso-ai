@@ -89,30 +89,28 @@ function parseFukushoPayout(html: string, top3: FinisherRow[]): FukushoPayout[] 
   const fukusho: FukushoPayout[] = [];
 
   // ── Method 1: UmaNum + Payout span（race.netkeiba.com の標準形式）──
-  // 複勝セクション（単勝の次、枠連の前）を特定してから抽出
-  const fukushoBlockM =
-    html.match(/class="[^"]*Pay_Fukusho[^"]*"[^>]*>([\s\S]*?)(?=class="[^"]*Pay_|$)/) ||
-    html.match(/複勝[\s\S]{0,100}<\/(?:dt|th)>([\s\S]*?)(?=<(?:dt|th)|枠連|馬連|ワイド|$)/);
+  // 複勝 <td> または <ul> のみを対象にして単勝セクションの汚染を防ぐ
+  const fukushoTdHtml =
+    html.match(/<td[^>]*class="[^"]*Fukusho[^"]*"[^>]*>([\s\S]*?)<\/td>/)?.[1] ||
+    html.match(/<td[^>]*class="[^"]*Pay_Fukusho[^"]*"[^>]*>([\s\S]*?)<\/td>/)?.[1];
 
-  const searchHtml = fukushoBlockM ? fukushoBlockM[1] : html;
-
-  // <span class="UmaNum">X</span> と <span class="Payout">XXX</span> のペアを探す
-  // netkeibaでは <li> 内に馬番→払戻の順で並ぶ
-  const liPattern = /<li[^>]*>([\s\S]*?)<\/li>/g;
-  let liM: RegExpExecArray | null;
-  while ((liM = liPattern.exec(searchHtml)) !== null && fukusho.length < 3) {
-    const liHtml = liM[1];
-    const umaNum = liHtml.match(/<span[^>]*class="[^"]*UmaNum[^"]*"[^>]*>(\d{1,2})<\/span>/)?.[1];
-    const payoutRaw = liHtml.match(/<span[^>]*class="[^"]*Payout[^"]*"[^>]*>([\d,]+)<\/span>/)?.[1];
-    if (umaNum && payoutRaw) {
-      const payout = parseInt(payoutRaw.replace(/,/g, ""));
-      if (payout >= 100) {
-        const fin = top3.find(f => f.num === umaNum);
-        fukusho.push({ num: umaNum, name: fin?.name ?? "不明", payout });
+  if (fukushoTdHtml) {
+    const liPattern = /<li[^>]*>([\s\S]*?)<\/li>/g;
+    let liM: RegExpExecArray | null;
+    while ((liM = liPattern.exec(fukushoTdHtml)) !== null && fukusho.length < 3) {
+      const liHtml = liM[1];
+      const umaNum = liHtml.match(/<span[^>]*class="[^"]*UmaNum[^"]*"[^>]*>(\d{1,2})<\/span>/)?.[1];
+      const payoutRaw = liHtml.match(/<span[^>]*class="[^"]*Payout[^"]*"[^>]*>([\d,]+)<\/span>/)?.[1];
+      if (umaNum && payoutRaw) {
+        const payout = parseInt(payoutRaw.replace(/,/g, ""));
+        if (payout >= 100) {
+          const fin = top3.find(f => f.num === umaNum);
+          fukusho.push({ num: umaNum, name: fin?.name ?? "不明", payout });
+        }
       }
     }
+    if (fukusho.length > 0) return fukusho;
   }
-  if (fukusho.length > 0) return fukusho;
 
   // ── Method 2: Payout_Detail_Table の td セル内の馬番・払戻 ──
   // 複勝行: <th>複勝</th><td>馬番リスト</td><td>払戻リスト</td>

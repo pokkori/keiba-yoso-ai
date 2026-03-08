@@ -210,10 +210,18 @@ export default function BacktestPage() {
       let profit: number | undefined;
 
       if (!skip && aiPick && result && aiPick.horseNum) {
-        const finisher = result.top3.find(f => f.num === aiPick.horseNum);
-        hit = !!finisher;
-        if (hit) {
-          const payoutInfo = result.fukusho.find(f => f.num === aiPick.horseNum);
+        // 馬番で照合（メイン）
+        const finisherByNum = result.top3.find(f => f.num === aiPick.horseNum);
+        // 馬名で照合（AIが馬番を誤記した場合のフォールバック）
+        const finisherByName = !finisherByNum && aiPick.horseName && aiPick.horseName !== "不明"
+          ? result.top3.find(f =>
+              f.name.includes(aiPick.horseName) || aiPick.horseName.includes(f.name)
+            )
+          : undefined;
+        const actualFinisher = finisherByNum ?? finisherByName;
+        hit = !!actualFinisher;
+        if (hit && actualFinisher) {
+          const payoutInfo = result.fukusho.find(f => f.num === actualFinisher.num);
           payout = payoutInfo?.payout;
           profit = payout !== undefined ? Math.round((payout / 100) * 1000 - 1000) : undefined;
         } else {
@@ -407,7 +415,11 @@ export default function BacktestPage() {
                         {row.result?.top3.length ? (
                           <div className="space-y-0.5">
                             {row.result.top3.map(f => {
-                              const isAIPick = !row.skip && f.num === row.aiPick?.horseNum;
+                              const isAIPick = !row.skip && (
+                                f.num === row.aiPick?.horseNum ||
+                                (row.hit && row.aiPick?.horseName && row.aiPick.horseName !== "不明" &&
+                                  (f.name.includes(row.aiPick.horseName) || row.aiPick.horseName.includes(f.name)))
+                              );
                               const payout = row.result?.fukusho.find(p => p.num === f.num)?.payout;
                               return (
                                 <div key={f.pos}
