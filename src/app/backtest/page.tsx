@@ -173,6 +173,14 @@ export default function BacktestPage() {
     setRows(prev => prev.map((r, i) => i === idx ? { ...r, status: "loading" } : r));
 
     try {
+      // 未勝利レースはデータ不足でAIが機能しないためスキップ
+      if (row.race.label.includes("未勝利")) {
+        setRows(prev => prev.map((r, i) => i === idx
+          ? { ...r, status: "done", skip: true, predictError: "未勝利レース（過去データ不足のため対象外）" }
+          : r));
+        return;
+      }
+
       // バックテストはカウント対象外なのでプレミアム不要
       const apiMode = betMode === "fukusho" ? "fukusho" : "standard";
       const fetches: Promise<Response>[] = [

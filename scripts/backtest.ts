@@ -84,6 +84,14 @@ async function main() {
   for (const race of pastRaces) {
     process.stdout.write(`  ${race.label}... `);
 
+    // 未勝利レースはデータ不足でAIが機能しないためスキップ
+    if (race.label.includes("未勝利")) {
+      skips++;
+      process.stdout.write(`⏭ 未勝利（データ不足スキップ）\n`);
+      summary.push(`${race.label}: スキップ（未勝利）`);
+      continue;
+    }
+
     // 2. predict + result を並列取得
     const [predictRes, resultRes] = await Promise.all([
       fetch(`${BASE}/api/predict`, {
