@@ -63,10 +63,17 @@ function isSkipRecommended(prediction: string): boolean {
 }
 
 // AI予想から複勝推奨セクションを抽出
-function extractAIPick(prediction: string): AIPick {
-  const section = prediction.match(/【複勝推奨】([\s\S]*?)(?=【|$)/)?.[1]?.trim() ?? prediction;
+function extractAIPick(prediction: string, mode: "fukusho" | "standard"): AIPick {
+  let section: string;
+  if (mode === "fukusho") {
+    section = prediction.match(/【複勝推奨】([\s\S]*?)(?=【|$)/)?.[1]?.trim() ?? prediction;
+  } else {
+    // 通常モード: 本命(◎) を抽出
+    section = prediction.match(/【本命[（(◎)）】][^】]*】([\s\S]*?)(?=【|$)/)?.[1]?.trim() ??
+              prediction.match(/本命[（(◎)）\s]*([^\n]{0,80})/)?.[0]?.trim() ??
+              prediction;
+  }
   const horseNum = extractHorseNum(section);
-  // 馬名を取得（「X番 馬名」の馬名部分）
   const nameM = section.match(/\d{1,2}番\s*([\u30A0-\u30FF\u4E00-\u9FFF\u3040-\u309F]{2,15})/);
   const horseName = nameM ? nameM[1] : "不明";
   return { horseName, horseNum, rawText: section };
@@ -107,6 +114,7 @@ async function startCheckout(plan: string) {
 
 export default function BacktestPage() {
   const [date, setDate] = useState(getJSTDateStr());
+  const [betMode, setBetMode] = useState<"fukusho" | "standard">("fukusho");
   const [races, setRaces] = useState<Race[]>([]);
   const [racesLoading, setRacesLoading] = useState(false);
   const [rows, setRows] = useState<RaceRow[]>([]);
@@ -116,6 +124,11 @@ export default function BacktestPage() {
   useEffect(() => {
     fetch("/api/auth/status").then(r => r.json()).then(d => setIsPremium(d.isPremium));
   }, []);
+
+  // モード変更時にリセット
+  useEffect(() => {
+    setRows(prev => prev.map(r => ({ race: r.race, status: "idle" as RaceStatus })));
+  }, [betMode]);
 
   // レース一覧を取得
   useEffect(() => {
@@ -146,12 +159,13 @@ export default function BacktestPage() {
 
     try {
       // バックテストはカウント対象外なのでプレミアム不要
+      const apiMode = betMode === "fukusho" ? "fukusho" : "standard";
       const fetches: Promise<Response>[] = [
         fetch(`/api/result?raceId=${row.race.raceId}`),
         fetch("/api/predict", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ raceId: row.race.raceId, mode: "fukusho", backtest: true }),
+          body: JSON.stringify({ raceId: row.race.raceId, mode: apiMode, backtest: true }),
         }),
       ];
 
@@ -161,8 +175,8 @@ export default function BacktestPage() {
 
       const result: RaceResult | undefined = resultData?.top3 ? resultData : undefined;
       const rawPrediction: string | undefined = predictData?.prediction;
-      const aiPick = rawPrediction ? extractAIPick(rawPrediction) : undefined;
-      const skip = rawPrediction ? isSkipRecommended(rawPrediction) : false;
+      const aiPick = rawPrediction ? extractAIPick(rawPrediction, betMode) : undefined;
+      const skip = betMode === "fukusho" && rawPrediction ? isSkipRecommended(rawPrediction) : false;
 
       let hit: boolean | undefined;
       let payout: number | undefined;
@@ -173,7 +187,7 @@ export default function BacktestPage() {
         hit = !!finisher;
         if (hit) {
           const payoutInfo = result.fukusho.find(f => f.num === aiPick.horseNum);
-          payout = payoutInfo?.payout; // undefined = parsing failed
+          payout = payoutInfo?.payout;
           profit = payout !== undefined ? Math.round((payout / 100) * 1000 - 1000) : undefined;
         } else {
           profit = -1000;
@@ -226,7 +240,21 @@ export default function BacktestPage() {
 
       <div className="max-w-3xl mx-auto py-8 px-4">
         <h1 className="text-xl font-bold text-gray-900 mb-1">📊 バックテスト</h1>
-        <p className="text-sm text-gray-500 mb-6">複勝モードのAI予想と実際の結果を照合します（¥1,000/レース想定）</p>
+        <p className="text-sm text-gray-500 mb-3">AI予想と実際の結果を照合します（¥1,000/レース想定）</p>
+
+        {/* モード切替 */}
+        <div className="flex gap-2 mb-5">
+          <button
+            onClick={() => setBetMode("fukusho")}
+            className={`text-sm px-4 py-2 rounded-xl font-bold transition-colors ${betMode === "fukusho" ? "bg-amber-500 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-amber-50"}`}>
+            🎯 複勝モード
+          </button>
+          <button
+            onClick={() => setBetMode("standard")}
+            className={`text-sm px-4 py-2 rounded-xl font-bold transition-colors ${betMode === "standard" ? "bg-green-700 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-green-50"}`}>
+            🏆 通常モード（本命◎）
+          </button>
+        </div>
 
         {/* 日付選択 */}
         <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-5 shadow-sm">
@@ -325,8 +353,10 @@ export default function BacktestPage() {
                   {row.status === "done" && (
                     <div className="grid grid-cols-2 gap-3 mt-2 text-xs">
                       {/* AI予想 */}
-                      <div className={`rounded-lg p-3 ${row.skip ? "bg-gray-50" : "bg-amber-50"}`}>
-                        <div className={`font-bold mb-1 ${row.skip ? "text-gray-500" : "text-amber-800"}`}>🎯 AI複勝推奨</div>
+                      <div className={`rounded-lg p-3 ${row.skip ? "bg-gray-50" : betMode === "fukusho" ? "bg-amber-50" : "bg-blue-50"}`}>
+                        <div className={`font-bold mb-1 ${row.skip ? "text-gray-500" : betMode === "fukusho" ? "text-amber-800" : "text-blue-800"}`}>
+                          {betMode === "fukusho" ? "🎯 AI複勝推奨" : "🏆 AI本命（◎）"}
+                        </div>
                         {row.skip ? (
                           <span className="text-gray-400 text-xs">このレースはスキップ推奨（ベット対象外）</span>
                         ) : row.aiPick?.horseNum ? (

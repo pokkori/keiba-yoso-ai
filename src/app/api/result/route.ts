@@ -76,33 +76,59 @@ function parseResultHtml(html: string, raceId: string): RaceResultData {
   top3.sort((a, b) => a.pos - b.pos);
 
   // ── 複勝払戻テーブルをパース ─────────────────────────────────
-  // 払戻金テーブルは <table class="Payout_Detail_Table"> や
-  // 「複勝」キーワードを含むセクション
-  const payoutSection = html.match(/複勝([\s\S]*?)(?:枠連|馬連|馬単|三連|ワイド)/)?.[1] ?? "";
+  const rawPayoutSection =
+    html.match(/複勝([\s\S]*?)(?:枠連|馬連|馬単|三連複|三連単|ワイド)/)?.[1] ??
+    html.match(/複勝([\s\S]{0,600}?)$/)?.[1] ?? "";
+  const payoutText = stripTags(rawPayoutSection).replace(/\s+/g, " ").trim();
 
-  // 馬番を探す: 1〜2桁の数字の羅列
-  const horseNums = [...payoutSection.matchAll(/[>\s](\d{1,2})[<\s,・]/g)].map(m => m[1]);
-  // 払戻金を探す: 3〜6桁の数字（¥マークや「円」付き、または単独3桁以上）
-  const amounts = [...payoutSection.matchAll(/[\s,>](\d{3,6})[\s<,円]/g)].map(m => parseInt(m[1]));
+  if (payoutText) {
+    // Try 1: "馬番 払戻金" ペアパターン（例: "5 140" "3 200"）
+    const pairPat = /\b(\d{1,2})\b\s+(\d{3,5})\b/g;
+    const seenNums = new Set<string>();
+    let pm: RegExpExecArray | null;
+    while ((pm = pairPat.exec(payoutText)) !== null) {
+      const num = pm[1];
+      const amt = parseInt(pm[2]);
+      const numI = parseInt(num);
+      if (numI >= 1 && numI <= 18 && amt >= 100 && amt <= 99999 && !seenNums.has(num)) {
+        seenNums.add(num);
+        const fin = top3.find(f => f.num === num);
+        fukusho.push({ num, name: fin?.name ?? "不明", payout: amt });
+        if (fukusho.length >= 3) break;
+      }
+    }
 
-  // 馬番と払戻金を対応付け（最大3件）
-  for (let i = 0; i < Math.min(3, horseNums.length, amounts.length); i++) {
-    const finisher = top3.find(f => f.num === horseNums[i]);
-    fukusho.push({
-      num: horseNums[i],
-      name: finisher?.name ?? "不明",
-      payout: amounts[i],
-    });
+    // Try 2: 馬番と金額を別々に取り出して順番で対応付け
+    if (fukusho.length === 0) {
+      const nums = [...payoutText.matchAll(/\b(\d{1,2})\b/g)]
+        .map(m => m[1]).filter(n => { const i = parseInt(n); return i >= 1 && i <= 18; });
+      const amts = [...payoutText.matchAll(/\b(\d{3,5})\b/g)]
+        .map(m => parseInt(m[1])).filter(n => n >= 100 && n <= 99999);
+      const uniqNums = [...new Set(nums)];
+      for (let i = 0; i < Math.min(3, uniqNums.length, amts.length); i++) {
+        const fin = top3.find(f => f.num === uniqNums[i]);
+        fukusho.push({ num: uniqNums[i], name: fin?.name ?? "不明", payout: amts[i] });
+      }
+    }
   }
 
-  // fallback: 払戻金テーブルが別形式の場合
+  // Fallback: top3馬番に紐づく「XXX円」をページ全体から探す
   if (fukusho.length === 0 && top3.length > 0) {
-    // 金額っぽい数値を探す
-    const allAmounts = [...html.matchAll(/(\d{3,5})円/g)].map(m => parseInt(m[1]));
-    // 100〜900の範囲が複勝らしい金額（1倍〜9倍）
-    const likely = allAmounts.filter(n => n >= 100 && n <= 9000).slice(0, 3);
-    top3.slice(0, likely.length).forEach((f, i) => {
-      fukusho.push({ num: f.num, name: f.name, payout: likely[i] ?? 0 });
+    for (const f of top3.slice(0, 3)) {
+      const m = html.match(new RegExp(`[^\\d]${f.num}[^\\d][\\s\\S]{0,80}?(\\d{3,5})円`));
+      if (m) {
+        const amt = parseInt(m[1]);
+        if (amt >= 100 && amt <= 99999) fukusho.push({ num: f.num, name: f.name, payout: amt });
+      }
+    }
+  }
+
+  // Final fallback: ページ全体の 複勝らしい金額を top3 順に割り当て
+  if (fukusho.length === 0 && top3.length > 0) {
+    const allAmts = [...html.matchAll(/(\d{3,5})円/g)]
+      .map(m => parseInt(m[1])).filter(n => n >= 100 && n <= 9900).slice(0, 3);
+    top3.slice(0, allAmts.length).forEach((f, i) => {
+      fukusho.push({ num: f.num, name: f.name, payout: allAmts[i] });
     });
   }
 
