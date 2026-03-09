@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   cookieStore.set("stripe_premium", "1", {
     httpOnly: true,
     secure: true,
-    maxAge: 60 * 60 * 24 * 30,
+    maxAge: 60 * 60 * 24 * 366,
     path: "/",
   });
 
