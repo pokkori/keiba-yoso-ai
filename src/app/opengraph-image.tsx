@@ -25,10 +25,10 @@ export default function Image() {
           競馬予想AI
         </div>
         <div style={{ fontSize: 28, color: "#fef3c7", textAlign: "center", maxWidth: 900 }}>
-          レース名を入力するだけ
+          netkeiba出走馬データをAIが30秒分析
         </div>
         <div style={{ fontSize: 24, color: "#fbbf24", marginTop: 12, textAlign: "center" }}>
-          本命・穴馬・複勝をAIが瞬時に予想 🏆
+          本命◎ 対抗○ 単穴▲ 推奨買い目まで一発提案 🏆
         </div>
         <div
           style={{
