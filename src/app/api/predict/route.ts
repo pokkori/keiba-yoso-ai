@@ -483,7 +483,14 @@ export async function POST(req: NextRequest) {
 
   // バックテスト（過去レース検証）は無料枠カウント対象外
   const isBacktest = body.backtest === true;
-  const isPremium = req.cookies.get("stripe_premium")?.value === "1";
+  const email = req.cookies.get("user_email")?.value;
+  let isPremium = false;
+  if (email) {
+    const { isActiveSubscription } = await import("@/lib/supabase");
+    isPremium = await isActiveSubscription(email, "keiba");
+  } else {
+    isPremium = req.cookies.get("stripe_premium")?.value === "1";
+  }
   const cookieCount = parseInt(req.cookies.get(COOKIE_KEY)?.value || "0");
   if (!isPremium && !isBacktest && cookieCount >= FREE_LIMIT) {
     return NextResponse.json({ error: "LIMIT_REACHED" }, { status: 429 });

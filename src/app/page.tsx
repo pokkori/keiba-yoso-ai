@@ -273,10 +273,18 @@ export default function Home() {
         </Link>
       </section>
 
-      <footer className="text-center py-8 text-sm text-gray-400 border-t space-x-4">
-        <a href="/legal" className="hover:text-gray-600">特定商取引法に基づく表記</a>
-        <a href="/privacy" className="hover:text-gray-600">プライバシーポリシー</a>
-        <span>© 2025 競馬予想AI</span>
+      <footer className="text-center py-8 text-sm text-gray-400 border-t">
+        <p className="text-yellow-600 text-xs mb-4 font-semibold">
+          ⚠️ 本サービスは18歳以上の方を対象としています。競馬は公営競技です。馬券購入は各自の判断と責任で行ってください。ギャンブル依存症でお悩みの方は
+          <a href="https://www.ncasa-japan.jp/" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-400">こちら</a>
+          にご相談ください。
+        </p>
+        <div className="space-x-4">
+          <a href="/legal" className="hover:text-gray-600">特定商取引法に基づく表記</a>
+          <a href="/terms" className="hover:text-gray-600">利用規約</a>
+          <a href="/privacy" className="hover:text-gray-600">プライバシーポリシー</a>
+          <span>© 2025 競馬予想AI</span>
+        </div>
       </footer>
     </div>
   );
