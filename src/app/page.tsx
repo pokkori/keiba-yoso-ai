@@ -12,6 +12,21 @@ async function startCheckout(plan: string) {
   if (data.url) window.location.href = data.url;
 }
 
+const G1_RACES = [
+  { name: "高松宮記念", date: "2026-03-29", displayDate: "3/29（日）", venue: "中京", distance: "1200m芝" },
+  { name: "大阪杯", date: "2026-04-05", displayDate: "4/5（日）", venue: "阪神", distance: "2000m芝" },
+  { name: "桜花賞", date: "2026-04-12", displayDate: "4/12（日）", venue: "阪神", distance: "1600m芝" },
+  { name: "皐月賞", date: "2026-04-19", displayDate: "4/19（日）", venue: "中山", distance: "2000m芝" },
+  { name: "天皇賞（春）", date: "2026-05-03", displayDate: "5/3（日）", venue: "京都", distance: "3200m芝" },
+  { name: "日本ダービー", date: "2026-05-31", displayDate: "5/31（日）", venue: "東京", distance: "2400m芝" },
+];
+
+function getNextG1s(count = 3) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return G1_RACES.filter(r => new Date(r.date) >= today).slice(0, count);
+}
+
 const FEATURES = [
   {
     icon: "📋",
@@ -190,6 +205,38 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Next G1 Races */}
+      {(() => {
+        const next = getNextG1s(3);
+        if (!next.length) return null;
+        return (
+          <section className="py-12 px-6 bg-yellow-50 border-y border-yellow-200">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-gray-900">🏆 今後のG1レース</h2>
+                <Link href="/calendar" className="text-sm text-green-700 hover:text-green-800 font-medium">
+                  全日程を見る →
+                </Link>
+              </div>
+              <div className="grid sm:grid-cols-3 gap-4">
+                {next.map((race) => (
+                  <Link key={race.name} href="/predict"
+                    className="bg-white rounded-xl border border-yellow-200 p-4 hover:border-green-400 hover:shadow-md transition-all group">
+                    <div className="text-xs text-yellow-600 font-bold mb-1">G1</div>
+                    <div className="text-base font-bold text-gray-900 mb-2 group-hover:text-green-700">{race.name}</div>
+                    <div className="text-xs text-gray-500 space-y-0.5">
+                      <div>📅 {race.displayDate}</div>
+                      <div>📍 {race.venue}　{race.distance}</div>
+                    </div>
+                    <div className="mt-3 text-xs font-bold text-green-600">AIで予想する →</div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      })()}
 
       {/* Voices */}
       <section className="py-16 px-6 max-w-5xl mx-auto">
