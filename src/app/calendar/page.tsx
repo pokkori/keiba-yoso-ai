@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: TITLE,
     description: DESC,
-    site: "@keiba_yoso_ai",
+    site: "@levona_design",
   },
   alternates: {
     canonical: `${SITE_URL}/calendar`,

@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: TITLE,
     description: DESC,
-    site: "@keiba_yoso_ai",
+    site: "@levona_design",
   },
   metadataBase: new URL(SITE_URL),
 };
