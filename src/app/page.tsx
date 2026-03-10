@@ -1,16 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import PayjpModal from "@/components/PayjpModal";
 
-async function startCheckout(plan: string) {
-  const res = await fetch("/api/stripe/checkout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ plan }),
-  });
-  const data = await res.json();
-  if (data.url) window.location.href = data.url;
-}
+const PAYJP_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYJP_PUBLIC_KEY ?? "";
 
 const G1_RACES = [
   { name: "高松宮記念", date: "2026-03-29", displayDate: "3/29（日）", venue: "中京", distance: "1200m芝" },
@@ -133,8 +127,31 @@ const FAQS = [
 ];
 
 export default function Home() {
+  const [showPayjp, setShowPayjp] = useState(false);
+  const [payjpPlan, setPayjpPlan] = useState("basic");
+
+  function startCheckout(plan: string) {
+    setPayjpPlan(plan);
+    setShowPayjp(true);
+  }
+
+  const planLabel = payjpPlan === "annual"
+    ? "年間プロプラン ¥19,800/年"
+    : payjpPlan === "pro"
+    ? "プロプラン ¥2,980/月"
+    : "ベーシックプラン ¥980/月";
+
   return (
     <div className="min-h-screen bg-white">
+      {showPayjp && (
+        <PayjpModal
+          publicKey={PAYJP_PUBLIC_KEY}
+          planLabel={planLabel}
+          plan={payjpPlan}
+          onSuccess={() => { setShowPayjp(false); window.location.reload(); }}
+          onClose={() => setShowPayjp(false)}
+        />
+      )}
       <nav className="flex items-center justify-between px-6 py-4 border-b border-green-200 bg-green-900 sticky top-0 z-10">
         <span className="text-xl font-bold text-white">🏇 競馬予想AI</span>
         <div className="flex items-center gap-4">
@@ -151,8 +168,8 @@ export default function Home() {
       <section className="text-center py-20 px-6 bg-gradient-to-br from-green-900 to-green-700 text-white">
         <p className="text-xs font-bold text-green-300 mb-4 tracking-widest uppercase">リアルデータ × AI分析</p>
         <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-          netkeiba の出走馬データを<br />
-          <span className="text-yellow-400">AIが30秒で分析</span>
+          回収率が変わる。<br />
+          <span className="text-yellow-400">AIが30秒で本命・買い目まで提案</span>
         </h1>
         <p className="text-lg text-green-200 mb-4 max-w-xl mx-auto">
           本命◎・対抗○・単穴▲・推奨買い目・展開予想まで<br />
@@ -340,10 +357,16 @@ export default function Home() {
       <section className="py-16 px-6 bg-green-900 text-white text-center">
         <h2 className="text-2xl font-bold mb-3">今週の競馬、AIと一緒に楽しもう</h2>
         <p className="text-green-200 text-sm mb-8">無料1回から。登録不要でいますぐ体験できます。</p>
-        <Link href="/predict"
-          className="inline-block bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-4 px-12 rounded-full text-lg transition-colors">
-          無料で予想を見る →
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <Link href="/predict"
+            className="inline-block bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-4 px-12 rounded-full text-lg transition-colors">
+            無料で予想を見る →
+          </Link>
+          <button onClick={() => startCheckout("pro")}
+            className="inline-block bg-green-500 hover:bg-green-400 text-white font-bold py-4 px-10 rounded-full text-base transition-colors border-2 border-green-400">
+            🏆 プロプラン（¥2,980/月）で始める →
+          </button>
+        </div>
       </section>
 
       <footer className="text-center py-8 text-sm text-gray-400 border-t">

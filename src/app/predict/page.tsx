@@ -91,6 +91,17 @@ function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: 
     else { setCopied(true); setTimeout(() => setCopied(false), 2000); }
   };
 
+  // X シェア用: 本命馬名を抽出
+  const honmeSection = sections.find(s => s.title.includes("本命") || s.title.includes("複勝推奨"));
+  const honmeHorse = honmeSection?.content.match(/^([^\n（(【\s]{1,12})/)?.[1] ?? "";
+  const shareText = [
+    `【AI予想】${raceInfo}`,
+    honmeHorse ? (isFukusho ? `🎯複勝推奨: ${honmeHorse}` : `◎本命: ${honmeHorse}`) : "",
+    isFukusho ? "#競馬複勝予想 #競馬AI" : "#競馬予想AI #競馬 #G1",
+    "https://keiba-yoso-ai.vercel.app/predict",
+  ].filter(Boolean).join("\n");
+  const xShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+
   const current = sections[activeTab];
 
   const accent = isFukusho ? "amber" : "green";
@@ -106,12 +117,18 @@ function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: 
   return (
     <div className={`mt-8 rounded-2xl border ${isFukusho ? "border-amber-200" : "border-green-200"} overflow-hidden`}>
       {/* Header */}
-      <div className={`${headerBg} px-4 py-3 flex items-center justify-between`}>
+      <div className={`${headerBg} px-4 py-3 flex items-center justify-between gap-2`}>
         <span className="text-white font-bold text-sm">{headerIcon} {raceInfo} {headerLabel}</span>
-        <button onClick={() => handleCopy(rawText, true)}
-          className="text-xs bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg font-medium transition-colors">
-          {copiedAll ? "✓ コピー済み" : "全文コピー"}
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <a href={xShareUrl} target="_blank" rel="noopener noreferrer"
+            className="text-xs bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap">
+            🐦 Xでシェア
+          </a>
+          <button onClick={() => handleCopy(rawText, true)}
+            className="text-xs bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap">
+            {copiedAll ? "✓ コピー済み" : "全文コピー"}
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -237,8 +254,6 @@ export default function PredictPage() {
     return acc;
   }, {});
 
-  const shareLabel = raceInfo || "競馬";
-  const shareText = rawResult ? `${shareLabel}をAIが予想！🏇\n#競馬予想AI #競馬\nhttps://keiba-yoso-ai.vercel.app` : "";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -246,7 +261,7 @@ export default function PredictPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full text-center">
             <div className="text-4xl mb-3">🏇</div>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">無料枠を使い切りました</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">次のレースも、AIが30秒で的中候補を出す</h2>
             <p className="text-gray-500 text-sm mb-1">
               毎週土日・全レース無制限に使えます
             </p>
@@ -255,7 +270,8 @@ export default function PredictPage() {
               <li>✓ 本命・対抗・単穴・買い目を明示</li>
               <li>✓ 軍資金別の具体的な配分提案</li>
               <li>✓ 回収率トラッキングで成績可視化</li>
-              <li>✓ 重賞G1の特別詳細分析（プロプラン）</li>
+              <li>✓ G1・重賞を自信を持って買える</li>
+              <li>✓ 回収率改善のデータ管理ツール付き</li>
             </ul>
             <button onClick={() => startCheckout("pro")}
               className="w-full bg-gradient-to-r from-green-700 to-green-600 text-white py-3 rounded-xl font-bold hover:from-green-800 hover:to-green-700 transition-all mb-3">
@@ -418,6 +434,14 @@ export default function PredictPage() {
                   className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-2.5 px-8 rounded-full text-sm transition-colors">
                   ベーシック ¥980/月 で始める
                 </button>
+                <p className="mt-3 text-green-300 text-xs">
+                  さらに本格的に →{" "}
+                  <button onClick={() => startCheckout("pro")}
+                    className="text-yellow-300 hover:text-yellow-200 font-bold underline underline-offset-2 transition-colors">
+                    プロプラン ¥2,980/月
+                  </button>
+                  （G1・重賞の詳細分析付き）
+                </p>
               </div>
             )}
           </>

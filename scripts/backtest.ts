@@ -35,10 +35,14 @@ interface RaceResultData {
 
 function extractHorseNum(text: string): string {
   if (/^[\s*]*スキップ/.test(text)) return "";
+  // 先頭マッチ（優先）
   const m =
     text.match(/^[\s*]*(\d{1,2})番\s*[\u30A0-\u30FF\u4E00-\u9FFF]/) ||
     text.match(/^[\s*【]*(\d{1,2})番[^0-9目人気]/);
-  return m ? m[1] : "";
+  if (m) return m[1];
+  // フォールバック: テキスト内の任意位置から馬番を探す
+  const fb = text.match(/(\d{1,2})番\s*[\u30A0-\u30FF\u4E00-\u9FFF]/);
+  return fb ? fb[1] : "";
 }
 
 function extractAIPick(prediction: string, mode: "fukusho" | "standard"): { horseNum: string; horseName: string } {
