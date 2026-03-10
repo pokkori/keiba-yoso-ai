@@ -49,12 +49,12 @@ const FEATURES = [
   {
     icon: "🌿",
     title: "複勝モード（粗品式）",
-    desc: "負けにくい複勝買いに特化したモード。レース安定度・オッズ想定・リスク要因を分析して堅実な回収を狙う。",
+    desc: "複勝買いに特化したモード。レース安定度・オッズ想定・リスク要因をAIが分析して、買い目選びの参考情報を提供。",
   },
   {
     icon: "📊",
     title: "回収率トラッキング",
-    desc: "投資額・回収額を記録して累計回収率を自動計算。どの条件で勝てているか可視化できる。",
+    desc: "投資額・回収額を記録して累計回収率を自動計算。自分の馬券傾向を客観的に振り返ることができる。",
   },
   {
     icon: "⚡",
@@ -69,8 +69,8 @@ const FEATURES = [
 ];
 
 const VOICES = [
-  { text: "阪神大賞典でAIが推した単穴◉が3着に。三連複で3,000円が18,000円になった。根拠付きで納得感がある。", name: "40代・会社員" },
-  { text: "複勝モードを使い始めて3週間、週1〜2レースだけ買って9勝4敗。ストレスなく続けられる。", name: "30代・競馬歴5年" },
+  { text: "阪神大賞典でAIの根拠付き分析を参考に買い目を組み立てられた。自分だけの感覚じゃなくデータで考えられるのが良い。", name: "40代・会社員" },
+  { text: "複勝モードを使い始めて、どのレースに絞るか整理しやすくなった。分析の手間が省けてストレスなく続けられる。", name: "30代・競馬歴5年" },
   { text: "軍資金入力で金額まで出るのが最高。今まで「何円買えばいいんだろ」で止まってた。", name: "50代・週末競馬ファン" },
   { text: "G1前にプロプランにアップしたら展開予測が詳しくて感動。自分じゃこの分析できない。", name: "20代・競馬初心者" },
 ];
@@ -168,12 +168,12 @@ export default function Home() {
       <section className="text-center py-20 px-6 bg-gradient-to-br from-green-900 to-green-700 text-white">
         <p className="text-xs font-bold text-green-300 mb-4 tracking-widest uppercase">リアルデータ × AI分析</p>
         <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-          回収率が変わる。<br />
+          予想の根拠が、変わる。<br />
           <span className="text-yellow-400">AIが30秒で本命・買い目まで提案</span>
         </h1>
         <p className="text-lg text-green-200 mb-4 max-w-xl mx-auto">
           本命◎・対抗○・単穴▲・推奨買い目・展開予想まで<br />
-          ワンクリックで完全網羅。毎週土日・全レース対応。
+          ワンクリックで整理。毎週土日・全レース対応。
         </p>
         <p className="text-green-300 text-sm mb-8">G1・重賞・平場レースすべて対応</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
@@ -370,6 +370,9 @@ export default function Home() {
       </section>
 
       <footer className="text-center py-8 text-sm text-gray-400 border-t">
+        <p className="text-gray-500 text-xs mb-3">
+          ※本サービスはエンターテインメント目的の予想サービスです。馬券の的中・収益を保証するものではありません。
+        </p>
         <p className="text-yellow-600 text-xs mb-4 font-semibold">
           ⚠️ 本サービスは18歳以上の方を対象としています。競馬は公営競技です。馬券購入は各自の判断と責任で行ってください。ギャンブル依存症でお悩みの方は
           <a href="https://www.ncasa-japan.jp/" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-400">こちら</a>
