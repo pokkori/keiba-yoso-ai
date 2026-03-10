@@ -358,7 +358,7 @@ export default function PredictPage() {
             </div>
             {mode === "fukusho" && (
               <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mt-2">
-                💡 複勝は3着以内で的中。的中率80〜90%の堅実戦略。オッズ1.1〜1.6倍を狙います。
+                💡 複勝は3着以内で的中。AIが安定レースを厳選してオッズ1.2〜1.6倍の堅実な複勝を推奨します。
               </p>
             )}
           </div>

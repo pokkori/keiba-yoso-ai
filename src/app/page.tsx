@@ -382,7 +382,7 @@ export default function Home() {
           <a href="/legal" className="hover:text-gray-600">特定商取引法に基づく表記</a>
           <a href="/terms" className="hover:text-gray-600">利用規約</a>
           <a href="/privacy" className="hover:text-gray-600">プライバシーポリシー</a>
-          <span>© 2025 競馬予想AI</span>
+          <span>© 2026 競馬予想AI</span>
         </div>
       </footer>
     </div>
