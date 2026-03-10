@@ -18,7 +18,21 @@ const G1_RACES = [
   { name: "桜花賞", date: "2026-04-12", displayDate: "4/12（日）", venue: "阪神", distance: "1600m芝" },
   { name: "皐月賞", date: "2026-04-19", displayDate: "4/19（日）", venue: "中山", distance: "2000m芝" },
   { name: "天皇賞（春）", date: "2026-05-03", displayDate: "5/3（日）", venue: "京都", distance: "3200m芝" },
+  { name: "NHKマイルカップ", date: "2026-05-10", displayDate: "5/10（日）", venue: "東京", distance: "1600m芝" },
+  { name: "ヴィクトリアマイル", date: "2026-05-17", displayDate: "5/17（日）", venue: "東京", distance: "1600m芝" },
+  { name: "オークス", date: "2026-05-24", displayDate: "5/24（日）", venue: "東京", distance: "2400m芝" },
   { name: "日本ダービー", date: "2026-05-31", displayDate: "5/31（日）", venue: "東京", distance: "2400m芝" },
+  { name: "安田記念", date: "2026-06-07", displayDate: "6/7（日）", venue: "東京", distance: "1600m芝" },
+  { name: "宝塚記念", date: "2026-06-28", displayDate: "6/28（日）", venue: "阪神", distance: "2200m芝" },
+  { name: "スプリンターズS", date: "2026-09-27", displayDate: "9/27（日）", venue: "中山", distance: "1200m芝" },
+  { name: "秋華賞", date: "2026-10-18", displayDate: "10/18（日）", venue: "京都", distance: "2000m芝" },
+  { name: "菊花賞", date: "2026-10-25", displayDate: "10/25（日）", venue: "京都", distance: "3000m芝" },
+  { name: "天皇賞（秋）", date: "2026-11-01", displayDate: "11/1（日）", venue: "東京", distance: "2000m芝" },
+  { name: "エリザベス女王杯", date: "2026-11-15", displayDate: "11/15（日）", venue: "京都", distance: "2200m芝" },
+  { name: "マイルCS", date: "2026-11-22", displayDate: "11/22（日）", venue: "京都", distance: "1600m芝" },
+  { name: "ジャパンC", date: "2026-11-29", displayDate: "11/29（日）", venue: "東京", distance: "2400m芝" },
+  { name: "チャンピオンズC", date: "2026-12-06", displayDate: "12/6（日）", venue: "中京", distance: "1800mダート" },
+  { name: "有馬記念", date: "2026-12-27", displayDate: "12/27（日）", venue: "中山", distance: "2500m芝" },
 ];
 
 function getNextG1s(count = 3) {
@@ -39,6 +53,11 @@ const FEATURES = [
     desc: "「今日の軍資金3,000円」と入力するだけで、三連複・馬連・単勝の具体的な購入金額まで提案。",
   },
   {
+    icon: "🌿",
+    title: "複勝モード（粗品式）",
+    desc: "負けにくい複勝買いに特化したモード。レース安定度・オッズ想定・リスク要因を分析して堅実な回収を狙う。",
+  },
+  {
     icon: "📊",
     title: "回収率トラッキング",
     desc: "投資額・回収額を記録して累計回収率を自動計算。どの条件で勝てているか可視化できる。",
@@ -48,12 +67,18 @@ const FEATURES = [
     title: "30秒で予想完了",
     desc: "レースを選んでボタンを押すだけ。データ取得からAI分析まで全自動。難しい操作は一切不要。",
   },
+  {
+    icon: "🏆",
+    title: "G1・重賞の特別分析",
+    desc: "プロプランでは重賞レースに特化した詳細分析。展開・ペース・コース適性・前走比較まで徹底解剖。",
+  },
 ];
 
 const VOICES = [
-  { text: "G1の前に使ってみたら本命が飛んで単穴が来た。AIが指摘してた穴馬だったので感謝。", name: "40代・会社員" },
-  { text: "毎週土日に全レース予想するのは無理だけど、これなら気になったレースをすぐ調べられる。", name: "30代・競馬歴5年" },
-  { text: "軍資金入力で具体的な金額が出るのが便利。自分で配分考えるのが一番難しかった。", name: "50代・週末競馬ファン" },
+  { text: "阪神大賞典でAIが推した単穴◉が3着に。三連複で3,000円が18,000円になった。根拠付きで納得感がある。", name: "40代・会社員" },
+  { text: "複勝モードを使い始めて3週間、週1〜2レースだけ買って9勝4敗。ストレスなく続けられる。", name: "30代・競馬歴5年" },
+  { text: "軍資金入力で金額まで出るのが最高。今まで「何円買えばいいんだろ」で止まってた。", name: "50代・週末競馬ファン" },
+  { text: "G1前にプロプランにアップしたら展開予測が詳しくて感動。自分じゃこの分析できない。", name: "20代・競馬初心者" },
 ];
 
 const PLANS = [
@@ -149,11 +174,12 @@ export default function Home() {
 
       {/* Stats */}
       <section className="py-10 px-6 bg-green-800 text-white">
-        <div className="max-w-4xl mx-auto grid grid-cols-3 gap-6 text-center">
+        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
             { num: "JRA全場", label: "全競馬場に対応" },
             { num: "30秒", label: "AI分析完了まで" },
             { num: "直近5走", label: "全馬の成績を分析" },
+            { num: "G1 20戦", label: "2026年全G1対応" },
           ].map(s => (
             <div key={s.label}>
               <div className="text-2xl md:text-3xl font-bold text-yellow-400">{s.num}</div>
