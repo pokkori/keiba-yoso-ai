@@ -14,7 +14,7 @@ export default function PrivacyPage() {
           <p>本サービスでは、サービス提供のために以下の情報を取得することがあります。</p>
           <ul className="list-disc list-inside mt-2 space-y-1 text-gray-600">
             <li>お問い合わせ時に入力いただいたメールアドレス</li>
-            <li>決済時にStripe社が収集する支払情報（当社はカード番号を保持しません）</li>
+            <li>決済時にPAY.JP（PAY.JP株式会社）が収集する支払情報（当社はカード番号を保持しません）</li>
             <li>ブラウザのCookieおよびlocalStorage（利用回数の管理）</li>
             <li>アクセスログ（IPアドレス・ブラウザ種別・閲覧ページ）</li>
           </ul>
@@ -36,7 +36,7 @@ export default function PrivacyPage() {
           <ul className="list-disc list-inside mt-2 space-y-1 text-gray-600">
             <li>ご本人の同意がある場合</li>
             <li>法令に基づき開示が必要な場合</li>
-            <li>決済処理のためStripe, Inc.に提供する場合（Stripe社のプライバシーポリシーに従います）</li>
+            <li>決済処理のためPAY.JP（PAY.JP株式会社）に提供する場合（PAY.JP（https://pay.jp）のプライバシーポリシーに従います）</li>
           </ul>
         </section>
 
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="font-bold text-base mb-2">6. お問い合わせ</h2>
-          <p>個人情報の取扱いに関するお問い合わせは support@example.com までご連絡ください。</p>
+          <p>個人情報の取扱いに関するお問い合わせは levonadesign@gmail.com までご連絡ください。</p>
         </section>
 
         <p className="text-gray-400 text-xs pt-4 border-t">制定日：2025年1月1日</p>
