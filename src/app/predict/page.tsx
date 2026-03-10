@@ -409,41 +409,55 @@ export default function PredictPage() {
           <>
             <PredictionCard sections={sections} raceInfo={raceInfo} rawText={rawResult} isFukusho={mode === "fukusho"} />
 
-            <div className="mt-4 flex gap-3">
-              <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`}
-                target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-colors">
-                𝕏 でシェア
-              </a>
-              <a href={`https://line.me/R/msg/text/?${encodeURIComponent(`${shareLabel}をAIが予想！🏇 #競馬予想AI https://keiba-yoso-ai.vercel.app`)}`}
-                target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-4 py-2 bg-[#06C755] text-white text-sm font-bold rounded-xl hover:bg-[#05b04c] transition-colors">
-                LINE でシェア
-              </a>
-              <Link href="/tracker"
-                className="flex items-center gap-1.5 px-4 py-2 bg-green-50 text-green-700 text-sm font-bold rounded-xl hover:bg-green-100 transition-colors border border-green-200">
-                📊 結果を記録
-              </Link>
-            </div>
-
-            {!isPremium && (
-              <div className="mt-5 bg-gradient-to-r from-green-800 to-green-700 rounded-2xl p-5 text-white text-center">
-                <p className="font-bold mb-1">毎週全レース予想したい方へ</p>
-                <p className="text-green-200 text-xs mb-4">土日毎週20〜30レースが全部使い放題。¥980/月から。</p>
-                <button onClick={() => startCheckout("basic")}
-                  className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-2.5 px-8 rounded-full text-sm transition-colors">
-                  ベーシック ¥980/月 で始める
-                </button>
-                <p className="mt-3 text-green-300 text-xs">
-                  さらに本格的に →{" "}
-                  <button onClick={() => startCheckout("pro")}
-                    className="text-yellow-300 hover:text-yellow-200 font-bold underline underline-offset-2 transition-colors">
-                    プロプラン ¥2,980/月
-                  </button>
-                  （G1・重賞の詳細分析付き）
-                </p>
-              </div>
-            )}
+            {(() => {
+              const shareLabel = raceInfo || "レース";
+              const honmeSec = sections.find(s => s.title.includes("本命") || s.title.includes("複勝推奨"));
+              const honmeHorse = honmeSec?.content.match(/^([^\n（(【\s]{1,12})/)?.[1] ?? "";
+              const shareText = [
+                `【AI予想】${shareLabel}`,
+                honmeHorse ? (mode === "fukusho" ? `🎯複勝推奨: ${honmeHorse}` : `◎本命: ${honmeHorse}`) : "",
+                mode === "fukusho" ? "#競馬複勝予想 #競馬AI" : "#競馬予想AI #競馬 #G1",
+                "https://keiba-yoso-ai.vercel.app/predict",
+              ].filter(Boolean).join("\n");
+              return (
+                <>
+                  <div className="mt-4 flex gap-3">
+                    <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-colors">
+                      𝕏 でシェア
+                    </a>
+                    <a href={`https://line.me/R/msg/text/?${encodeURIComponent(`${shareLabel}をAIが予想！🏇 #競馬予想AI https://keiba-yoso-ai.vercel.app`)}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-4 py-2 bg-[#06C755] text-white text-sm font-bold rounded-xl hover:bg-[#05b04c] transition-colors">
+                      LINE でシェア
+                    </a>
+                    <Link href="/tracker"
+                      className="flex items-center gap-1.5 px-4 py-2 bg-green-50 text-green-700 text-sm font-bold rounded-xl hover:bg-green-100 transition-colors border border-green-200">
+                      📊 結果を記録
+                    </Link>
+                  </div>
+                  {!isPremium && (
+                    <div className="mt-5 bg-gradient-to-r from-green-800 to-green-700 rounded-2xl p-5 text-white text-center">
+                      <p className="font-bold mb-1">毎週全レース予想したい方へ</p>
+                      <p className="text-green-200 text-xs mb-4">土日毎週20〜30レースが全部使い放題。¥980/月から。</p>
+                      <button onClick={() => startCheckout("basic")}
+                        className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-2.5 px-8 rounded-full text-sm transition-colors">
+                        ベーシック ¥980/月 で始める
+                      </button>
+                      <p className="mt-3 text-green-300 text-xs">
+                        さらに本格的に →{" "}
+                        <button onClick={() => startCheckout("pro")}
+                          className="text-yellow-300 hover:text-yellow-200 font-bold underline underline-offset-2 transition-colors">
+                          プロプラン ¥2,980/月
+                        </button>
+                        （G1・重賞の詳細分析付き）
+                      </p>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </>
         )}
       </div>
