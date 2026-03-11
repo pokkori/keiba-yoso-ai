@@ -163,8 +163,13 @@ function parseHorsesBasic(html: string): HorseBasic[] {
 
 // ─── Fetch shutuba page → HorseBasic[] ───────────────────────────────────────
 
-async function fetchShutuba(raceId: string, log: string[]): Promise<ShutubResult> {
-  const urls = [
+async function fetchShutuba(raceId: string, log: string[], preferResult = false): Promise<ShutubResult> {
+  // バックテスト（過去レース）はdb.netkeibaを優先: オッズ・人気データが含まれている
+  const urls = preferResult ? [
+    `https://db.netkeiba.com/race/${raceId}/`,
+    `https://race.netkeiba.com/race/result.html?race_id=${raceId}`,
+    `https://race.netkeiba.com/race/shutuba.html?race_id=${raceId}`,
+  ] : [
     `https://race.netkeiba.com/race/shutuba_popup.html?race_id=${raceId}`,
     `https://race.netkeiba.com/race/shutuba.html?race_id=${raceId}`,
     `https://sp.netkeiba.com/race/shutuba.html?race_id=${raceId}`,
@@ -385,7 +390,7 @@ function extractRaceInfoFromResultPage(html: string, venue: string, raceNo: numb
   return condShort ? `${base} (${condShort})` : base;
 }
 
-async function fetchRaceData(raceId: string): Promise<FetchResult> {
+async function fetchRaceData(raceId: string, isBacktest = false): Promise<FetchResult> {
   const log: string[] = [];
   const trackCode = raceId.substring(4, 6);
   const raceNo = parseInt(raceId.substring(10, 12), 10);
@@ -426,7 +431,7 @@ async function fetchRaceData(raceId: string): Promise<FetchResult> {
   }
 
   // ── Fetch shutuba HTML to get horse IDs (always needed for detail fetch) ──
-  const shutubaResult = await fetchShutuba(raceId, log);
+  const shutubaResult = await fetchShutuba(raceId, log, isBacktest);
   const shutubaHorses = shutubaResult?.horses ?? null;
 
   if (!shutubaHorses && !baseHorses) {
@@ -526,7 +531,7 @@ export async function POST(req: NextRequest) {
   const budget = typeof body.budget === "number" && body.budget >= 100 ? Math.min(body.budget, 1000000) : null;
   const mode = body.mode === "fukusho" ? "fukusho" : "standard";
 
-  const { data: raceData, debugLog } = await fetchRaceData(body.raceId);
+  const { data: raceData, debugLog } = await fetchRaceData(body.raceId, isBacktest);
   if (!raceData) {
     console.error("fetchRaceData failed:", debugLog);
     const trackCode = body.raceId.substring(4, 6);
