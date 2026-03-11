@@ -262,9 +262,9 @@ export default function PredictPage() {
           <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full text-center relative">
             <button onClick={() => setShowPaywall(false)} className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold leading-none">×</button>
             <div className="text-4xl mb-3">🏇</div>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">次のレースも、AIが30秒で的中候補を出す</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">このまま終わらせますか？</h2>
             <p className="text-gray-500 text-sm mb-1">
-              毎週土日・全レース無制限に使えます
+              まだレースは続いています。全レース無制限でAIが予想します。
             </p>
             <ul className="text-xs text-gray-400 text-left mb-6 space-y-1.5 mt-3">
               <li>✓ 全レース予想（1日20〜30レース）</li>

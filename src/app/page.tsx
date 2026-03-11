@@ -193,9 +193,9 @@ export default function Home() {
       <section className="py-10 px-6 bg-green-800 text-white">
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
-            { num: "JRA全場", label: "全競馬場に対応" },
+            { num: "33%", label: "重賞・特別レース的中率" },
             { num: "30秒", label: "AI分析完了まで" },
-            { num: "直近5走", label: "全馬の成績を分析" },
+            { num: "+¥2,300", label: "重賞特化の収支実績" },
             { num: "G1 20戦", label: "2026年全G1対応" },
           ].map(s => (
             <div key={s.label}>
