@@ -47,17 +47,21 @@ function getJSTDateStr(offset = 0): string {
   return `${jst.getUTCFullYear()}-${String(jst.getUTCMonth() + 1).padStart(2, "0")}-${String(jst.getUTCDate()).padStart(2, "0")}`;
 }
 
-// AI出力から馬番を抽出（セクションの先頭にある "X番 馬名" のみを対象）
-// 説明文中の「1番人気」「3番手」などは誤検出しないよう先頭限定
+// AI出力から馬番を抽出
 function extractHorseNum(sectionText: string): string {
   // スキップ推奨の場合は馬番なしとして扱う
   if (/^[\s*]*スキップ/.test(sectionText)) return "";
 
+  // 全角数字を半角に正規化（AIが全角で出力するケースに対応）
+  const text = sectionText.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+
   const m =
     // 先頭の "X番 カタカナ/漢字" パターン（最も確実）
-    sectionText.match(/^[\s*]*(\d{1,2})番\s*[\u30A0-\u30FF\u4E00-\u9FFF]/) ||
-    // 先頭の "X番" + 何らかの文字
-    sectionText.match(/^[\s*【]*(\d{1,2})番[^0-9目人気]/);
+    text.match(/^[\s*]*(\d{1,2})番\s*[\u30A0-\u30FF\u4E00-\u9FFF]/) ||
+    // 先頭の "X番" + 何らかの文字（1番人気・1番目などを除外）
+    text.match(/^[\s*【]*(\d{1,2})番[^0-9目人気]/) ||
+    // 文中の "X番 馬名（カタカナ/漢字2文字以上）" フォールバック（先頭に説明文がある場合）
+    text.match(/\b(\d{1,2})番[\s　][\u30A0-\u30FF\u4E00-\u9FFF\u3040-\u309F]{2}/);
   return m ? m[1] : "";
 }
 
@@ -89,7 +93,9 @@ function extractAIPick(prediction: string, mode: "fukusho" | "standard"): AIPick
     section = sectionMatch[1].trim();
   }
   const horseNum = extractHorseNum(section);
-  const nameM = section.match(/\d{1,2}番\s*([\u30A0-\u30FF\u4E00-\u9FFF\u3040-\u309F]{2,15})/);
+  // 全角数字を正規化してから馬名を抽出
+  const normSection = section.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+  const nameM = normSection.match(/\d{1,2}番[\s　]*([\u30A0-\u30FF\u4E00-\u9FFF\u3040-\u309F]{2,15})/);
   const horseName = nameM ? nameM[1] : "不明";
   return { horseName, horseNum, rawText: section };
 }
