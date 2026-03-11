@@ -459,6 +459,31 @@ async function fetchRaceData(raceId: string): Promise<FetchResult> {
   // ── Fetch per-horse past results from db.netkeiba.com ──
   const horseDetails = await fetchAllHorseDetails(horses, log);
 
+  // ── Enrich raceInfo with race name if still missing ──
+  // Critical: STEP0 filtering requires race name to distinguish 重賞 from 一般クラス戦.
+  // shutuba.html for past races returns horses but NOT race name → all races wrongly skipped.
+  if (raceInfo === `${venue} ${raceNo}R`) {
+    for (const url of [
+      `https://race.netkeiba.com/race/result.html?race_id=${raceId}`,
+      `https://db.netkeiba.com/race/${raceId}/`,
+    ]) {
+      try {
+        const r = await fetch(url, {
+          headers: { ...BASE_HEADERS, Referer: "https://race.netkeiba.com/" },
+          signal: AbortSignal.timeout(4000),
+        });
+        if (!r.ok) continue;
+        const html = await decodeBuffer(await r.arrayBuffer());
+        const enriched = extractRaceInfoFromResultPage(html, venue, raceNo);
+        if (enriched !== raceInfo) {
+          raceInfo = enriched;
+          log.push(`raceInfo enriched: ${raceInfo}`);
+          break;
+        }
+      } catch { /* ignore */ }
+    }
+  }
+
   return {
     data: { info: raceInfo, horses: horseDetails.join("\n\n") },
     debugLog: log,
