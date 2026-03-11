@@ -71,14 +71,27 @@ interface HorseBasic {
 
 function parseHorsesFromDBResultPage(html: string): HorseBasic[] {
   const horses: HorseBasic[] = [];
-  const tableMatch = html.match(/<table[^>]*class="[^"]*race_table_01[^"]*"[^>]*>([\s\S]*?)<\/table>/);
-  if (!tableMatch) return [];
+
+  // race_table_01 の開始位置を検索
+  const tblIdx = html.search(/<table[^>]*class="[^"]*race_table_01[^"]*"/);
+  if (tblIdx === -1) return [];
+
+  // ネストしたテーブルを考慮して正しい </table> を見つける（lazy match では途中で止まる）
+  let depth = 0, tableEnd = -1;
+  const tagRe = /<\/?table/gi;
+  tagRe.lastIndex = tblIdx;
+  let tagM: RegExpExecArray | null;
+  while ((tagM = tagRe.exec(html)) !== null) {
+    if (tagM[0].startsWith("</")) { if (--depth === 0) { tableEnd = tagM.index; break; } }
+    else { depth++; }
+  }
+  const tableHtml = tableEnd > 0 ? html.slice(tblIdx, tableEnd) : html.slice(tblIdx, tblIdx + 80000);
 
   const getText = (h: string) => h.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
 
   let m;
   const rowPattern = /<tr[^>]*>([\s\S]*?)<\/tr>/g;
-  while ((m = rowPattern.exec(tableMatch[1])) !== null) {
+  while ((m = rowPattern.exec(tableHtml)) !== null) {
     const rowHtml = m[1];
     if (/<th/.test(rowHtml)) continue; // skip header rows
 
