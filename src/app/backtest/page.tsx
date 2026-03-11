@@ -56,8 +56,8 @@ function extractHorseNum(sectionText: string): string {
   const text = sectionText.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
 
   const m =
-    // 先頭の "X番 カタカナ/漢字" パターン（最も確実）
-    text.match(/^[\s*]*(\d{1,2})番\s*[\u30A0-\u30FF\u4E00-\u9FFF]/) ||
+    // 先頭の "X番 カタカナ/漢字" パターン（「1番人気」「1番目」などは除外）
+    text.match(/^[\s*]*(\d{1,2})番(?!\s*(?:人気|番|目))\s*[\u30A0-\u30FF\u4E00-\u9FFF]/) ||
     // 先頭の "X番" + 何らかの文字（1番人気・1番目などを除外）
     text.match(/^[\s*【]*(\d{1,2})番[^0-9目人気]/) ||
     // 文中の "X番 馬名（カタカナ/漢字2文字以上）" フォールバック（先頭に説明文がある場合）
