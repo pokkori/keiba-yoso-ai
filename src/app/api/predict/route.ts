@@ -193,8 +193,12 @@ async function fetchShutuba(raceId: string, log: string[], preferResult = false)
 
   for (const url of urls) {
     try {
+      // db.netkeiba は race.netkeiba の Referer だとログインページにリダイレクトされる
+      const referer = url.includes("db.netkeiba")
+        ? "https://db.netkeiba.com/"
+        : "https://race.netkeiba.com/";
       const res = await fetch(url, {
-        headers: { ...BASE_HEADERS, Referer: "https://race.netkeiba.com/" },
+        headers: { ...BASE_HEADERS, Referer: referer },
         signal: AbortSignal.timeout(10000),
       });
       const key = url.replace(/https?:\/\/[^/]+/, "").replace(/\?.*/, "");
@@ -487,7 +491,10 @@ async function fetchRaceData(raceId: string, isBacktest = false): Promise<FetchR
     ]) {
       try {
         const r = await fetch(url, {
-          headers: { ...BASE_HEADERS, Referer: "https://race.netkeiba.com/" },
+          headers: {
+            ...BASE_HEADERS,
+            Referer: url.includes("db.netkeiba") ? "https://db.netkeiba.com/" : "https://race.netkeiba.com/",
+          },
           signal: AbortSignal.timeout(4000),
         });
         if (!r.ok) continue;
