@@ -266,21 +266,19 @@ export default function PredictPage() {
             <p className="text-gray-500 text-sm mb-1">
               まだレースは続いています。全レース無制限でAIが予想します。
             </p>
-            <ul className="text-xs text-gray-400 text-left mb-6 space-y-1.5 mt-3">
-              <li>✓ 全レース予想（1日20〜30レース）</li>
-              <li>✓ 本命・対抗・単穴・買い目を明示</li>
-              <li>✓ 軍資金別の具体的な配分提案</li>
-              <li>✓ 回収率トラッキングで成績可視化</li>
-              <li>✓ G1・重賞を自信を持って買える</li>
-              <li>✓ 回収率改善のデータ管理ツール付き</li>
+            <ul className="text-xs text-gray-500 text-left mb-5 space-y-1.5 mt-3">
+              <li>✓ 土日毎週20〜30レースが全部使い放題</li>
+              <li>✓ G1前夜に「これが本命だ」と確信できる</li>
+              <li>✓ 軍資金別の具体的な購入金額まで提案</li>
+              <li>✓ 回収率トラッキングで自分の成績を可視化</li>
             </ul>
-            <button onClick={() => startCheckout("pro")}
-              className="w-full bg-gradient-to-r from-green-700 to-green-600 text-white py-3 rounded-xl font-bold hover:from-green-800 hover:to-green-700 transition-all mb-3">
-              プロプランで続ける（¥2,980/月）
-            </button>
             <button onClick={() => startCheckout("basic")}
-              className="w-full border border-green-300 text-green-700 py-2 rounded-xl text-sm font-medium hover:bg-green-50 transition-colors">
-              ベーシックプラン（¥980/月）
+              className="w-full bg-gradient-to-r from-green-700 to-green-600 text-white py-3 rounded-xl font-bold hover:from-green-800 hover:to-green-700 transition-all mb-2">
+              ベーシックで続ける（¥980/月）
+            </button>
+            <button onClick={() => startCheckout("pro")}
+              className="w-full border border-green-300 text-green-700 py-2 rounded-xl text-sm font-medium hover:bg-green-50 transition-colors mb-1">
+              G1・重賞の詳細分析も欲しい → プロプラン（¥2,980/月）
             </button>
           </div>
         </div>
@@ -437,20 +435,18 @@ export default function PredictPage() {
                   </div>
                   {!isPremium && (
                     <div className="mt-5 bg-gradient-to-r from-green-800 to-green-700 rounded-2xl p-5 text-white text-center">
-                      <p className="font-bold mb-1">毎週全レース予想したい方へ</p>
-                      <p className="text-green-200 text-xs mb-4">土日毎週20〜30レースが全部使い放題。¥980/月から。</p>
-                      <button onClick={() => startCheckout("basic")}
-                        className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-2.5 px-8 rounded-full text-sm transition-colors">
-                        ベーシック ¥980/月 で始める
-                      </button>
-                      <p className="mt-3 text-green-300 text-xs">
-                        さらに本格的に →{" "}
-                        <button onClick={() => startCheckout("pro")}
-                          className="text-yellow-300 hover:text-yellow-200 font-bold underline underline-offset-2 transition-colors">
-                          プロプラン ¥2,980/月
+                      <p className="font-bold mb-1">次のレースも予想しますか？</p>
+                      <p className="text-green-200 text-xs mb-4">土日毎週20〜30レースが全部使い放題。</p>
+                      <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                        <button onClick={() => startCheckout("basic")}
+                          className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-2.5 px-6 rounded-full text-sm transition-colors">
+                          次のレースへ → ¥980/月
                         </button>
-                        （G1・重賞の詳細分析付き）
-                      </p>
+                        <button onClick={() => startCheckout("pro")}
+                          className="bg-white/15 hover:bg-white/25 text-white border border-white/30 font-bold py-2.5 px-6 rounded-full text-sm transition-colors">
+                          G1詳細分析 → プロ ¥2,980/月
+                        </button>
+                      </div>
                     </div>
                   )}
                 </>

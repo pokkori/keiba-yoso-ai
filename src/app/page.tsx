@@ -355,17 +355,18 @@ export default function Home() {
 
       {/* Final CTA */}
       <section className="py-16 px-6 bg-green-900 text-white text-center">
-        <h2 className="text-2xl font-bold mb-3">今週の競馬、AIと一緒に楽しもう</h2>
-        <p className="text-green-200 text-sm mb-8">無料1回から。登録不要でいますぐ体験できます。</p>
+        <h2 className="text-2xl font-bold mb-3">今週のG1、AIと一緒に本命を絞ろう</h2>
+        <p className="text-green-200 text-sm mb-2">登録不要・カード不要で今すぐ無料体験できます。</p>
+        <p className="text-green-300 text-xs mb-8">有料プランはいつでも解約可能</p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Link href="/predict"
-            className="inline-block bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-4 px-12 rounded-full text-lg transition-colors">
-            無料で予想を見る →
-          </Link>
           <button onClick={() => startCheckout("pro")}
-            className="inline-block bg-green-500 hover:bg-green-400 text-white font-bold py-4 px-10 rounded-full text-base transition-colors border-2 border-green-400">
-            🏆 プロプラン（¥2,980/月）で始める →
+            className="inline-block bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-4 px-12 rounded-full text-lg transition-colors">
+            🏆 プロプランで始める（¥2,980/月）
           </button>
+          <Link href="/predict"
+            className="inline-block border-2 border-white/50 hover:border-white text-white font-bold py-4 px-10 rounded-full text-base transition-colors">
+            まず無料で試す →
+          </Link>
         </div>
       </section>
 
