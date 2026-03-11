@@ -230,6 +230,70 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Backtest Results — 透明性で差別化 */}
+      <section className="py-14 px-6 bg-white border-b border-gray-100">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <p className="text-xs font-bold text-green-600 tracking-widest uppercase mb-2">公開バックテスト実績</p>
+            <h2 className="text-2xl font-bold text-gray-900">AIの予想結果を、すべて公開します</h2>
+            <p className="text-gray-500 text-sm mt-2">的中も外れも隠しません。データで判断してください。</p>
+          </div>
+          {/* サマリー */}
+          <div className="grid grid-cols-3 gap-4 mb-8 text-center">
+            {[
+              { num: "67%", label: "複勝的中率", sub: "2/3レース的中" },
+              { num: "193%", label: "複勝回収率", sub: "1,000円投資→1,930円回収" },
+              { num: "+¥2,800", label: "収支（3レース計）", sub: "¥3,000投資→¥5,800回収" },
+            ].map(s => (
+              <div key={s.label} className="bg-green-50 rounded-2xl p-4 border border-green-100">
+                <div className="text-2xl md:text-3xl font-bold text-green-700">{s.num}</div>
+                <div className="text-xs font-bold text-gray-700 mt-1">{s.label}</div>
+                <div className="text-xs text-gray-400 mt-0.5">{s.sub}</div>
+              </div>
+            ))}
+          </div>
+          {/* 実績テーブル */}
+          <div className="overflow-x-auto rounded-2xl border border-gray-100">
+            <table className="w-full text-sm">
+              <thead className="bg-green-800 text-white">
+                <tr>
+                  <th className="px-4 py-3 text-left font-bold">レース</th>
+                  <th className="px-4 py-3 text-left font-bold">推奨馬</th>
+                  <th className="px-4 py-3 text-center font-bold">結果</th>
+                  <th className="px-4 py-3 text-right font-bold">収支</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                <tr className="bg-green-50">
+                  <td className="px-4 py-3"><span className="font-bold">弥生賞 (G2)</span><br /><span className="text-xs text-gray-500">中山・9頭立て</span></td>
+                  <td className="px-4 py-3">4番 ライヒスアドラー</td>
+                  <td className="px-4 py-3 text-center"><span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full">2着 ✓</span></td>
+                  <td className="px-4 py-3 text-right font-bold text-green-600">+¥100</td>
+                </tr>
+                <tr className="bg-green-50">
+                  <td className="px-4 py-3"><span className="font-bold">小倉大賞典 (G3)</span><br /><span className="text-xs text-gray-500">小倉</span></td>
+                  <td className="px-4 py-3">4番 ショウナンアデイブ</td>
+                  <td className="px-4 py-3 text-center"><span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full">3着 ✓</span></td>
+                  <td className="px-4 py-3 text-right font-bold text-green-600">+¥3,700</td>
+                </tr>
+                <tr className="bg-red-50">
+                  <td className="px-4 py-3"><span className="font-bold">中山記念 (G2)</span><br /><span className="text-xs text-gray-500">中山</span></td>
+                  <td className="px-4 py-3">8番 ショウナンマグマ</td>
+                  <td className="px-4 py-3 text-center"><span className="bg-red-400 text-white text-xs font-bold px-2 py-1 rounded-full">圏外 ✗</span></td>
+                  <td className="px-4 py-3 text-right font-bold text-red-500">-¥1,000</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-gray-400 text-center mt-3">※各レース¥1,000投資・複勝買いの場合。少サンプルのため参考値です。全記録は<Link href="/backtest" className="text-green-600 underline">バックテストページ</Link>で公開中。</p>
+          <div className="text-center mt-6">
+            <Link href="/backtest" className="inline-block bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-8 rounded-full text-sm transition-colors">
+              全バックテスト記録を見る →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Features */}
       <section className="py-16 px-6 max-w-5xl mx-auto">
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-3">なぜ競馬予想AIが選ばれるのか</h2>
