@@ -174,6 +174,7 @@ export default function PredictPage() {
   const [raceInfo, setRaceInfo] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isSkipMsg, setIsSkipMsg] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [usageCount, setUsageCount] = useState(0);
   const [showPaywall, setShowPaywall] = useState(false);
@@ -215,6 +216,7 @@ export default function PredictPage() {
 
     setLoading(true);
     setError("");
+    setIsSkipMsg(false);
     setRawResult("");
     setSections([]);
     setRaceInfo("");
@@ -235,6 +237,15 @@ export default function PredictPage() {
       }
       if (data.error) throw new Error(data.error);
 
+      // スキップ推奨チェック（一般クラス戦など）
+      const isSkip = /【推奨判定】スキップ/.test(data.prediction ?? "");
+      if (isSkip) {
+        setIsSkipMsg(true);
+        setError("このレースはスキップ推奨です。一般クラス戦は的中率9%で収支マイナスのため対象外。重賞・特別レースを選んでください。");
+        setLoading(false);
+        return;
+      }
+      setIsSkipMsg(false);
       setRawResult(data.prediction);
       setSections(data.mode === "fukusho" ? parseFukusho(data.prediction) : parsePredict(data.prediction));
       setRaceInfo(data.raceInfo || "");
@@ -380,7 +391,12 @@ export default function PredictPage() {
             </div>
           )}
 
-          {error && <p className="text-red-500 text-sm mb-4 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+          {error && (
+            <div className={`text-sm mb-4 px-3 py-2 rounded-lg ${isSkipMsg ? "text-amber-700 bg-amber-50 border border-amber-200" : "text-red-500 bg-red-50"}`}>
+              {isSkipMsg && <span className="font-bold mr-1">⏭ スキップ推奨:</span>}
+              {error}
+            </div>
+          )}
 
           <button onClick={handlePredict}
             disabled={loading || racePast || (!selectedRaceId && !racesLoading)}

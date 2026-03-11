@@ -212,8 +212,8 @@ export default function BacktestPage() {
       // まず馬推奨を抽出し、推奨馬がいる場合はスキップ扱いにしない
       const aiPickRaw = rawPrediction ? extractAIPick(rawPrediction, betMode) : undefined;
       const hasHorsePick = !!aiPickRaw?.horseNum;
-      // スキップ = AIがスキップ推奨 かつ 推奨馬なし（矛盾を防ぐ）
-      const skip = betMode === "fukusho" && rawPrediction
+      // スキップ = AIがスキップ推奨 かつ 推奨馬なし（両モード対応）
+      const skip = rawPrediction
         ? isSkipRecommended(rawPrediction) && !hasHorsePick
         : false;
       // スキップでなければ aiPick を保持（horseNum が空でも rawText 表示のため）
