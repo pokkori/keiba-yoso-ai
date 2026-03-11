@@ -298,7 +298,7 @@ export default function Home() {
       <section className="py-16 px-6 bg-green-50" id="pricing">
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-3">料金プラン</h2>
         <p className="text-center text-gray-500 text-sm mb-12">いつでも解約OK・次回更新前に停止可能</p>
-        <div className="grid md:grid-cols-4 gap-5 max-w-5xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 max-w-5xl mx-auto">
           {PLANS.map((plan) => (
             <div key={plan.name}
               className={`rounded-2xl p-6 border-2 bg-white ${plan.highlight ? "border-green-500 shadow-xl" : "border-green-200"}`}>
