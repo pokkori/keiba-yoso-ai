@@ -194,7 +194,7 @@ export default function BacktestPage() {
         fetch("/api/predict", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ raceId: row.race.raceId, mode: apiMode, backtest: true }),
+          body: JSON.stringify({ raceId: row.race.raceId, mode: apiMode, backtest: true, raceLabel: row.race.label }),
         }),
       ];
 

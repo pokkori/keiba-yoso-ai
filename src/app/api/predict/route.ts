@@ -498,7 +498,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "リクエストが多すぎます。しばらく待ってから再試行してください。" }, { status: 429 });
   }
 
-  let body: { raceId?: string; budget?: number; mode?: string; backtest?: boolean };
+  let body: { raceId?: string; budget?: number; mode?: string; backtest?: boolean; raceLabel?: string };
   try { body = await req.json(); }
   catch { return NextResponse.json({ error: "リクエストの形式が正しくありません" }, { status: 400 }); }
 
@@ -508,6 +508,8 @@ export async function POST(req: NextRequest) {
 
   // バックテスト（過去レース検証）は無料枠カウント対象外
   const isBacktest = body.backtest === true;
+  // クライアントから渡されたレースラベル（レース一覧APIから取得済み、確実にレース名を含む）
+  const clientRaceLabel = typeof body.raceLabel === "string" ? body.raceLabel.trim() : null;
   const email = req.cookies.get("user_email")?.value;
   let isPremium = false;
   if (email) {
@@ -531,6 +533,12 @@ export async function POST(req: NextRequest) {
     const raceNo = parseInt(body.raceId.substring(10, 12), 10);
     const venue = TRACK_NAMES[trackCode] || "";
     return NextResponse.json({ error: "FETCH_FAILED", venue, raceNo, debugLog }, { status: 502 });
+  }
+
+  // クライアントから渡されたレース名で上書き（レース一覧APIが取得済みの確実な情報を優先）
+  if (clientRaceLabel && clientRaceLabel.length > raceData.info.length) {
+    debugLog.push(`raceInfo overridden by clientRaceLabel: ${clientRaceLabel}`);
+    raceData.info = clientRaceLabel;
   }
 
   let prompt: string;

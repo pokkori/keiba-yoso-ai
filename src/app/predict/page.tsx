@@ -226,7 +226,7 @@ export default function PredictPage() {
       const res = await fetch("/api/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ raceId: selectedRaceId, budget: budgetNum, mode }),
+        body: JSON.stringify({ raceId: selectedRaceId, budget: budgetNum, mode, raceLabel: selectedRace?.label }),
       });
       if (res.status === 429) { setShowPaywall(true); return; }
       const data = await res.json();
