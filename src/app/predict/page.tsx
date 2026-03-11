@@ -259,7 +259,8 @@ export default function PredictPage() {
     <div className="min-h-screen bg-gray-50">
       {showPaywall && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full text-center">
+          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full text-center relative">
+            <button onClick={() => setShowPaywall(false)} className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold leading-none">×</button>
             <div className="text-4xl mb-3">🏇</div>
             <h2 className="text-xl font-bold text-gray-800 mb-2">次のレースも、AIが30秒で的中候補を出す</h2>
             <p className="text-gray-500 text-sm mb-1">
@@ -278,11 +279,8 @@ export default function PredictPage() {
               プロプランで続ける（¥2,980/月）
             </button>
             <button onClick={() => startCheckout("basic")}
-              className="w-full border border-green-300 text-green-700 py-2 rounded-xl text-sm font-medium hover:bg-green-50 transition-colors mb-3">
+              className="w-full border border-green-300 text-green-700 py-2 rounded-xl text-sm font-medium hover:bg-green-50 transition-colors">
               ベーシックプラン（¥980/月）
-            </button>
-            <button onClick={() => setShowPaywall(false)} className="text-xs text-gray-400 hover:text-gray-600">
-              閉じる
             </button>
           </div>
         </div>
