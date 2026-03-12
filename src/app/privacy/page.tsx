@@ -52,7 +52,7 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="font-bold text-base mb-2">6. お問い合わせ</h2>
-          <p>個人情報の取扱いに関するお問い合わせは levonadesign@gmail.com までご連絡ください。</p>
+          <p>個人情報の取扱いに関するお問い合わせは X(Twitter) @levona_design へのDM までご連絡ください。</p>
         </section>
 
         <p className="text-gray-400 text-xs pt-4 border-t">制定日：2025年1月1日</p>
