@@ -157,6 +157,7 @@ export default function Home() {
         <div className="flex items-center gap-4">
           <Link href="/predict" className="text-sm text-green-200 hover:text-white">予想する</Link>
           <Link href="/tracker" className="text-sm text-green-200 hover:text-white">回収率管理</Link>
+          <Link href="/backtest/results" className="text-sm text-green-200 hover:text-white">実績を見る</Link>
           <Link href="/predict"
             className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-4 py-1.5 rounded-full text-sm transition-colors">
             無料で試す
@@ -285,9 +286,9 @@ export default function Home() {
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-gray-400 text-center mt-3">※各レース¥1,000投資・複勝買いの場合。少サンプルのため参考値です。全記録は<Link href="/backtest" className="text-green-600 underline">バックテストページ</Link>で公開中。</p>
+          <p className="text-xs text-gray-400 text-center mt-3">※各レース¥1,000投資・複勝買いの場合。少サンプルのため参考値です。全記録は<Link href="/backtest/results" className="text-green-600 underline">バックテストページ</Link>で公開中。</p>
           <div className="text-center mt-6">
-            <Link href="/backtest" className="inline-block bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-8 rounded-full text-sm transition-colors">
+            <Link href="/backtest/results" className="inline-block bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-8 rounded-full text-sm transition-colors">
               全バックテスト記録を見る →
             </Link>
           </div>
