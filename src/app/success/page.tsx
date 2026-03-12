@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 function Confetti() {
@@ -50,17 +49,12 @@ function Confetti() {
 }
 
 function SuccessContent() {
-  const params = useSearchParams();
   const [showConfetti, setShowConfetti] = useState(true);
 
   useEffect(() => {
-    const sessionId = params.get("session_id");
-    if (sessionId) {
-      fetch(`/api/stripe/verify?session_id=${sessionId}`);
-    }
     const timer = setTimeout(() => setShowConfetti(false), 4000);
     return () => clearTimeout(timer);
-  }, [params]);
+  }, []);
 
   return (
     <>
