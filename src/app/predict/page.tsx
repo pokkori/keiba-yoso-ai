@@ -418,7 +418,7 @@ export default function PredictPage() {
             {(() => {
               const shareLabel = raceInfo || "レース";
               const honmeSec = sections.find(s => s.title.includes("本命") || s.title.includes("複勝推奨"));
-              const honmeHorse = honmeSec?.content.match(/^([^\n（(【\s]{1,12})/)?.[1] ?? "";
+              const honmeHorse = honmeSec?.content.match(/^(\d+番[\s　]?\S{1,10})/)?.[1]?.trim() ?? honmeSec?.content.match(/^([^\n（(【\s]{1,12})/)?.[1] ?? "";
               const shareText = [
                 `【AI予想】${shareLabel}`,
                 honmeHorse ? (mode === "fukusho" ? `🎯複勝推奨: ${honmeHorse}` : `◎本命: ${honmeHorse}`) : "",
