@@ -192,8 +192,10 @@ export default function PredictPage() {
       .then((data) => {
         if (data.races && data.races.length > 0) {
           setRaces(data.races);
-          const upcoming = data.races.find((r: Race) => !r.isPast);
-          setSelectedRaceId((upcoming ?? data.races[0]).raceId);
+          const eligible = data.races.filter((r: Race) => !/新馬|未勝利|1勝クラス|2勝クラス/.test(r.label));
+          const pool = eligible.length > 0 ? eligible : data.races;
+          const upcoming = pool.find((r: Race) => !r.isPast);
+          setSelectedRaceId((upcoming ?? pool[0]).raceId);
         }
       })
       .catch(() => {})
@@ -253,7 +255,15 @@ export default function PredictPage() {
     }
   };
 
-  const venueGroups = races.reduce<Record<string, Race[]>>((acc, race) => {
+  // スキップ推奨レースを事前判定（一般クラス戦は的中率が低いため対象外）
+  function isSkipRace(label: string): boolean {
+    return /新馬|未勝利|1勝クラス|2勝クラス/.test(label);
+  }
+
+  const eligibleRaces = races.filter((r) => !isSkipRace(r.label));
+  const skippedCount = races.length - eligibleRaces.length;
+
+  const venueGroups = eligibleRaces.reduce<Record<string, Race[]>>((acc, race) => {
     if (!acc[race.venue]) acc[race.venue] = [];
     acc[race.venue].push(race);
     return acc;
@@ -320,20 +330,29 @@ export default function PredictPage() {
           ) : (
             <div className="mb-5">
               <label className="block text-sm font-medium text-gray-600 mb-1.5">レース選択</label>
-              {races.length > 0 ? (
-                <select value={selectedRaceId}
-                  onChange={(e) => { setSelectedRaceId(e.target.value); setRawResult(""); setSections([]); setError(""); }}
-                  className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:border-green-500 bg-gray-50">
-                  {Object.entries(venueGroups).map(([venue, venueRaces]) => (
-                    <optgroup key={venue} label={`── ${venue} ──`}>
-                      {venueRaces.map((r) => (
-                        <option key={r.raceId} value={r.raceId}>
-                          {r.isPast ? `[発走済] ${r.label}` : r.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
+              {eligibleRaces.length > 0 ? (
+                <>
+                  <select value={selectedRaceId}
+                    onChange={(e) => { setSelectedRaceId(e.target.value); setRawResult(""); setSections([]); setError(""); }}
+                    className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:border-green-500 bg-gray-50">
+                    {Object.entries(venueGroups).map(([venue, venueRaces]) => (
+                      <optgroup key={venue} label={`── ${venue} ──`}>
+                        {venueRaces.map((r) => (
+                          <option key={r.raceId} value={r.raceId}>
+                            {r.isPast ? `[発走済] ${r.label}` : r.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                  {skippedCount > 0 && (
+                    <p className="text-xs text-gray-400 mt-1.5">
+                      ※ 新馬・未勝利・1〜2勝クラス（{skippedCount}レース）は回収率が低いため対象外
+                    </p>
+                  )}
+                </>
+              ) : races.length > 0 ? (
+                <p className="text-gray-400 text-sm py-2 bg-gray-50 rounded-xl px-3">本日は重賞・特別レースがありません（新馬・未勝利戦は対象外）</p>
               ) : (
                 <p className="text-gray-400 text-sm py-2 bg-gray-50 rounded-xl px-3">レースが見つかりませんでした（土日のみ開催）</p>
               )}
