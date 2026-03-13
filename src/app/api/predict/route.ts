@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export const maxDuration = 55; // Vercel hobby max 60s
 
-const FREE_LIMIT = 1;
+const FREE_LIMIT = 2;
 const COOKIE_KEY = "keiba_predict_count";
 
 const TRACK_NAMES: Record<string, string> = {

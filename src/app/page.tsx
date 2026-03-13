@@ -80,7 +80,7 @@ const PLANS = [
     name: "無料",
     price: "0",
     unit: "",
-    features: ["1レース予想（お試し）", "基本分析のみ"],
+    features: ["2レース予想（お試し）", "基本分析のみ"],
     cta: "無料で試す",
     stripeKey: null,
     href: "/predict",
@@ -176,27 +176,27 @@ export default function Home() {
           本命◎・対抗○・単穴▲・推奨買い目・展開予想まで<br />
           ワンクリックで整理。毎週土日・全レース対応。
         </p>
-        {/* Cialdini: 社会的証明 */}
+        {/* 実績ベース訴求（バックテスト公開・透明性重視） */}
         <div className="flex flex-wrap justify-center gap-3 mb-6 text-sm">
-          <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur border border-white/20 rounded-full px-4 py-2">
-            <span className="text-yellow-400 font-bold">1,800+</span>
-            <span className="text-green-100">人が毎週利用</span>
-          </div>
-          <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur border border-white/20 rounded-full px-4 py-2">
-            <span className="text-yellow-400">★★★★★</span>
-            <span className="text-green-100">平均評価 4.7</span>
-          </div>
           <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur border border-white/20 rounded-full px-4 py-2">
             <span className="text-yellow-400 font-bold">複勝回収率193%</span>
             <span className="text-green-100">参考値（※少サンプル）</span>
+          </div>
+          <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur border border-white/20 rounded-full px-4 py-2">
+            <span className="text-yellow-400 font-bold">全記録公開中</span>
+            <span className="text-green-100">バックテスト透明性重視</span>
+          </div>
+          <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur border border-white/20 rounded-full px-4 py-2">
+            <span className="text-yellow-400 font-bold">重賞的中率33%</span>
+            <span className="text-green-100">3レース実績</span>
           </div>
         </div>
         {/* Hormozi: 価値スタック */}
         <div className="bg-white/10 backdrop-blur border border-yellow-400/40 rounded-2xl p-4 mb-8 max-w-md mx-auto text-left">
           <p className="text-yellow-300 text-xs font-bold mb-2 text-center">🎁 無料プランでもこれだけ使える</p>
           <ul className="text-green-100 text-sm space-y-1">
-            <li>✅ AI予想（本命・対抗・単穴・買い目）1レース</li>
-            <li>✅ 複勝モード（粗品式・高的中率）1レース</li>
+            <li>✅ AI予想（本命・対抗・単穴・買い目）2レース</li>
+            <li>✅ 複勝モード（粗品式・高的中率）2レース</li>
             <li>✅ G1・重賞レース完全対応</li>
           </ul>
           <p className="text-yellow-300 text-xs mt-2 text-center">👑 Pro（¥2,980/月）で無制限 + バックテスト機能</p>
@@ -395,7 +395,8 @@ export default function Home() {
 
       {/* Voices */}
       <section className="py-16 px-6 max-w-5xl mx-auto">
-        <h2 className="text-2xl font-bold text-center text-gray-900 mb-12">ユーザーの声</h2>
+        <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">ユーザーの声</h2>
+        <p className="text-center text-xs text-gray-400 mb-10">※ユーザーからの声（個人の感想です）</p>
         <div className="grid md:grid-cols-3 gap-6">
           {VOICES.map((v, i) => (
             <div key={i} className="bg-green-50 border border-green-100 rounded-2xl p-5">
