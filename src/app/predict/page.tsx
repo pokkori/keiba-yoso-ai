@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import PayjpModal from "@/components/PayjpModal";
 
-const FREE_LIMIT = 1;
+const FREE_LIMIT = 2;
 const STORAGE_KEY = "keiba_predict_count";
 
 interface Race {

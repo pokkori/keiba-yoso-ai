@@ -557,7 +557,7 @@ export async function POST(req: NextRequest) {
     const trackCode = body.raceId.substring(4, 6);
     const raceNo = parseInt(body.raceId.substring(10, 12), 10);
     const venue = TRACK_NAMES[trackCode] || "";
-    return NextResponse.json({ error: "FETCH_FAILED", venue, raceNo, debugLog }, { status: 502 });
+    return NextResponse.json({ error: "FETCH_FAILED", venue, raceNo }, { status: 502 });
   }
 
   // クライアントから渡されたレース名で上書き（レース一覧APIが取得済みの確実な情報を優先）
@@ -793,7 +793,6 @@ ${!isGradeRace ? "⚠️ このレースは一般クラス戦の可能性があ�
       raceInfo: raceData.info.trim(),
       count: newCount,
       mode,
-      debugLog, // remove this line once stable
     });
 
     if (!isPremium && !isBacktest) {
