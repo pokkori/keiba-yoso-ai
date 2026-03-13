@@ -169,8 +169,8 @@ export default function Home() {
       <section className="text-center py-20 px-6 bg-gradient-to-br from-green-900 to-green-700 text-white">
         <p className="text-xs font-bold text-green-300 mb-4 tracking-widest uppercase">リアルデータ × AI分析</p>
         <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-          予想の根拠が、変わる。<br />
-          <span className="text-yellow-400">AIが30秒で本命・買い目まで提案</span>
+          バックテスト回収率193%。<br />
+          <span className="text-yellow-400">AIが根拠ごと本命・買い目まで提案</span>
         </h1>
         <p className="text-lg text-green-200 mb-4 max-w-xl mx-auto">
           本命◎・対抗○・単穴▲・推奨買い目・展開予想まで<br />
