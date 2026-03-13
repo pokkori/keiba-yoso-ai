@@ -10,7 +10,7 @@ const geistSans = Geist({
 });
 
 const SITE_URL = "https://keiba-yoso-ai.vercel.app";
-const TITLE = "競馬予想AI｜リアルデータをAIが30秒分析・本命◎対抗○単穴▲を即提案";
+const TITLE = "競馬予想AI｜複勝回収率193%・AIが30秒分析・本命◎対抗○単穴▲を即提案";
 const DESC = "netkeiba出走馬データをAIが自動取得・分析。本命◎対抗○単穴▲と推奨買い目を30秒で提案。軍資金別配分・回収率トラッキング付き。無料1レースから。";
 
 export const metadata: Metadata = {

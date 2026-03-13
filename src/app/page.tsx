@@ -165,8 +165,23 @@ export default function Home() {
         </div>
       </nav>
 
+      {/* G1シーズン開幕バナー */}
+      {(() => {
+        const spring = getNextG1s(3);
+        if (!spring.length) return null;
+        return (
+          <div className="bg-red-600 text-white text-center text-sm font-bold py-2 px-4">
+            🏆 春G1シーズン開幕！{spring.map(r => r.name).join(" → ")} — AIで予想する
+            <Link href="/predict" className="ml-2 underline hover:no-underline">無料で試す →</Link>
+          </div>
+        );
+      })()}
+
       {/* Hero */}
       <section className="text-center py-20 px-6 bg-gradient-to-br from-green-900 to-green-700 text-white">
+        <div className="inline-flex items-center gap-2 bg-red-600 text-white rounded-full px-4 py-1.5 text-xs font-bold mb-4">
+          🏆 春G1シーズン開幕中
+        </div>
         <p className="text-xs font-bold text-green-300 mb-4 tracking-widest uppercase">リアルデータ × AI分析</p>
         <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
           バックテスト回収率193%。<br />
@@ -365,28 +380,36 @@ export default function Home() {
       {(() => {
         const next = getNextG1s(3);
         if (!next.length) return null;
+        const today = new Date(); today.setHours(0, 0, 0, 0);
         return (
           <section className="py-12 px-6 bg-yellow-50 border-y border-yellow-200">
             <div className="max-w-4xl mx-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold text-gray-900">🏆 今後のG1レース</h2>
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-lg font-bold text-gray-900">🏆 春G1シーズン — 直近レース</h2>
                 <Link href="/calendar" className="text-sm text-green-700 hover:text-green-800 font-medium">
                   全日程を見る →
                 </Link>
               </div>
+              <p className="text-xs text-gray-500 mb-6">今がG1シーズン最高潮。AIで今すぐ予想を確認しよう。</p>
               <div className="grid sm:grid-cols-3 gap-4">
-                {next.map((race) => (
-                  <Link key={race.name} href="/predict"
-                    className="bg-white rounded-xl border border-yellow-200 p-4 hover:border-green-400 hover:shadow-md transition-all group">
-                    <div className="text-xs text-yellow-600 font-bold mb-1">G1</div>
-                    <div className="text-base font-bold text-gray-900 mb-2 group-hover:text-green-700">{race.name}</div>
-                    <div className="text-xs text-gray-500 space-y-0.5">
-                      <div>📅 {race.displayDate}</div>
-                      <div>📍 {race.venue}　{race.distance}</div>
-                    </div>
-                    <div className="mt-3 text-xs font-bold text-green-600">AIで予想する →</div>
-                  </Link>
-                ))}
+                {next.map((race) => {
+                  const days = Math.ceil((new Date(race.date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                  return (
+                    <Link key={race.name} href="/predict"
+                      className="bg-white rounded-xl border border-yellow-200 p-4 hover:border-green-400 hover:shadow-md transition-all group">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-yellow-600 font-bold">G1</span>
+                        <span className="bg-red-600 text-white text-xs font-black px-2 py-0.5 rounded-full">あと{days}日</span>
+                      </div>
+                      <div className="text-base font-bold text-gray-900 mb-2 group-hover:text-green-700">{race.name}</div>
+                      <div className="text-xs text-gray-500 space-y-0.5">
+                        <div>📅 {race.displayDate}</div>
+                        <div>📍 {race.venue}　{race.distance}</div>
+                      </div>
+                      <div className="mt-3 text-xs font-bold text-green-600">AIで予想する →</div>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           </section>
@@ -492,11 +515,21 @@ export default function Home() {
           <a href="https://www.ncasa-japan.jp/" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-400">こちら</a>
           にご相談ください。
         </p>
-        <div className="space-x-4">
+        <div className="space-x-4 mb-3">
           <a href="/legal" className="hover:text-gray-600">特定商取引法に基づく表記</a>
           <a href="/terms" className="hover:text-gray-600">利用規約</a>
           <a href="/privacy" className="hover:text-gray-600">プライバシーポリシー</a>
           <span>© 2026 競馬予想AI</span>
+        </div>
+        <div className="border-t border-green-900 pt-3 text-xs text-green-800">
+          <p className="mb-1">ポッコリラボの他のサービス</p>
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+            <a href="https://keirin-yoso-ai.vercel.app" className="hover:text-green-600">競輪予想AI</a>
+            <a href="https://claim-ai-beryl.vercel.app" className="hover:text-green-600">クレームAI</a>
+            <a href="https://hojyokin-ai-delta.vercel.app" className="hover:text-green-600">補助金AI</a>
+            <a href="https://rougo-sim-ai.vercel.app" className="hover:text-green-600">老後シミュレーターAI</a>
+            <a href="https://keiyakusho-ai.vercel.app" className="hover:text-green-600">契約書AIレビュー</a>
+          </div>
         </div>
       </footer>
     </div>
