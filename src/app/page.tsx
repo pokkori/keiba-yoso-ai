@@ -417,7 +417,7 @@ export default function Home() {
               className={`rounded-2xl p-6 border-2 bg-white ${plan.highlight ? "border-green-500 shadow-xl" : "border-green-200"}`}>
               {plan.highlight && (
                 <span className="block text-center text-xs font-bold text-white bg-green-600 rounded-full px-3 py-1 mb-3">
-                  人気No.1
+                  おすすめ
                 </span>
               )}
               {"badge" in plan && plan.badge && (
