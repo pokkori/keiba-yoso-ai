@@ -214,6 +214,29 @@ export default function Home() {
         <p className="text-green-400 text-sm mt-4">登録不要・カード不要・今すぐ体験</p>
       </section>
 
+      {/* 次のG1まで○日 — 時限urgency CTA */}
+      {(() => {
+        const nextRace = getNextG1s(1)[0];
+        if (!nextRace) return null;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const raceDate = new Date(nextRace.date);
+        const days = Math.ceil((raceDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        return (
+          <div className="bg-yellow-400 py-3 px-6">
+            <div className="max-w-5xl mx-auto flex items-center justify-center gap-3 flex-wrap text-green-900">
+              <span className="text-sm font-bold">🏆 次のG1</span>
+              <span className="font-black text-lg">{nextRace.name}（{nextRace.displayDate}）</span>
+              <span className="bg-red-600 text-white text-xs font-black px-3 py-1 rounded-full">あと{days}日</span>
+              <Link href="/predict"
+                className="bg-green-900 text-yellow-400 font-bold px-5 py-1.5 rounded-full text-sm hover:bg-green-800 transition-colors">
+                AI予想を今すぐ確認する →
+              </Link>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Stats */}
       <section className="py-10 px-6 bg-green-800 text-white">
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
