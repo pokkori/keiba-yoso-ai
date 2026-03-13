@@ -541,7 +541,7 @@ export async function POST(req: NextRequest) {
     const { isActiveSubscription } = await import("@/lib/supabase");
     isPremium = await isActiveSubscription(email, "keiba");
   } else {
-    isPremium = req.cookies.get("stripe_premium")?.value === "1";
+    isPremium = req.cookies.get("premium")?.value === "1" || req.cookies.get("stripe_premium")?.value === "1";
   }
   const cookieCount = parseInt(req.cookies.get(COOKIE_KEY)?.value || "0");
   if (!isPremium && !isBacktest && cookieCount >= FREE_LIMIT) {
