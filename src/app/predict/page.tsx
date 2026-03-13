@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import PayjpModal from "@/components/PayjpModal";
 
 const FREE_LIMIT = 1;
 const STORAGE_KEY = "keiba_predict_count";
@@ -70,15 +71,6 @@ function parseFukusho(text: string): PredictionSection[] {
   return sections;
 }
 
-async function startCheckout(plan: string) {
-  const res = await fetch("/api/stripe/checkout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ plan }),
-  });
-  const data = await res.json();
-  if (data.url) window.location.href = data.url;
-}
 
 function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: PredictionSection[]; raceInfo: string; rawText: string; isFukusho?: boolean }) {
   const [activeTab, setActiveTab] = useState(0);
@@ -178,6 +170,8 @@ export default function PredictPage() {
   const [isPremium, setIsPremium] = useState(false);
   const [usageCount, setUsageCount] = useState(0);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showPayjp, setShowPayjp] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState("basic");
 
   useEffect(() => {
     fetch("/api/auth/status").then((r) => r.json()).then((d) => setIsPremium(d.isPremium));
@@ -283,11 +277,11 @@ export default function PredictPage() {
               <li>✓ 軍資金別の具体的な購入金額まで提案</li>
               <li>✓ 回収率トラッキングで自分の成績を可視化</li>
             </ul>
-            <button onClick={() => startCheckout("basic")}
+            <button onClick={() => { setCheckoutPlan("basic"); setShowPayjp(true); setShowPaywall(false); }}
               className="w-full bg-gradient-to-r from-green-700 to-green-600 text-white py-3 rounded-xl font-bold hover:from-green-800 hover:to-green-700 transition-all mb-2">
               ベーシックで続ける（¥980/月）
             </button>
-            <button onClick={() => startCheckout("pro")}
+            <button onClick={() => { setCheckoutPlan("pro"); setShowPayjp(true); setShowPaywall(false); }}
               className="w-full border border-green-300 text-green-700 py-2 rounded-xl text-sm font-medium hover:bg-green-50 transition-colors mb-1">
               G1・重賞の詳細分析も欲しい → プロプラン（¥2,980/月）
             </button>
@@ -454,11 +448,11 @@ export default function PredictPage() {
                       <p className="font-bold mb-1">次のレースも予想しますか？</p>
                       <p className="text-green-200 text-xs mb-4">土日毎週20〜30レースが全部使い放題。</p>
                       <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                        <button onClick={() => startCheckout("basic")}
+                        <button onClick={() => { setCheckoutPlan("basic"); setShowPayjp(true); }}
                           className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-2.5 px-6 rounded-full text-sm transition-colors">
                           次のレースへ → ¥980/月
                         </button>
-                        <button onClick={() => startCheckout("pro")}
+                        <button onClick={() => { setCheckoutPlan("pro"); setShowPayjp(true); }}
                           className="bg-white/15 hover:bg-white/25 text-white border border-white/30 font-bold py-2.5 px-6 rounded-full text-sm transition-colors">
                           G1詳細分析 → プロ ¥2,980/月
                         </button>
@@ -476,6 +470,16 @@ export default function PredictPage() {
         <a href="/legal" className="hover:text-gray-600">特定商取引法に基づく表記</a>
         <a href="/privacy" className="hover:text-gray-600">プライバシーポリシー</a>
       </footer>
+
+      {showPayjp && (
+        <PayjpModal
+          publicKey={process.env.NEXT_PUBLIC_PAYJP_PUBLIC_KEY ?? ""}
+          planLabel={checkoutPlan === "pro" ? "プロプラン ¥2,980/月（税込）— G1・重賞の詳細分析付き" : "ベーシックプラン ¥980/月（税込）— 全レース無制限予想"}
+          plan={checkoutPlan}
+          onSuccess={() => { setShowPayjp(false); setIsPremium(true); window.location.href = "/success"; }}
+          onClose={() => setShowPayjp(false)}
+        />
+      )}
     </div>
   );
 }
