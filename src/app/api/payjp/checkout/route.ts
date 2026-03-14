@@ -68,6 +68,16 @@ export async function POST(req: NextRequest) {
       maxAge: 60 * 60 * 24 * 366,
       path: "/",
     });
+    // subscription IDを保存（解約検知に使用）
+    if (plan !== "annual" && sub?.id) {
+      res.cookies.set("payjp_sub_id", sub.id, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 366,
+        path: "/",
+      });
+    }
     return res;
   } catch {
     return NextResponse.json({ error: "決済処理に失敗しました" }, { status: 500 });
