@@ -48,7 +48,7 @@ const FEATURES = [
   },
   {
     icon: "🌿",
-    title: "複勝モード（粗品式）",
+    title: "複勝モード",
     desc: "複勝買いに特化したモード。レース安定度・オッズ想定・リスク要因をAIが分析して、買い目選びの参考情報を提供。",
   },
   {
@@ -180,29 +180,29 @@ export default function Home() {
       {/* Hero */}
       <section className="text-center py-20 px-6 bg-gradient-to-br from-green-900 to-green-700 text-white">
         <div className="inline-flex items-center gap-2 bg-amber-100 border border-amber-400 text-amber-800 font-bold text-sm px-4 py-2 rounded-full mb-6">
-          🏆 複勝回収率 193% 実績公開中
+          🏆 バックテスト実施中 — 全記録公開
         </div>
         <p className="text-xs font-bold text-green-300 mb-4 tracking-widest uppercase">リアルデータ × AI分析</p>
         <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-          複勝回収率193%のAIが、<br />
-          <span className="text-yellow-400">今週末のレースも狙います。</span>
+          リアルデータ×AIで、<br />
+          <span className="text-yellow-400">今週末のレースを分析します。</span>
         </h1>
         <p className="text-lg text-green-200 mb-4 max-w-xl mx-auto">
-          実績データ公開中 — 2026年1〜2月検証 複勝回収率193%（参考値） | AIが毎週レースを分析して予想を更新
+          バックテスト全記録公開中 — 的中も外れも隠しません。AIが毎週レースを分析して予想を更新
         </p>
         {/* 実績ベース訴求（バックテスト公開・透明性重視） */}
         <div className="flex flex-wrap justify-center gap-3 mb-6 text-sm">
-          <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur border border-white/20 rounded-full px-4 py-2">
-            <span className="text-yellow-400 font-bold">複勝回収率193%</span>
-            <span className="text-green-100">参考値（※少サンプル）</span>
-          </div>
           <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur border border-white/20 rounded-full px-4 py-2">
             <span className="text-yellow-400 font-bold">全記録公開中</span>
             <span className="text-green-100">バックテスト透明性重視</span>
           </div>
           <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur border border-white/20 rounded-full px-4 py-2">
-            <span className="text-yellow-400 font-bold">重賞的中率33%</span>
-            <span className="text-green-100">3レース実績</span>
+            <span className="text-yellow-400 font-bold">リアルデータ分析</span>
+            <span className="text-green-100">出走馬・騎手・成績を自動取得</span>
+          </div>
+          <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur border border-white/20 rounded-full px-4 py-2">
+            <span className="text-yellow-400 font-bold">G1・重賞対応</span>
+            <span className="text-green-100">2026年全G1レース</span>
           </div>
         </div>
         {/* Hormozi: 価値スタック */}
@@ -210,7 +210,7 @@ export default function Home() {
           <p className="text-yellow-300 text-xs font-bold mb-2 text-center">🎁 無料プランでもこれだけ使える</p>
           <ul className="text-green-100 text-sm space-y-1">
             <li>✅ AI予想（本命・対抗・単穴・買い目）2レース</li>
-            <li>✅ 複勝モード（粗品式・高的中率）2レース</li>
+            <li>✅ 複勝モード（高的中率）2レース</li>
             <li>✅ G1・重賞レース完全対応</li>
           </ul>
           <p className="text-yellow-300 text-xs mt-2 text-center">👑 Pro（¥2,980/月）で無制限 + バックテスト機能</p>
@@ -226,7 +226,7 @@ export default function Home() {
           </button>
         </div>
         <p className="text-sm text-amber-300 mt-2 font-semibold">
-          ⚡ 複勝回収率193%（2026年1〜2月・参考値）のAIが今週も分析中
+          ⚡ バックテスト継続中 — 全記録をリアルタイム公開
         </p>
         <p className="text-green-400 text-sm mt-2">登録不要・カード不要・今すぐ体験</p>
       </section>
@@ -261,9 +261,9 @@ export default function Home() {
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
-            { num: "33%", label: "重賞・特別レース的中率" },
+            { num: "3レース", label: "バックテスト実施済み（公開中）" },
             { num: "30秒", label: "AI分析完了まで" },
-            { num: "+¥2,300", label: "重賞特化の収支実績" },
+            { num: "全記録", label: "的中・外れともに公開" },
             { num: "G1 20戦", label: "2026年全G1対応" },
           ].map(s => (
             <div key={s.label}>
@@ -283,18 +283,8 @@ export default function Home() {
             <p className="text-gray-500 text-sm mt-2">的中も外れも隠しません。データで判断してください。</p>
           </div>
           {/* サマリー */}
-          <div className="grid grid-cols-3 gap-4 mb-8 text-center">
-            {[
-              { num: "67%", label: "複勝的中率", sub: "2/3レース的中" },
-              { num: "193%", label: "複勝回収率", sub: "1,000円投資→1,930円回収" },
-              { num: "+¥2,800", label: "収支（3レース計）", sub: "¥3,000投資→¥5,800回収" },
-            ].map(s => (
-              <div key={s.label} className="bg-green-50 rounded-2xl p-4 border border-green-100">
-                <div className="text-2xl md:text-3xl font-bold text-green-700">{s.num}</div>
-                <div className="text-xs font-bold text-gray-700 mt-1">{s.label}</div>
-                <div className="text-xs text-gray-400 mt-0.5">{s.sub}</div>
-              </div>
-            ))}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-8 text-sm text-yellow-800">
+            ⚠️ バックテストはn=3レースのみです。統計的に有意な数値を出すには最低20〜30レースが必要です。現在継続中のため、数値の解釈にはご注意ください。
           </div>
           {/* 実績テーブル */}
           <div className="overflow-x-auto rounded-2xl border border-gray-100">
@@ -438,9 +428,9 @@ export default function Home() {
       {/* Pricing */}
       <section className="py-16 px-6 bg-green-50" id="pricing">
         <div className="max-w-md mx-auto mb-8">
-          <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 mb-4">
-            <p className="font-bold text-amber-800">🏆 AI実績: 複勝回収率 193%</p>
-            <p className="text-amber-700 text-sm mt-1">今週末のレース予想も同じAIが分析しています。</p>
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
+            <p className="font-bold text-green-800">📊 バックテスト全記録公開中</p>
+            <p className="text-green-700 text-sm mt-1">的中も外れも隠さず公開。同じAIが今週末のレースも分析します。</p>
           </div>
         </div>
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-3">料金プラン</h2>
@@ -498,7 +488,7 @@ export default function Home() {
             </div>
           ))}
         </div>
-        <p className="text-xs text-gray-400 text-center mt-8">※193%は2026年1〜2月・複勝式・開発者検証データの参考値です。すべての方に同等の回収率を保証するものではありません。</p>
+        <p className="text-xs text-gray-400 text-center mt-8">※バックテストはn=3レースの初期データです。少サンプルのため統計的信頼性はありません。全記録はバックテストページで公開中。競馬は公営競技です。馬券購入は各自の判断と責任で行ってください。</p>
       </section>
 
       {/* Final CTA */}

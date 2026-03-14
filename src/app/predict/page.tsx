@@ -373,7 +373,7 @@ export default function PredictPage() {
                 onClick={() => setMode("fukusho")}
                 className={`py-2.5 rounded-xl text-sm font-bold border-2 transition-colors ${mode === "fukusho" ? "bg-amber-500 text-white border-amber-500" : "bg-white text-gray-500 border-gray-200 hover:border-amber-300"}`}>
                 🎯 複勝モード
-                <span className="block text-xs font-normal mt-0.5">{mode === "fukusho" ? "粗品式・堅実戦略" : "粗品式・堅実戦略"}</span>
+                <span className="block text-xs font-normal mt-0.5">堅実戦略・的中重視</span>
               </button>
             </div>
             {mode === "fukusho" && (

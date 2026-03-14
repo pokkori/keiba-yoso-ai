@@ -77,7 +77,7 @@ function SuccessContent() {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-green-600 mt-0.5">&#10003;</span>
-              複勝モード（粗品式）で堅実な予想も
+              複勝モードで堅実な予想も
             </li>
             <li className="flex items-start gap-2">
               <span className="text-green-600 mt-0.5">&#10003;</span>
