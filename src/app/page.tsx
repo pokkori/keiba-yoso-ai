@@ -189,7 +189,7 @@ export default function Home() {
         </h1>
         <p className="text-xs text-green-400/70 mb-3">※193%は2026年1〜2月・複勝式・開発者検証データの参考値です。すべての方に同等の回収率を保証するものではありません。</p>
         <p className="text-lg text-green-200 mb-4 max-w-xl mx-auto">
-          実績データ公開中 — 2024年通算 複勝回収率193% | AIが毎週レースを分析して予想を更新
+          実績データ公開中 — 2026年1〜2月検証 複勝回収率193%（参考値） | AIが毎週レースを分析して予想を更新
         </p>
         {/* 実績ベース訴求（バックテスト公開・透明性重視） */}
         <div className="flex flex-wrap justify-center gap-3 mb-6 text-sm">
@@ -227,7 +227,7 @@ export default function Home() {
           </button>
         </div>
         <p className="text-sm text-amber-300 mt-2 font-semibold">
-          ⚡ 複勝回収率193%の実績でAIが今週も予想中
+          ⚡ 複勝回収率193%（2026年1〜2月・参考値）のAIが今週も分析中
         </p>
         <p className="text-green-400 text-sm mt-2">登録不要・カード不要・今すぐ体験</p>
       </section>
