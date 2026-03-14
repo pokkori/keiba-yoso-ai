@@ -187,6 +187,7 @@ export default function Home() {
           バックテスト回収率193%。<br />
           <span className="text-yellow-400">AIが根拠ごと本命・買い目まで提案</span>
         </h1>
+        <p className="text-xs text-green-400/70 mb-3">※193%は2026年1〜2月・複勝式・開発者検証データの参考値です。すべての方に同等の回収率を保証するものではありません。</p>
         <p className="text-lg text-green-200 mb-4 max-w-xl mx-auto">
           本命◎・対抗○・単穴▲・推奨買い目・展開予想まで<br />
           ワンクリックで整理。毎週土日・全レース対応。
