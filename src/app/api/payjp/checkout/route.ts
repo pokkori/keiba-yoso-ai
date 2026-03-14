@@ -58,26 +58,35 @@ export async function POST(req: NextRequest) {
       if (sub.error) {
         return NextResponse.json({ error: sub.error.message }, { status: 400 });
       }
-    }
-
-    const res = NextResponse.json({ ok: true });
-    res.cookies.set("premium", plan === "pro" || plan === "annual" ? "pro" : "1", {
-      httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 366,
-      path: "/",
-    });
-    // subscription IDを保存（解約検知に使用）
-    if (plan !== "annual" && sub?.id) {
-      res.cookies.set("payjp_sub_id", sub.id, {
+      // subscription IDを保存（解約検知に使用）
+      const res = NextResponse.json({ ok: true });
+      res.cookies.set("premium", plan === "pro" ? "pro" : "1", {
         httpOnly: true,
         secure: true,
         sameSite: "lax",
         maxAge: 60 * 60 * 24 * 366,
         path: "/",
       });
+      if (sub.id) {
+        res.cookies.set("payjp_sub_id", sub.id, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "lax",
+          maxAge: 60 * 60 * 24 * 366,
+          path: "/",
+        });
+      }
+      return res;
     }
+
+    const res = NextResponse.json({ ok: true });
+    res.cookies.set("premium", "pro", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 366,
+      path: "/",
+    });
     return res;
   } catch {
     return NextResponse.json({ error: "決済処理に失敗しました" }, { status: 500 });
