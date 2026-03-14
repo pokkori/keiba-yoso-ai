@@ -187,7 +187,6 @@ export default function Home() {
           複勝回収率193%のAIが、<br />
           <span className="text-yellow-400">今週末のレースも狙います。</span>
         </h1>
-        <p className="text-xs text-green-400/70 mb-3">※193%は2026年1〜2月・複勝式・開発者検証データの参考値です。すべての方に同等の回収率を保証するものではありません。</p>
         <p className="text-lg text-green-200 mb-4 max-w-xl mx-auto">
           実績データ公開中 — 2026年1〜2月検証 複勝回収率193%（参考値） | AIが毎週レースを分析して予想を更新
         </p>
@@ -257,6 +256,9 @@ export default function Home() {
 
       {/* Stats */}
       <section className="py-10 px-6 bg-green-800 text-white">
+        <div className="flex justify-center mb-4">
+          <span className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">🎯 重賞的中率33%</span>
+        </div>
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
             { num: "33%", label: "重賞・特別レース的中率" },
@@ -496,6 +498,7 @@ export default function Home() {
             </div>
           ))}
         </div>
+        <p className="text-xs text-gray-400 text-center mt-8">※193%は2026年1〜2月・複勝式・開発者検証データの参考値です。すべての方に同等の回収率を保証するものではありません。</p>
       </section>
 
       {/* Final CTA */}
