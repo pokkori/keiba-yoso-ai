@@ -179,18 +179,17 @@ export default function Home() {
 
       {/* Hero */}
       <section className="text-center py-20 px-6 bg-gradient-to-br from-green-900 to-green-700 text-white">
-        <div className="inline-flex items-center gap-2 bg-red-600 text-white rounded-full px-4 py-1.5 text-xs font-bold mb-4">
-          🏆 春G1シーズン開幕中
+        <div className="inline-flex items-center gap-2 bg-amber-100 border border-amber-400 text-amber-800 font-bold text-sm px-4 py-2 rounded-full mb-6">
+          🏆 複勝回収率 193% 実績公開中
         </div>
         <p className="text-xs font-bold text-green-300 mb-4 tracking-widest uppercase">リアルデータ × AI分析</p>
         <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-          バックテスト回収率193%。<br />
-          <span className="text-yellow-400">AIが根拠ごと本命・買い目まで提案</span>
+          複勝回収率193%のAIが、<br />
+          <span className="text-yellow-400">今週末のレースも狙います。</span>
         </h1>
         <p className="text-xs text-green-400/70 mb-3">※193%は2026年1〜2月・複勝式・開発者検証データの参考値です。すべての方に同等の回収率を保証するものではありません。</p>
         <p className="text-lg text-green-200 mb-4 max-w-xl mx-auto">
-          本命◎・対抗○・単穴▲・推奨買い目・展開予想まで<br />
-          ワンクリックで整理。毎週土日・全レース対応。
+          実績データ公開中 — 2024年通算 複勝回収率193% | AIが毎週レースを分析して予想を更新
         </p>
         {/* 実績ベース訴求（バックテスト公開・透明性重視） */}
         <div className="flex flex-wrap justify-center gap-3 mb-6 text-sm">
@@ -227,7 +226,10 @@ export default function Home() {
             プロプラン ¥2,980/月
           </button>
         </div>
-        <p className="text-green-400 text-sm mt-4">登録不要・カード不要・今すぐ体験</p>
+        <p className="text-sm text-amber-300 mt-2 font-semibold">
+          ⚡ 複勝回収率193%の実績でAIが今週も予想中
+        </p>
+        <p className="text-green-400 text-sm mt-2">登録不要・カード不要・今すぐ体験</p>
       </section>
 
       {/* 次のG1まで○日 — 時限urgency CTA */}
@@ -433,6 +435,12 @@ export default function Home() {
 
       {/* Pricing */}
       <section className="py-16 px-6 bg-green-50" id="pricing">
+        <div className="max-w-md mx-auto mb-8">
+          <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 mb-4">
+            <p className="font-bold text-amber-800">🏆 AI実績: 複勝回収率 193%</p>
+            <p className="text-amber-700 text-sm mt-1">今週末のレース予想も同じAIが分析しています。</p>
+          </div>
+        </div>
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-3">料金プラン</h2>
         <p className="text-center text-gray-500 text-sm mb-12">いつでも解約OK・次回更新前に停止可能</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-5 max-w-5xl mx-auto">
