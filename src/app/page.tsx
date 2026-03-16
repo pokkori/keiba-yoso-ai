@@ -152,12 +152,12 @@ export default function Home() {
           onClose={() => setShowPayjp(false)}
         />
       )}
-      <nav className="flex items-center justify-between px-6 py-4 border-b border-green-200 bg-green-900 sticky top-0 z-10">
-        <span className="text-xl font-bold text-white">🏇 競馬予想AI</span>
-        <div className="flex items-center gap-4">
-          <Link href="/predict" className="text-sm text-green-200 hover:text-white">予想する</Link>
-          <Link href="/tracker" className="text-sm text-green-200 hover:text-white">回収率管理</Link>
-          <Link href="/backtest/results" className="text-sm text-green-200 hover:text-white">実績を見る</Link>
+      <nav className="flex items-center justify-between px-4 py-4 border-b border-green-200 bg-green-900 sticky top-0 z-10">
+        <span className="text-base md:text-xl font-bold text-white">🏇 競馬予想AI</span>
+        <div className="flex items-center gap-2 md:gap-4">
+          <Link href="/predict" className="hidden md:block text-sm text-green-200 hover:text-white">予想する</Link>
+          <Link href="/tracker" className="hidden md:block text-sm text-green-200 hover:text-white">回収率管理</Link>
+          <Link href="/backtest/results" className="hidden md:block text-sm text-green-200 hover:text-white">実績を見る</Link>
           <Link href="/predict"
             className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-4 py-1.5 rounded-full text-sm transition-colors">
             無料で試す
@@ -178,16 +178,16 @@ export default function Home() {
       })()}
 
       {/* Hero */}
-      <section className="text-center py-20 px-6 bg-gradient-to-br from-green-900 to-green-700 text-white">
-        <div className="inline-flex items-center gap-2 bg-amber-100 border border-amber-400 text-amber-800 font-bold text-sm px-4 py-2 rounded-full mb-6">
+      <section className="text-center py-12 md:py-20 px-4 bg-gradient-to-br from-green-900 to-green-700 text-white overflow-x-hidden">
+        <div className="inline-flex items-center gap-2 bg-amber-100 border border-amber-400 text-amber-800 font-bold text-sm px-4 py-2 rounded-full mb-4">
           🏆 バックテスト実施中 — 全記録公開
         </div>
-        <p className="text-xs font-bold text-green-300 mb-4 tracking-widest uppercase">リアルデータ × AI分析</p>
-        <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+        <p className="text-xs font-bold text-green-300 mb-3 tracking-widest uppercase">リアルデータ × AI分析</p>
+        <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">
           リアルデータ×AIで、<br />
           <span className="text-yellow-400">今週末のレースを分析します。</span>
         </h1>
-        <p className="text-lg text-green-200 mb-4 max-w-xl mx-auto">
+        <p className="text-base md:text-lg text-green-200 mb-4 max-w-xl mx-auto">
           バックテスト全記録公開中 — 的中も外れも隠しません。AIが毎週レースを分析して予想を更新
         </p>
         {/* 実績ベース訴求（バックテスト公開・透明性重視） */}
@@ -435,7 +435,7 @@ export default function Home() {
         </div>
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-3">料金プラン</h2>
         <p className="text-center text-gray-500 text-sm mb-12">いつでも解約OK・次回更新前に停止可能</p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 max-w-5xl mx-auto">
           {PLANS.map((plan) => (
             <div key={plan.name}
               className={`rounded-2xl p-6 border-2 bg-white ${plan.highlight ? "border-green-500 shadow-xl" : "border-green-200"}`}>
@@ -492,17 +492,17 @@ export default function Home() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-16 px-6 bg-green-900 text-white text-center">
-        <h2 className="text-2xl font-bold mb-3">今週のG1、AIと一緒に本命を絞ろう</h2>
+      <section className="py-16 px-4 bg-green-900 text-white text-center overflow-x-hidden">
+        <h2 className="text-xl md:text-2xl font-bold mb-3">今週のG1、AIと一緒に本命を絞ろう</h2>
         <p className="text-green-200 text-sm mb-2">登録不要・カード不要で今すぐ無料体験できます。</p>
         <p className="text-green-300 text-xs mb-8">有料プランはいつでも解約可能</p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div className="flex flex-col gap-4 justify-center items-center w-full max-w-sm mx-auto sm:max-w-none sm:flex-row">
           <button onClick={() => startCheckout("pro")}
-            className="inline-block bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-4 px-12 rounded-full text-lg transition-colors">
+            className="w-full sm:w-auto bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-4 px-8 md:px-12 rounded-full text-base md:text-lg transition-colors">
             🏆 プロプランで始める（¥2,980/月）
           </button>
           <Link href="/predict"
-            className="inline-block border-2 border-white/50 hover:border-white text-white font-bold py-4 px-10 rounded-full text-base transition-colors">
+            className="w-full sm:w-auto text-center border-2 border-white/50 hover:border-white text-white font-bold py-4 px-8 md:px-10 rounded-full text-base transition-colors">
             まず無料で試す →
           </Link>
         </div>
