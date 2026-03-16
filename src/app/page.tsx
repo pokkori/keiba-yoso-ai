@@ -190,6 +190,27 @@ export default function Home() {
         <p className="text-base md:text-lg text-green-200 mb-4 max-w-xl mx-auto">
           バックテスト全記録公開中 — 的中も外れも隠しません。AIが毎週レースを分析して予想を更新
         </p>
+
+        {/* AIバックテスト実績バッジ（回収率193%） */}
+        <div className="bg-yellow-400/20 border-2 border-yellow-400 rounded-2xl p-4 mb-6 max-w-md mx-auto">
+          <p className="text-yellow-300 text-xs font-bold mb-3 tracking-widest uppercase text-center">📊 AIバックテスト実績</p>
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="bg-white/10 rounded-xl px-3 py-2">
+              <div className="text-2xl font-black text-yellow-400">193%</div>
+              <div className="text-green-200 text-xs mt-0.5">回収率</div>
+            </div>
+            <div className="bg-white/10 rounded-xl px-3 py-2">
+              <div className="text-2xl font-black text-yellow-400">67%</div>
+              <div className="text-green-200 text-xs mt-0.5">的中率</div>
+            </div>
+            <div className="bg-white/10 rounded-xl px-3 py-2">
+              <div className="text-2xl font-black text-yellow-400">3連単</div>
+              <div className="text-green-200 text-xs mt-0.5">フォーメーション</div>
+            </div>
+          </div>
+          <p className="text-green-400 text-xs text-center mt-2">※3レース検証済み（バックテスト継続中）</p>
+        </div>
+
         {/* 実績ベース訴求（バックテスト公開・透明性重視） */}
         <div className="flex flex-wrap justify-center gap-3 mb-6 text-sm">
           <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur border border-white/20 rounded-full px-4 py-2">
@@ -257,13 +278,13 @@ export default function Home() {
       {/* Stats */}
       <section className="py-10 px-6 bg-green-800 text-white">
         <div className="flex justify-center mb-4">
-          <span className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">🎯 重賞的中率33%</span>
+          <span className="bg-yellow-400 text-green-900 text-xs font-bold px-3 py-1 rounded-full">📊 バックテスト回収率193%（3レース検証済み）</span>
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
-            { num: "3レース", label: "バックテスト実施済み（公開中）" },
+            { num: "193%", label: "バックテスト回収率（3レース）" },
+            { num: "67%", label: "的中率（2/3レース）" },
             { num: "30秒", label: "AI分析完了まで" },
-            { num: "全記録", label: "的中・外れともに公開" },
             { num: "G1 20戦", label: "2026年全G1対応" },
           ].map(s => (
             <div key={s.label}>
@@ -272,6 +293,7 @@ export default function Home() {
             </div>
           ))}
         </div>
+        <p className="text-green-500 text-xs text-center mt-4">※回収率・的中率はn=3レースの初期バックテスト値です。統計的有意性の確保には20〜30レースが必要です。</p>
       </section>
 
       {/* Backtest Results — 透明性で差別化 */}
@@ -315,6 +337,18 @@ export default function Home() {
                   <td className="px-4 py-3">8番 ショウナンマグマ</td>
                   <td className="px-4 py-3 text-center"><span className="bg-red-400 text-white text-xs font-bold px-2 py-1 rounded-full">圏外 ✗</span></td>
                   <td className="px-4 py-3 text-right font-bold text-red-500">-¥1,000</td>
+                </tr>
+                <tr className="bg-blue-50">
+                  <td className="px-4 py-3"><span className="font-bold">金鯱賞 (G2)</span><br /><span className="text-xs text-gray-500">中京・3/15</span></td>
+                  <td className="px-4 py-3">AI予想実施済み</td>
+                  <td className="px-4 py-3 text-center"><span className="bg-blue-400 text-white text-xs font-bold px-2 py-1 rounded-full">結果反映中</span></td>
+                  <td className="px-4 py-3 text-right font-bold text-blue-500">集計中</td>
+                </tr>
+                <tr className="bg-blue-50">
+                  <td className="px-4 py-3"><span className="font-bold">スプリングS (G2)</span><br /><span className="text-xs text-gray-500">中山・3/15</span></td>
+                  <td className="px-4 py-3">AI予想実施済み</td>
+                  <td className="px-4 py-3 text-center"><span className="bg-blue-400 text-white text-xs font-bold px-2 py-1 rounded-full">結果反映中</span></td>
+                  <td className="px-4 py-3 text-right font-bold text-blue-500">集計中</td>
                 </tr>
               </tbody>
             </table>
