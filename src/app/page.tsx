@@ -450,28 +450,28 @@ export default function Home() {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs bg-yellow-400 text-green-900 font-black px-3 py-1 rounded-full">G2 注目レース</span>
-            <span className="text-xs text-green-300">3/22（日） 中京競馬場</span>
+            <span className="text-xs text-green-300">3/29（日） 中京競馬場</span>
           </div>
-          <h2 className="text-xl font-bold text-white mb-1">金鯱賞 — 高松宮記念へのステップ戦</h2>
-          <p className="text-sm text-green-300 mb-6">中京2000m芝。春G1「大阪杯」の前哨戦として注目度の高い重賞。例年波乱が多く、AIの分析が特に効果的なレース。</p>
+          <h2 className="text-xl font-bold text-white mb-1">高松宮記念（G1） — 今春初の芝スプリントG1</h2>
+          <p className="text-sm text-green-300 mb-6">中京1200m芝。今春最初のスプリントG1。前哨戦・スプリンターの仕上がり具合が結果を左右する。AIで出走馬データを分析しよう。</p>
           <div className="grid sm:grid-cols-3 gap-4">
             <div className="bg-white/10 border border-white/20 rounded-xl p-4">
               <div className="text-yellow-400 font-bold text-sm mb-2">📍 コース特性</div>
-              <p className="text-green-200 text-xs leading-relaxed">中京2000m芝はスタート直後に急坂。先行勢が有利だが、上がり3F勝負になることも多い。内枠・先行馬に注目。</p>
+              <p className="text-green-200 text-xs leading-relaxed">中京1200m芝はポケットスタートで先行争いが激化しやすい。内枠の逃げ先行馬に注意。外枠差し馬は不利になりやすい。</p>
             </div>
             <div className="bg-white/10 border border-white/20 rounded-xl p-4">
               <div className="text-yellow-400 font-bold text-sm mb-2">🎯 AIの着目点</div>
-              <p className="text-green-200 text-xs leading-relaxed">過去5走の中京・阪神実績、前走からの距離変化、斤量差をAIが総合分析。回収率重視の買い目を提案します。</p>
+              <p className="text-green-200 text-xs leading-relaxed">前走スプリント実績・中京適性・斤量・騎手の中京成績をAIが総合判断。近走の上がり3Fタイムも重視します。</p>
             </div>
             <div className="bg-white/10 border border-white/20 rounded-xl p-4">
               <div className="text-yellow-400 font-bold text-sm mb-2">💡 狙い目</div>
-              <p className="text-green-200 text-xs leading-relaxed">このレース出走馬は4/5大阪杯へのステップ組が多数。本番に向けたたたき台の馬と本気組の見極めがポイント。</p>
+              <p className="text-green-200 text-xs leading-relaxed">前哨戦（阪急杯・シルクロードS）好走馬と海外帰り組が中心。仕上がり早い状態の馬を見つけるのがポイント。</p>
             </div>
           </div>
           <div className="mt-6 text-center">
             <Link href="/predict"
               className="inline-block bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-8 py-3 rounded-xl transition-colors">
-              金鯱賞をAIで予想する →
+              高松宮記念をAIで予想する →
             </Link>
           </div>
         </div>
