@@ -72,10 +72,63 @@ function parseFukusho(text: string): PredictionSection[] {
 }
 
 
+function HitModal({ raceInfo, sections, isFukusho, onClose }: { raceInfo: string; sections: PredictionSection[]; isFukusho?: boolean; onClose: () => void }) {
+  const honmeSec = sections.find(s => s.title.includes("本命") || s.title.includes("複勝推奨"));
+  const honmeHorse = honmeSec?.content.match(/^([^\n（(【\s]{1,12})/)?.[1] ?? "";
+  const shareText = [
+    `🎊【的中報告】${raceInfo}`,
+    honmeHorse ? `${isFukusho ? "🎯複勝推奨" : "◎本命"}: ${honmeHorse} が的中！` : "的中しました！",
+    "競馬予想AIを使ってみた → https://keiba-yoso-ai.vercel.app",
+    isFukusho ? "#競馬複勝的中 #競馬AI" : "#競馬的中 #競馬予想AI #G1",
+  ].filter(Boolean).join("\n");
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+      <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
+        <div className="text-6xl mb-4 animate-bounce">🎊</div>
+        <h2 className="text-2xl font-black text-gray-900 mb-2">的中おめでとう！</h2>
+        <p className="text-gray-600 text-sm mb-6">
+          {raceInfo && <span className="block font-bold text-green-700 mb-1">{raceInfo}</span>}
+          {honmeHorse && <span className="text-lg font-bold text-gray-900">{honmeHorse}</span>}
+          {honmeHorse && <span className="text-gray-600 block text-sm mt-1">が{isFukusho ? "複勝" : ""}的中！Xでシェアしよう</span>}
+        </p>
+        <a
+          href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block w-full bg-black hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-xl mb-3 transition-colors"
+        >
+          𝕏 的中をシェアする
+        </a>
+        <button onClick={onClose} className="text-gray-400 text-sm hover:text-gray-600">閉じる</button>
+      </div>
+    </div>
+  );
+}
+
+// 信頼度バッジ（セクション内容の充実度から計算）
+function ConfidenceBadge({ sections }: { sections: PredictionSection[] }) {
+  const score = Math.min(95, Math.max(55,
+    60 +
+    (sections.length >= 5 ? 15 : sections.length * 3) +
+    (sections.some(s => s.content.length > 200) ? 10 : 0) +
+    (sections.some(s => s.title.includes("買い目")) ? 10 : 0)
+  ));
+  const color = score >= 80 ? "bg-green-100 text-green-800 border-green-300" :
+                score >= 65 ? "bg-yellow-100 text-yellow-800 border-yellow-300" :
+                "bg-gray-100 text-gray-700 border-gray-300";
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border ${color}`}>
+      🎯 信頼度 {score}%
+    </span>
+  );
+}
+
 function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: PredictionSection[]; raceInfo: string; rawText: string; isFukusho?: boolean }) {
   const [activeTab, setActiveTab] = useState(0);
   const [copied, setCopied] = useState(false);
   const [copiedAll, setCopiedAll] = useState(false);
+  const [showHitModal, setShowHitModal] = useState(false);
 
   const handleCopy = (text: string, all?: boolean) => {
     navigator.clipboard.writeText(text);
@@ -108,6 +161,9 @@ function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: 
 
   return (
     <div className={`mt-8 rounded-2xl border ${isFukusho ? "border-amber-200" : "border-green-200"} overflow-hidden`}>
+      {showHitModal && (
+        <HitModal raceInfo={raceInfo} sections={sections} isFukusho={isFukusho} onClose={() => setShowHitModal(false)} />
+      )}
       {/* Header */}
       <div className={`${headerBg} px-4 py-3 flex items-center justify-between gap-2`}>
         <span className="text-white font-bold text-sm">{headerIcon} {raceInfo} {headerLabel}</span>
@@ -137,13 +193,27 @@ function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: 
       {/* Content */}
       <div className="bg-white p-5">
         <div className="flex items-center justify-between mb-3">
-          <span className={`text-sm font-bold ${titleColor}`}>{current.icon} {current.title}</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-sm font-bold ${titleColor}`}>{current.icon} {current.title}</span>
+            {activeTab === 0 && <ConfidenceBadge sections={sections} />}
+          </div>
           <button onClick={() => handleCopy(current.content)}
             className={`text-xs ${copyBg} px-3 py-1 rounded-lg font-medium transition-colors`}>
             {copied ? "✓ コピー" : "コピー"}
           </button>
         </div>
         <p className="text-gray-800 leading-relaxed whitespace-pre-wrap text-sm">{current.content}</p>
+        {/* 的中報告ボタン — 常時表示 */}
+        {activeTab === 0 && (
+          <div className="mt-4 pt-3 border-t border-gray-100">
+            <button
+              onClick={() => setShowHitModal(true)}
+              className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-4 py-2 rounded-xl text-sm transition-colors"
+            >
+              🎊 当たった！的中報告
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
