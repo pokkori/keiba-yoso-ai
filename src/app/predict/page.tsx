@@ -139,13 +139,20 @@ function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: 
   // X シェア用: 本命馬名を抽出
   const honmeSection = sections.find(s => s.title.includes("本命") || s.title.includes("複勝推奨"));
   const honmeHorse = honmeSection?.content.match(/^([^\n（(【\s]{1,12})/)?.[1] ?? "";
+  const confidenceScore = Math.min(95, Math.max(55,
+    60 +
+    (sections.length >= 5 ? 15 : sections.length * 3) +
+    (sections.some(s => s.content.length > 200) ? 10 : 0) +
+    (sections.some(s => s.title.includes("買い目")) ? 10 : 0)
+  ));
+  const ogUrl = `https://keiba-yoso-ai.vercel.app/api/og?race=${encodeURIComponent(raceInfo)}&horse=${encodeURIComponent(honmeHorse)}&confidence=${confidenceScore}&mode=${isFukusho ? "fukusho" : "standard"}`;
   const shareText = [
     `【AI予想】${raceInfo}`,
     honmeHorse ? (isFukusho ? `🎯複勝推奨: ${honmeHorse}` : `◎本命: ${honmeHorse}`) : "",
     isFukusho ? "#競馬複勝予想 #競馬AI" : "#競馬予想AI #競馬 #G1",
     "https://keiba-yoso-ai.vercel.app/predict",
   ].filter(Boolean).join("\n");
-  const xShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+  const xShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(ogUrl)}`;
 
   const current = sections[activeTab];
 
@@ -394,6 +401,24 @@ export default function PredictPage() {
               className="w-full border border-green-300 text-green-700 py-2 rounded-xl text-sm font-medium hover:bg-green-50 transition-colors mb-1">
               G1・重賞の詳細分析も欲しい → プロプラン（¥2,980/月）
             </button>
+            {/* 安心保証バッジ */}
+            <div className="flex items-center justify-center gap-4 mt-3">
+              <div className="flex items-center gap-1 text-xs text-slate-400">
+                <span>🔒</span>
+                <span>SSL暗号化決済</span>
+              </div>
+              <div className="flex items-center gap-1 text-xs text-slate-400">
+                <span>✅</span>
+                <span>いつでもキャンセル可能</span>
+              </div>
+              <div className="flex items-center gap-1 text-xs text-slate-400">
+                <span>💳</span>
+                <span>PAY.JP安全決済</span>
+              </div>
+            </div>
+            <p className="text-xs text-center text-slate-500 mt-2">
+              ※ プレミアムプランはいつでもキャンセル可能です
+            </p>
           </div>
         </div>
       )}
@@ -537,6 +562,13 @@ export default function PredictPage() {
               const shareLabel = raceInfo || "レース";
               const honmeSec = sections.find(s => s.title.includes("本命") || s.title.includes("複勝推奨"));
               const honmeHorse = honmeSec?.content.match(/^(\d+番[\s　]?\S{1,10})/)?.[1]?.trim() ?? honmeSec?.content.match(/^([^\n（(【\s]{1,12})/)?.[1] ?? "";
+              const confScore = Math.min(95, Math.max(55,
+                60 +
+                (sections.length >= 5 ? 15 : sections.length * 3) +
+                (sections.some(s => s.content.length > 200) ? 10 : 0) +
+                (sections.some(s => s.title.includes("買い目")) ? 10 : 0)
+              ));
+              const ogImageUrl = `https://keiba-yoso-ai.vercel.app/api/og?race=${encodeURIComponent(shareLabel)}&horse=${encodeURIComponent(honmeHorse)}&confidence=${confScore}&mode=${mode === "fukusho" ? "fukusho" : "standard"}`;
               const shareText = [
                 `【AI予想】${shareLabel}`,
                 honmeHorse ? (mode === "fukusho" ? `🎯複勝推奨: ${honmeHorse}` : `◎本命: ${honmeHorse}`) : "",
@@ -546,7 +578,7 @@ export default function PredictPage() {
               return (
                 <>
                   <div className="mt-4 flex gap-3">
-                    <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`}
+                    <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(ogImageUrl)}`}
                       target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-colors">
                       𝕏 でシェア
@@ -574,6 +606,21 @@ export default function PredictPage() {
                           className="bg-white/15 hover:bg-white/25 text-white border border-white/30 font-bold py-2.5 px-6 rounded-full text-sm transition-colors">
                           G1詳細分析 → プロ ¥2,980/月
                         </button>
+                      </div>
+                      {/* 安心保証バッジ */}
+                      <div className="flex items-center justify-center gap-4 mt-3">
+                        <div className="flex items-center gap-1 text-xs text-green-300/70">
+                          <span>🔒</span>
+                          <span>SSL暗号化決済</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-green-300/70">
+                          <span>✅</span>
+                          <span>いつでもキャンセル可能</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-green-300/70">
+                          <span>💳</span>
+                          <span>PAY.JP安全決済</span>
+                        </div>
                       </div>
                     </div>
                   )}
