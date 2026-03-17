@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import PayjpModal from "@/components/PayjpModal";
+import { track } from '@vercel/analytics';
 
 const FREE_LIMIT = 2;
 const STORAGE_KEY = "keiba_predict_count";
@@ -284,9 +285,10 @@ export default function PredictPage() {
 
   const handlePredict = async () => {
     if (racePast) return;
-    if (!isPremium && usageCount >= FREE_LIMIT) { setShowPaywall(true); return; }
+    if (!isPremium && usageCount >= FREE_LIMIT) { track('paywall_shown', { service: '競馬予想AI' }); setShowPaywall(true); return; }
     if (!selectedRaceId) { setError("レースを選択してください"); return; }
 
+    track('ai_generated', { service: '競馬予想AI' });
     setLoading(true);
     setError("");
     setIsSkipMsg(false);
@@ -301,7 +303,7 @@ export default function PredictPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ raceId: selectedRaceId, budget: budgetNum, mode, raceLabel: selectedRace?.label }),
       });
-      if (res.status === 429) { setShowPaywall(true); return; }
+      if (res.status === 429) { track('paywall_shown', { service: '競馬予想AI' }); setShowPaywall(true); return; }
       if (!res.body) throw new Error("レスポンスが空です");
 
       const reader = res.body.getReader();
@@ -393,11 +395,11 @@ export default function PredictPage() {
               <li>✓ 軍資金別の具体的な購入金額まで提案</li>
               <li>✓ 回収率トラッキングで自分の成績を可視化</li>
             </ul>
-            <button onClick={() => { setCheckoutPlan("basic"); setShowPayjp(true); setShowPaywall(false); }}
+            <button onClick={() => { track('upgrade_click', { service: '競馬予想AI', plan: 'basic' }); setCheckoutPlan("basic"); setShowPayjp(true); setShowPaywall(false); }}
               className="w-full bg-gradient-to-r from-green-700 to-green-600 text-white py-3 rounded-xl font-bold hover:from-green-800 hover:to-green-700 transition-all mb-2">
               ベーシックで続ける（¥980/月）
             </button>
-            <button onClick={() => { setCheckoutPlan("pro"); setShowPayjp(true); setShowPaywall(false); }}
+            <button onClick={() => { track('upgrade_click', { service: '競馬予想AI', plan: 'pro' }); setCheckoutPlan("pro"); setShowPayjp(true); setShowPaywall(false); }}
               className="w-full border border-green-300 text-green-700 py-2 rounded-xl text-sm font-medium hover:bg-green-50 transition-colors mb-1">
               G1・重賞の詳細分析も欲しい → プロプラン（¥2,980/月）
             </button>
@@ -598,11 +600,11 @@ export default function PredictPage() {
                       <p className="font-bold mb-1">次のレースも予想しますか？</p>
                       <p className="text-green-200 text-xs mb-4">土日毎週20〜30レースが全部使い放題。</p>
                       <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                        <button onClick={() => { setCheckoutPlan("basic"); setShowPayjp(true); }}
+                        <button onClick={() => { track('upgrade_click', { service: '競馬予想AI', plan: 'basic' }); setCheckoutPlan("basic"); setShowPayjp(true); }}
                           className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-2.5 px-6 rounded-full text-sm transition-colors">
                           次のレースへ → ¥980/月
                         </button>
-                        <button onClick={() => { setCheckoutPlan("pro"); setShowPayjp(true); }}
+                        <button onClick={() => { track('upgrade_click', { service: '競馬予想AI', plan: 'pro' }); setCheckoutPlan("pro"); setShowPayjp(true); }}
                           className="bg-white/15 hover:bg-white/25 text-white border border-white/30 font-bold py-2.5 px-6 rounded-full text-sm transition-colors">
                           G1詳細分析 → プロ ¥2,980/月
                         </button>
