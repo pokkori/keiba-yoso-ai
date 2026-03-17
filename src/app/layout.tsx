@@ -25,6 +25,7 @@ export const metadata: Metadata = {
     siteName: "競馬予想AI",
     locale: "ja_JP",
     type: "website",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "競馬予想AI" }],
   },
   twitter: {
     card: "summary_large_image",
