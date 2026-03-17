@@ -338,17 +338,17 @@ export default function Home() {
                   <td className="px-4 py-3 text-center"><span className="bg-red-400 text-white text-xs font-bold px-2 py-1 rounded-full">圏外 ✗</span></td>
                   <td className="px-4 py-3 text-right font-bold text-red-500">-¥1,000</td>
                 </tr>
-                <tr className="bg-blue-50">
+                <tr className="bg-gray-50">
                   <td className="px-4 py-3"><span className="font-bold">金鯱賞 (G2)</span><br /><span className="text-xs text-gray-500">中京・3/15</span></td>
-                  <td className="px-4 py-3">AI予想実施済み</td>
-                  <td className="px-4 py-3 text-center"><span className="bg-blue-400 text-white text-xs font-bold px-2 py-1 rounded-full">結果反映中</span></td>
-                  <td className="px-4 py-3 text-right font-bold text-blue-500">集計中</td>
+                  <td className="px-4 py-3">1着: シェイクユアハート（単勝1,350円）</td>
+                  <td className="px-4 py-3 text-center"><span className="bg-gray-400 text-white text-xs font-bold px-2 py-1 rounded-full">予想記録なし</span></td>
+                  <td className="px-4 py-3 text-right font-bold text-gray-500">—</td>
                 </tr>
-                <tr className="bg-blue-50">
+                <tr className="bg-gray-50">
                   <td className="px-4 py-3"><span className="font-bold">スプリングS (G2)</span><br /><span className="text-xs text-gray-500">中山・3/15</span></td>
-                  <td className="px-4 py-3">AI予想実施済み</td>
-                  <td className="px-4 py-3 text-center"><span className="bg-blue-400 text-white text-xs font-bold px-2 py-1 rounded-full">結果反映中</span></td>
-                  <td className="px-4 py-3 text-right font-bold text-blue-500">集計中</td>
+                  <td className="px-4 py-3">1着: アウダーシア（8番人気・単勝1,940円）</td>
+                  <td className="px-4 py-3 text-center"><span className="bg-gray-400 text-white text-xs font-bold px-2 py-1 rounded-full">予想記録なし</span></td>
+                  <td className="px-4 py-3 text-right font-bold text-gray-500">—</td>
                 </tr>
               </tbody>
             </table>
