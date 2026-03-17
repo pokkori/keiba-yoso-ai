@@ -6,6 +6,16 @@ import PayjpModal from "@/components/PayjpModal";
 
 const PAYJP_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYJP_PUBLIC_KEY ?? "";
 
+// 今日開催かどうかを判定（土日のみ）
+function isTodayRaceDay(): { isRaceDay: boolean; dayLabel: string } {
+  const now = new Date();
+  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const day = jst.getUTCDay();
+  const isRaceDay = day === 0 || day === 6;
+  const dayLabel = day === 0 ? "今日（日曜）" : day === 6 ? "今日（土曜）" : "";
+  return { isRaceDay, dayLabel };
+}
+
 const G1_RACES = [
   { name: "高松宮記念", date: "2026-03-29", displayDate: "3/29（日）", venue: "中京", distance: "1200m芝" },
   { name: "大阪杯", date: "2026-04-05", displayDate: "4/5（日）", venue: "阪神", distance: "2000m芝" },
@@ -165,9 +175,18 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* G1シーズン開幕バナー */}
+      {/* 今日開催バナー / G1シーズン開幕バナー */}
       {(() => {
+        const { isRaceDay, dayLabel } = isTodayRaceDay();
         const spring = getNextG1s(3);
+        if (isRaceDay) {
+          return (
+            <div className="bg-green-600 text-white text-center text-sm font-bold py-2 px-4 animate-pulse">
+              🏇 {dayLabel}はJRA開催中！今すぐAIで予想を確認する
+              <Link href="/predict" className="ml-2 underline hover:no-underline bg-yellow-400 text-green-900 px-2 py-0.5 rounded-full no-underline">今すぐ予想 →</Link>
+            </div>
+          );
+        }
         if (!spring.length) return null;
         return (
           <div className="bg-red-600 text-white text-center text-sm font-bold py-2 px-4">
@@ -420,6 +439,56 @@ export default function Home() {
               <p className="text-gray-600 text-sm leading-relaxed">{f.desc}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* 無料 vs プレミアム 差別化セクション */}
+      <section className="py-14 px-6 bg-gradient-to-b from-white to-green-50 border-b border-green-100">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <p className="text-xs font-bold text-green-600 tracking-widest uppercase mb-2">無料 vs プレミアム</p>
+            <h2 className="text-2xl font-bold text-gray-900">プレミアムにしかできないこと</h2>
+            <p className="text-gray-500 text-sm mt-2">無料で体験して、その価値を感じたらアップグレード</p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* 無料 */}
+            <div className="bg-gray-50 border-2 border-gray-200 rounded-2xl p-6">
+              <h3 className="font-bold text-gray-600 mb-4 flex items-center gap-2">
+                <span className="text-lg">🔓</span> 無料プラン
+              </h3>
+              <ul className="space-y-3 text-sm text-gray-600">
+                <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span> AI予想 2レース（本命・対抗・単穴）</li>
+                <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span> 複勝モード 2レース</li>
+                <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span> G1・重賞対応</li>
+                <li className="flex items-center gap-2"><span className="text-red-400 font-bold">✗</span> <span className="text-gray-400">週20〜30レース全予想</span></li>
+                <li className="flex items-center gap-2"><span className="text-red-400 font-bold">✗</span> <span className="text-gray-400">EV（期待値）計算付き分析</span></li>
+                <li className="flex items-center gap-2"><span className="text-red-400 font-bold">✗</span> <span className="text-gray-400">G1前日特別レポート</span></li>
+                <li className="flex items-center gap-2"><span className="text-red-400 font-bold">✗</span> <span className="text-gray-400">回収率トラッキング（無制限）</span></li>
+              </ul>
+            </div>
+            {/* プレミアム */}
+            <div className="bg-green-900 border-2 border-yellow-400 rounded-2xl p-6 relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-green-900 text-xs font-black px-4 py-1 rounded-full">PRO おすすめ</div>
+              <h3 className="font-bold text-yellow-400 mb-4 flex items-center gap-2">
+                <span className="text-lg">👑</span> プロプラン ¥2,980/月
+              </h3>
+              <ul className="space-y-3 text-sm text-green-100">
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">✓</span> AI予想 <strong className="text-white">毎週全レース無制限</strong></li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">✓</span> <strong className="text-white">EV（期待値）計算付き</strong>詳細分析</li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">✓</span> G1・重賞の<strong className="text-white">展開・ペース深掘り分析</strong></li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">✓</span> <strong className="text-white">過去5走の詳細成績</strong>全馬分析</li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">✓</span> 回収率トラッキング<strong className="text-white">無制限記録</strong></li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">✓</span> <strong className="text-white">「スキップ推奨」</strong>判定（損切りサポート）</li>
+              </ul>
+              <button
+                onClick={() => startCheckout("pro")}
+                className="w-full mt-5 bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-3 rounded-xl text-sm transition-colors"
+              >
+                今すぐプロプランで始める →
+              </button>
+            </div>
+          </div>
+          <p className="text-center text-xs text-gray-400 mt-4">※ PAY.JPによる安全な決済。いつでも解約可能。</p>
         </div>
       </section>
 
