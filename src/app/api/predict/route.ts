@@ -759,51 +759,36 @@ ${!isGradeRace ? "⚠️ このレースは一般クラス戦の可能性があ�
 
     // バックテストはSonnet 4.6（馬名・騎手・血統の知識が格段に高い）、通常予想はHaikuで高速処理
     const model = isBacktest ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001";
-    const message = await getClient().messages.create({
+    const newCount = cookieCount + 1;
+    const raceInfoStr = raceData.info.trim();
+    const stream = getClient().messages.stream({
       model,
       max_tokens: 2000,
       system: systemPrompt,
       messages: [{ role: "user", content: prompt }],
     });
-
-    const prediction = message.content[0].type === "text" ? message.content[0].text : "";
-
-    // バックテストはAIが何を返しても予想テキストとして返す（拒否チェックなし）
-    if (!isBacktest) {
-      const hasRequiredSections = mode === "fukusho"
-        ? prediction.includes("複勝推奨") || prediction.includes("レース安定度")
-        : prediction.includes("本命") || prediction.includes("◎") || prediction.includes("買い目");
-      // 明示的な全拒否のみ弾く（部分的な謝罪・情報不足言及は許容）
-      const isHardRefusal = !hasRequiredSections && (
-        prediction.includes("予想提供ができません") ||
-        prediction.includes("判読できない") ||
-        (prediction.includes("申し訳") && prediction.length < 200)
-      );
-      if (isHardRefusal) {
-        return NextResponse.json(
-          { error: "レースデータが正しく取得できませんでした。別のレースを選択するか、しばらく待ってから再試行してください。" },
-          { status: 422 }
-        );
-      }
-    }
-
-    const newCount = cookieCount + 1;
-    const response = NextResponse.json({
-      prediction,
-      raceInfo: raceData.info.trim(),
-      count: newCount,
-      mode,
+    const encoder = new TextEncoder();
+    const readable = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of stream) {
+            if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
+              controller.enqueue(encoder.encode(chunk.delta.text));
+            }
+          }
+          controller.enqueue(encoder.encode(`\nDONE:${JSON.stringify({ count: newCount, mode, raceInfo: raceInfoStr })}`));
+          controller.close();
+        } catch (err) { console.error(err); controller.error(err); }
+      },
     });
-
+    const headers: Record<string, string> = {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache",
+    };
     if (!isPremium && !isBacktest) {
-      response.cookies.set(COOKIE_KEY, String(newCount), {
-        maxAge: 60 * 60 * 24 * 30,
-        sameSite: "lax",
-        httpOnly: true,
-        secure: true,
-      });
+      headers["Set-Cookie"] = `${COOKIE_KEY}=${newCount}; Max-Age=${60 * 60 * 24 * 30}; SameSite=Lax; HttpOnly; Secure; Path=/`;
     }
-    return response;
+    return new Response(readable, { headers });
   } catch (err) {
     console.error(err);
     const msg = err instanceof Error ? err.message : "";

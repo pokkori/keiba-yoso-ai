@@ -225,16 +225,44 @@ export default function PredictPage() {
         body: JSON.stringify({ raceId: selectedRaceId, budget: budgetNum, mode, raceLabel: selectedRace?.label }),
       });
       if (res.status === 429) { setShowPaywall(true); return; }
-      const data = await res.json();
+      if (!res.body) throw new Error("レスポンスが空です");
 
-      if (res.status === 502 && data.error === "FETCH_FAILED") {
-        setError("出走表の自動取得ができませんでした。時間をおいてから別のレースを選択してください。");
-        return;
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = "";
+      let doneMetadata: { count?: number; mode?: string; raceInfo?: string } = {};
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        const doneIdx = chunk.indexOf("\nDONE:");
+        if (doneIdx !== -1) {
+          accumulated += chunk.slice(0, doneIdx);
+          try { doneMetadata = JSON.parse(chunk.slice(doneIdx + 6)); } catch { /* ignore */ }
+          break;
+        }
+        accumulated += chunk;
+        setRawResult(accumulated);
       }
-      if (data.error) throw new Error(data.error);
+
+      // エラーチェック（JSONエラーレスポンスが返った場合）
+      if (accumulated.startsWith("{") && accumulated.includes('"error"')) {
+        try {
+          const errData = JSON.parse(accumulated);
+          if (errData.error === "FETCH_FAILED") {
+            setError("出走表の自動取得ができませんでした。時間をおいてから別のレースを選択してください。");
+            return;
+          }
+          throw new Error(errData.error);
+        } catch (parseErr) {
+          if (parseErr instanceof SyntaxError) { /* not JSON, continue */ }
+          else throw parseErr;
+        }
+      }
 
       // スキップ推奨チェック（一般クラス戦など）
-      const isSkip = /【推奨判定】スキップ/.test(data.prediction ?? "");
+      const isSkip = /【推奨判定】スキップ/.test(accumulated);
       if (isSkip) {
         setIsSkipMsg(true);
         setError("このレースはスキップ推奨です。一般クラス戦は的中率9%で収支マイナスのため対象外。重賞・特別レースを選んでください。");
@@ -242,10 +270,11 @@ export default function PredictPage() {
         return;
       }
       setIsSkipMsg(false);
-      setRawResult(data.prediction);
-      setSections(data.mode === "fukusho" ? parseFukusho(data.prediction) : parsePredict(data.prediction));
-      setRaceInfo(data.raceInfo || "");
-      const next = data.count ?? usageCount + 1;
+      const finalMode = doneMetadata.mode ?? mode;
+      setRawResult(accumulated);
+      setSections(finalMode === "fukusho" ? parseFukusho(accumulated) : parsePredict(accumulated));
+      setRaceInfo(doneMetadata.raceInfo || "");
+      const next = doneMetadata.count ?? usageCount + 1;
       setUsageCount(next);
       localStorage.setItem(STORAGE_KEY, String(next));
     } catch (e) {
