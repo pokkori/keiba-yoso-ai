@@ -781,7 +781,7 @@ ${!isGradeRace ? "⚠️ このレースは一般クラス戦の可能性があ�
     const raceInfoStr = raceData.info.trim();
     const stream = getClient().messages.stream({
       model,
-      max_tokens: 2000,
+      max_tokens: 4000,
       system: systemPrompt,
       messages: [{ role: "user", content: prompt }],
     });
