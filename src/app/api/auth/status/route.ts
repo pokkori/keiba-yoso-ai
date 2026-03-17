@@ -32,10 +32,9 @@ export async function GET() {
     return NextResponse.json({ isPremium, email });
   }
 
-  const stripePremium = cookieStore.get("stripe_premium")?.value === "1";
   const payjpPremium = !!cookieStore.get("premium")?.value;
 
-  if (!payjpPremium && !stripePremium) {
+  if (!payjpPremium) {
     return NextResponse.json({ isPremium: false });
   }
 
@@ -52,5 +51,5 @@ export async function GET() {
     }
   }
 
-  return NextResponse.json({ isPremium: stripePremium || payjpPremium });
+  return NextResponse.json({ isPremium: payjpPremium });
 }
