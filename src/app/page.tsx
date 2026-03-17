@@ -445,6 +445,38 @@ export default function Home() {
         );
       })()}
 
+      {/* 今週末の重賞解説コンテンツ */}
+      <section className="py-12 px-6 bg-green-900 text-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs bg-yellow-400 text-green-900 font-black px-3 py-1 rounded-full">G2 注目レース</span>
+            <span className="text-xs text-green-300">3/22（日） 中京競馬場</span>
+          </div>
+          <h2 className="text-xl font-bold text-white mb-1">金鯱賞 — 高松宮記念へのステップ戦</h2>
+          <p className="text-sm text-green-300 mb-6">中京2000m芝。春G1「大阪杯」の前哨戦として注目度の高い重賞。例年波乱が多く、AIの分析が特に効果的なレース。</p>
+          <div className="grid sm:grid-cols-3 gap-4">
+            <div className="bg-white/10 border border-white/20 rounded-xl p-4">
+              <div className="text-yellow-400 font-bold text-sm mb-2">📍 コース特性</div>
+              <p className="text-green-200 text-xs leading-relaxed">中京2000m芝はスタート直後に急坂。先行勢が有利だが、上がり3F勝負になることも多い。内枠・先行馬に注目。</p>
+            </div>
+            <div className="bg-white/10 border border-white/20 rounded-xl p-4">
+              <div className="text-yellow-400 font-bold text-sm mb-2">🎯 AIの着目点</div>
+              <p className="text-green-200 text-xs leading-relaxed">過去5走の中京・阪神実績、前走からの距離変化、斤量差をAIが総合分析。回収率重視の買い目を提案します。</p>
+            </div>
+            <div className="bg-white/10 border border-white/20 rounded-xl p-4">
+              <div className="text-yellow-400 font-bold text-sm mb-2">💡 狙い目</div>
+              <p className="text-green-200 text-xs leading-relaxed">このレース出走馬は4/5大阪杯へのステップ組が多数。本番に向けたたたき台の馬と本気組の見極めがポイント。</p>
+            </div>
+          </div>
+          <div className="mt-6 text-center">
+            <Link href="/predict"
+              className="inline-block bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-8 py-3 rounded-xl transition-colors">
+              金鯱賞をAIで予想する →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Voices */}
       <section className="py-16 px-6 max-w-5xl mx-auto">
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">ユーザーの声</h2>
