@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import PayjpModal from "@/components/PayjpModal";
+import KomojuButton from "@/components/KomojuButton";
 
 const PAYJP_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYJP_PUBLIC_KEY ?? "";
 
@@ -154,13 +154,19 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       {showPayjp && (
-        <PayjpModal
-          publicKey={PAYJP_PUBLIC_KEY}
-          planLabel={planLabel}
-          plan={payjpPlan}
-          onSuccess={() => { setShowPayjp(false); window.location.reload(); }}
-          onClose={() => setShowPayjp(false)}
-        />
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl relative">
+            <button onClick={() => setShowPayjp(false)} className="absolute top-3 right-3 text-gray-400 text-xl">✕</button>
+            <div className="text-3xl mb-3 text-center">🏇</div>
+            <h2 className="text-lg font-bold mb-2 text-center">競馬予想AIプレミアム</h2>
+            <KomojuButton
+              planId={payjpPlan}
+              planLabel={planLabel}
+              className="w-full bg-green-700 text-white font-bold py-3 rounded-xl hover:bg-green-800 disabled:opacity-50"
+            />
+            <button onClick={() => setShowPayjp(false)} className="text-xs text-gray-400 mt-2 block w-full text-center">閉じる</button>
+          </div>
+        </div>
       )}
       <nav className="flex items-center justify-between px-4 py-4 border-b border-green-200 bg-green-900 sticky top-0 z-10">
         <span className="text-base md:text-xl font-bold text-white">🏇 競馬予想AI</span>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import PayjpModal from "@/components/PayjpModal";
+import KomojuButton from "@/components/KomojuButton";
 import { track } from '@vercel/analytics';
 
 const FREE_LIMIT = 2;
@@ -690,13 +690,19 @@ export default function PredictPage() {
       </footer>
 
       {showPayjp && (
-        <PayjpModal
-          publicKey={process.env.NEXT_PUBLIC_PAYJP_PUBLIC_KEY ?? ""}
-          planLabel={checkoutPlan === "pro" ? "プロプラン ¥2,980/月（税込）— G1・重賞の詳細分析付き" : "ベーシックプラン ¥980/月（税込）— 全レース無制限予想"}
-          plan={checkoutPlan}
-          onSuccess={() => { setShowPayjp(false); setIsPremium(true); window.location.href = "/success"; }}
-          onClose={() => setShowPayjp(false)}
-        />
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl relative">
+            <button onClick={() => setShowPayjp(false)} className="absolute top-3 right-3 text-gray-400 text-xl">✕</button>
+            <div className="text-3xl mb-3 text-center">🏇</div>
+            <h2 className="text-lg font-bold mb-2 text-center">競馬予想AIプレミアム</h2>
+            <KomojuButton
+              planId={checkoutPlan}
+              planLabel={checkoutPlan === "pro" ? "プロプラン ¥2,980/月（税込）— G1・重賞の詳細分析付き" : "ベーシックプラン ¥980/月（税込）— 全レース無制限予想"}
+              className="w-full bg-green-700 text-white font-bold py-3 rounded-xl hover:bg-green-800 disabled:opacity-50"
+            />
+            <button onClick={() => setShowPayjp(false)} className="text-xs text-gray-400 mt-2 block w-full text-center">閉じる</button>
+          </div>
+        </div>
       )}
     </div>
   );
