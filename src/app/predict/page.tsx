@@ -624,7 +624,7 @@ export default function PredictPage() {
                   {/* 購入サイトリンク（A8.net申請後URLを差し替え） */}
                   <div className="mt-4 bg-green-900 rounded-xl p-4">
                     <p className="text-xs font-bold text-green-200 mb-3">🏇 馬券購入はこちらから（公式サイト）</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       {/* TODO: Replace href with A8.net affiliate URL after approval (netkeiba案件) */}
                       <a href="https://regist.netkeiba.com/" target="_blank" rel="noopener noreferrer sponsored"
                         className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-green-700 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition-colors">
@@ -634,6 +634,11 @@ export default function PredictPage() {
                       <a href="https://jra.jp/" target="_blank" rel="noopener noreferrer sponsored"
                         className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-green-700 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition-colors">
                         🎯 JRA公式
+                      </a>
+                      {/* TODO: Replace href with 楽天アフィリエイト URL (insId=s00000011623001) after setup */}
+                      <a href="https://keiba.rakuten.co.jp/" target="_blank" rel="noopener noreferrer sponsored"
+                        className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-red-700 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-colors">
+                        🛒 楽天競馬
                       </a>
                     </div>
                   </div>
