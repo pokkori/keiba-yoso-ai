@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 function Confetti() {
@@ -50,10 +51,17 @@ function Confetti() {
 
 function SuccessContent() {
   const [showConfetti, setShowConfetti] = useState(true);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const timer = setTimeout(() => setShowConfetti(false), 4000);
+    // Komoju session verify
+    const sessionId = searchParams.get("session_id");
+    if (sessionId) {
+      fetch(`/api/komoju/verify?session_id=${sessionId}`).catch(() => {});
+    }
     return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
