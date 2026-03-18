@@ -623,6 +623,10 @@ export default function PredictPage() {
                           <span>💳</span>
                           <span>PAY.JP安全決済</span>
                         </div>
+                        <div className="flex items-center gap-1 text-xs text-yellow-300 font-bold">
+                          <span>🛡️</span>
+                          <span>30日返金保証</span>
+                        </div>
                       </div>
                     </div>
                   )}
