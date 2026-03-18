@@ -658,6 +658,26 @@ export default function Home() {
         </div>
       </section>
 
+      {/* 感情フック */}
+      <section className="py-12 px-6 max-w-3xl mx-auto">
+        <h2 className="text-xl font-bold text-center text-gray-800 mb-6">こんな経験ありませんか？</h2>
+        <div className="space-y-4">
+          {[
+            { icon: "😓", text: "出馬表を調べるのに時間がかかりすぎて、肝心の分析が疎かに..." },
+            { icon: "😤", text: "過去データを調べても、どの馬に注目すべきかわからない..." },
+            { icon: "💸", text: "感覚で買い続けて、なかなかプラス収支にならない..." },
+          ].map((item, i) => (
+            <div key={i} className="flex items-center gap-4 bg-red-50 border border-red-200 rounded-xl p-4">
+              <span className="text-2xl">{item.icon}</span>
+              <p className="text-gray-700 text-sm font-medium">{item.text}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-6 bg-green-700 text-white rounded-2xl p-5 text-center">
+          <p className="font-bold text-base mb-1">競馬予想AIがその悩みを解決します</p>
+          <p className="text-green-100 text-sm">最新データ×AIで本命を瞬時に絞り込み。迷わず買い目を決められます。</p>
+        </div>
+      </section>
       {/* FAQ */}
       <section className="py-16 px-6 max-w-3xl mx-auto">
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-10">よくある質問</h2>
