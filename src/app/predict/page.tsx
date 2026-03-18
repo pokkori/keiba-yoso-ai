@@ -555,6 +555,16 @@ export default function PredictPage() {
           )}
         </div>
 
+        {/* ローディングステップ表示 */}
+        {loading && (
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center mt-4">
+            <div className="inline-block w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin mb-3"></div>
+            <p className="text-green-800 font-medium text-sm mb-1">AIが予想を生成中...</p>
+            <p className="text-xs text-green-600">🏇 出走馬データ取得 → 📊 コース・馬場分析 → 🎯 本命馬選定 → 💡 買い目提案</p>
+            <p className="text-xs text-gray-400 mt-1">通常20〜40秒かかります</p>
+          </div>
+        )}
+
         {/* 予想結果 */}
         {sections.length > 0 && (
           <>
