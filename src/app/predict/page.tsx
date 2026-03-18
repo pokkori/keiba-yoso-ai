@@ -621,6 +621,22 @@ export default function PredictPage() {
                       ))}
                     </ol>
                   </div>
+                  {/* 購入サイトリンク（A8.net申請後URLを差し替え） */}
+                  <div className="mt-4 bg-green-900 rounded-xl p-4">
+                    <p className="text-xs font-bold text-green-200 mb-3">🏇 馬券購入はこちらから（公式サイト）</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {/* TODO: Replace href with A8.net affiliate URL after approval (netkeiba案件) */}
+                      <a href="https://regist.netkeiba.com/" target="_blank" rel="noopener noreferrer sponsored"
+                        className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-green-700 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition-colors">
+                        🐴 netkeiba
+                      </a>
+                      {/* TODO: Replace href with A8.net affiliate URL after approval (JRA-VAN案件) */}
+                      <a href="https://jra.jp/" target="_blank" rel="noopener noreferrer sponsored"
+                        className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-green-700 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition-colors">
+                        🎯 JRA公式
+                      </a>
+                    </div>
+                  </div>
                   {!isPremium && (
                     <div className="mt-5 bg-gradient-to-r from-green-800 to-green-700 rounded-2xl p-5 text-white text-center">
                       <p className="font-bold mb-1">次のレースも予想しますか？</p>
