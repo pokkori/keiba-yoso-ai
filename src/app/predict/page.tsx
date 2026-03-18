@@ -605,6 +605,22 @@ export default function PredictPage() {
                       📊 結果を記録
                     </Link>
                   </div>
+                  {/* 次のアクション3選 */}
+                  <div className="mt-4 bg-green-50 border border-green-200 rounded-xl p-4">
+                    <p className="text-sm font-bold text-green-800 mb-3">📋 次にやるべきこと3選</p>
+                    <ol className="space-y-2">
+                      {[
+                        { icon: "🏇", text: "netkeiba・JRA公式で本命◎の馬番を確認して馬券購入する" },
+                        { icon: "💰", text: "下の軍資金入力で具体的な購入金額・買い目を確認する" },
+                        { icon: "📊", text: "レース後に回収率トラッカーで結果を記録する" },
+                      ].map((item, i) => (
+                        <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
+                          <span className="text-lg leading-none">{item.icon}</span>
+                          <span>{i + 1}. {item.text}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
                   {!isPremium && (
                     <div className="mt-5 bg-gradient-to-r from-green-800 to-green-700 rounded-2xl p-5 text-white text-center">
                       <p className="font-bold mb-1">次のレースも予想しますか？</p>
