@@ -210,13 +210,13 @@ export default function Home() {
           バックテスト全記録公開中 — 的中も外れも隠しません。AIが毎週レースを分析して予想を更新
         </p>
 
-        {/* AIバックテスト実績バッジ（回収率193%） */}
+        {/* AIバックテスト実績バッジ */}
         <div className="bg-yellow-400/20 border-2 border-yellow-400 rounded-2xl p-4 mb-6 max-w-md mx-auto">
-          <p className="text-yellow-300 text-xs font-bold mb-3 tracking-widest uppercase text-center">📊 AIバックテスト実績</p>
+          <p className="text-yellow-300 text-xs font-bold mb-3 tracking-widest uppercase text-center">📊 AIバックテスト参考値（n=3）</p>
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="bg-white/10 rounded-xl px-3 py-2">
               <div className="text-2xl font-black text-yellow-400">193%</div>
-              <div className="text-green-200 text-xs mt-0.5">回収率</div>
+              <div className="text-green-200 text-xs mt-0.5">参考回収率</div>
             </div>
             <div className="bg-white/10 rounded-xl px-3 py-2">
               <div className="text-2xl font-black text-yellow-400">67%</div>
@@ -297,11 +297,11 @@ export default function Home() {
       {/* Stats */}
       <section className="py-10 px-6 bg-green-800 text-white">
         <div className="flex justify-center mb-4">
-          <span className="bg-yellow-400 text-green-900 text-xs font-bold px-3 py-1 rounded-full">📊 バックテスト回収率193%（3レース検証済み）</span>
+          <span className="bg-yellow-400 text-green-900 text-xs font-bold px-3 py-1 rounded-full">📊 AIによる予想情報提供サービス（参考値）</span>
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
-            { num: "193%", label: "バックテスト回収率（3レース）" },
+            { num: "193%", label: "参考回収率（n=3 初期検証）" },
             { num: "67%", label: "的中率（2/3レース）" },
             { num: "30秒", label: "AI分析完了まで" },
             { num: "G1 20戦", label: "2026年全G1対応" },
@@ -768,7 +768,7 @@ export default function Home() {
       <section className="py-6 px-6 text-center">
         <div className="inline-flex flex-col sm:flex-row gap-2">
           <a
-            href={"https://twitter.com/intent/tweet?text=" + encodeURIComponent("競馬予想AI — 出馬表をAIが自動分析・本命馬と買い目を30秒で提案🐎 バックテスト回収率193%！無料で試せます → https://keiba-yoso-ai.vercel.app #競馬 #競馬予想 #AI")}
+            href={"https://twitter.com/intent/tweet?text=" + encodeURIComponent("競馬予想AI — 出馬表をAIが自動分析・本命馬と買い目を30秒で提案🐎 AIの予想参考情報！無料で試せます → https://keiba-yoso-ai.vercel.app #競馬 #競馬予想 #AI")}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-black hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-xl text-sm transition-colors"
@@ -779,7 +779,7 @@ export default function Home() {
             Xでシェアする
           </a>
           <a
-            href={"https://line.me/R/msg/text/?" + encodeURIComponent("競馬予想AI🐎 出馬表をAIが自動分析・本命馬と買い目を30秒で提案！バックテスト回収率193%！無料で試せます → https://keiba-yoso-ai.vercel.app")}
+            href={"https://line.me/R/msg/text/?" + encodeURIComponent("競馬予想AI🐎 出馬表をAIが自動分析・本命馬と買い目を30秒で提案！AIの予想参考情報サービス！無料で試せます → https://keiba-yoso-ai.vercel.app")}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-white font-bold py-3 px-6 rounded-xl text-sm transition-colors"
