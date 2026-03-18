@@ -7,7 +7,7 @@ const ITEMS = [
   { label: "電話番号", value: "請求があれば遅滞なく開示します（お問い合わせはメールにて承ります）" },
   { label: "お問い合わせ", value: "X(Twitter) @levona_design へのDM" },
   { label: "販売価格", value: "ベーシックプラン ¥980/月、プロプラン ¥2,980/月、年間プラン ¥19,800/年（税込）" },
-  { label: "支払方法", value: "クレジットカード（PAY.JP（PAY.JP株式会社）経由）（Visa・Mastercard・American Express・JCB）" },
+  { label: "支払方法", value: "クレジットカード（オンライン決済サービス経由）（Visa・Mastercard・American Express・JCB）" },
   { label: "支払時期", value: "お申込み時に即時決済。以降、毎月同日に自動更新" },
   { label: "サービス提供時期", value: "決済完了後、即時ご利用いただけます" },
   { label: "返品・キャンセル", value: "デジタルコンテンツの性質上、決済完了後の返金は承っておりません。解約はいつでもマイページより行えます。解約後は次回更新日まで引き続きご利用いただけます" },
