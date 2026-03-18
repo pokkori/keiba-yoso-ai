@@ -709,6 +709,27 @@ export default function Home() {
         </div>
       </section>
 
+      {/* もっと楽しむ3選 */}
+      <section className="py-8 px-4 max-w-lg mx-auto">
+        <h2 className="text-center text-base font-bold text-green-800 mb-4">🏇 競馬AIをもっと楽しむ3選</h2>
+        <ol className="space-y-3">
+          {[
+            { icon: "📊", title: "バックテスト全記録を分析", desc: "的中・外れ全記録が公開中。AIの判断パターンを学んで自分の予想力を高めよう。" },
+            { icon: "🏆", title: "G1レース制覇チャレンジ", desc: "2026年全G1レースをAI予想でカバー。有馬記念・日本ダービーを制して達成感を味わおう。" },
+            { icon: "📣", title: "予想結果をXでシェア", desc: "当たった予想をXに投稿して仲間と盛り上がろう。的中報告は最高の喜び！" },
+          ].map((item, i) => (
+            <li key={i} className="flex items-start gap-3 rounded-xl p-3"
+              style={{ background: "rgba(22,101,52,0.06)", border: "1px solid rgba(22,101,52,0.15)" }}>
+              <span style={{ fontSize: "22px", lineHeight: "1" }}>{item.icon}</span>
+              <div>
+                <div className="text-green-900 font-bold text-sm">{i + 1}. {item.title}</div>
+                <div className="text-green-700 text-xs mt-0.5 opacity-80">{item.desc}</div>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
       {/* X Share */}
       <section className="py-6 px-6 text-center">
         <a
