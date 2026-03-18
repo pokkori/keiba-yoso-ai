@@ -709,6 +709,20 @@ export default function Home() {
         </div>
       </section>
 
+      {/* X Share */}
+      <section className="py-6 px-6 text-center">
+        <a
+          href={"https://twitter.com/intent/tweet?text=" + encodeURIComponent("競馬予想AI — 出馬表をAIが自動分析・本命馬と買い目を30秒で提案🐎 バックテスト回収率193%！無料で試せます → https://keiba-yoso-ai.vercel.app #競馬 #競馬予想 #AI")}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 bg-black hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-xl text-sm transition-colors"
+        >
+          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+          Xでシェアする
+        </a>
+      </section>
       <footer className="text-center py-8 text-sm text-gray-400 border-t">
         <p className="text-gray-500 text-xs mb-3">
           ※本サービスはエンターテインメント目的の予想サービスです。馬券の的中・収益を保証するものではありません。
