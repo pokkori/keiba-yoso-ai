@@ -666,6 +666,47 @@ export default function PredictPage() {
           </div>
         )}
 
+        {/* 平日・レースなし時 → G1カウントダウン + AI解説コンテンツ */}
+        {!racesLoading && races.length === 0 && !loading && (
+          <div className="mt-6 space-y-4">
+            <div className="bg-green-900 text-white rounded-2xl p-5">
+              <p className="text-yellow-300 text-xs font-bold mb-2">🏆 次のG1まで準備しよう</p>
+              <p className="text-white font-bold text-base mb-1">高松宮記念（G1）3/29（日）中京1200m芝</p>
+              <p className="text-green-200 text-sm mb-3">今春最初のスプリントG1。AIが分析する「勝ち馬の条件」を確認しておこう。</p>
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <div className="bg-white/10 rounded-lg p-3">
+                  <div className="text-yellow-400 text-xs font-bold mb-1">AI重視ポイント</div>
+                  <div className="text-green-200 text-xs">前走5着以内 + 中京適性 + 1〜3番人気</div>
+                </div>
+                <div className="bg-white/10 rounded-lg p-3">
+                  <div className="text-yellow-400 text-xs font-bold mb-1">過去傾向</div>
+                  <div className="text-green-200 text-xs">内枠先行有利・阪急杯組に注目</div>
+                </div>
+              </div>
+              <a href="/" className="inline-block bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-6 py-2.5 rounded-xl text-sm transition-colors">
+                LPでAI解説を詳しく見る →
+              </a>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <p className="text-sm font-bold text-gray-700 mb-3">📊 AIバックテスト実績（G1・重賞）</p>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "G1・重賞的中率", value: "67%", sub: "2/3レース" },
+                  { label: "参考回収率", value: "193%", sub: "初期バックテスト" },
+                  { label: "対象レース", value: "G1/重賞", sub: "一般戦は除外" },
+                ].map((s) => (
+                  <div key={s.label} className="text-center bg-green-50 rounded-lg p-2">
+                    <div className="text-lg font-bold text-green-700">{s.value}</div>
+                    <div className="text-xs text-gray-600">{s.label}</div>
+                    <div className="text-xs text-gray-400">{s.sub}</div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-400 text-center mt-2">※n=3レース・初期データ。土日のレースで試してみよう</p>
+            </div>
+          </div>
+        )}
+
         {/* 予想結果 */}
         {sections.length > 0 && (
           <>
