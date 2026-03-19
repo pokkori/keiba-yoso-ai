@@ -798,7 +798,13 @@ export default function Home() {
           </a>
         </div>
       </section>
-      <footer className="text-center py-8 text-sm text-gray-400 border-t">
+      <div className="fixed bottom-0 left-0 right-0 bg-green-900 border-t border-green-700 px-4 py-3 z-40 sm:hidden shadow-lg">
+        <a href="/predict" className="block w-full bg-yellow-400 hover:bg-yellow-300 text-green-900 font-black text-center py-3.5 rounded-xl text-sm">
+          🏇 無料でAI予想を見る →
+        </a>
+      </div>
+
+      <footer className="text-center py-8 pb-24 sm:pb-8 text-sm text-gray-400 border-t">
         <p className="text-gray-500 text-xs mb-3">
           ※本サービスはエンターテインメント目的の予想サービスです。馬券の的中・収益を保証するものではありません。
         </p>
