@@ -45,6 +45,23 @@ function getNextG1s(count = 3) {
   return G1_RACES.filter(r => new Date(r.date) >= today).slice(0, count);
 }
 
+// 的中実績ランキング TOP5
+const HIT_RANKING = [
+  { rank: 1, race: "小倉大賞典(G3)", date: "2026/3/8", bet: "複勝", horse: "ショウナンアデイブ", odds: "3.7倍", profit: "+¥2,700", badge: "bg-yellow-400 text-green-900" },
+  { rank: 2, race: "弥生賞(G2)", date: "2026/3/2", bet: "複勝", horse: "ライヒスアドラー", odds: "1.1倍", profit: "+¥100", badge: "bg-gray-300 text-gray-800" },
+  { rank: 3, race: "阪神大賞典(G2)", date: "2026/3/22", bet: "複勝", horse: "AI推奨馬", odds: "予想中", profit: "—", badge: "bg-amber-700 text-white" },
+  { rank: 4, race: "スプリングS(G2)", date: "2026/3/15", bet: "未記録", horse: "予想記録なし", odds: "—", profit: "—", badge: "bg-gray-200 text-gray-500" },
+  { rank: 5, race: "金鯱賞(G2)", date: "2026/3/15", bet: "未記録", horse: "予想記録なし", odds: "—", profit: "—", badge: "bg-gray-200 text-gray-500" },
+];
+
+// AI予想根拠の4軸データ（サンプル表示用）
+const RADAR_AXES = [
+  { label: "過去成績", value: 82, desc: "直近5走の着順・タイム偏差" },
+  { label: "コース適性", value: 75, desc: "コース別成績・距離適性" },
+  { label: "騎手相性", value: 68, desc: "騎手×馬の相性データ" },
+  { label: "当日馬場", value: 70, desc: "馬場状態×脚質適合度" },
+];
+
 const FEATURES = [
   {
     icon: "📋",
@@ -176,6 +193,7 @@ export default function Home() {
           <Link href="/predict" className="hidden md:block text-sm text-green-200 hover:text-white">予想する</Link>
           <Link href="/tracker" className="hidden md:block text-sm text-green-200 hover:text-white">回収率管理</Link>
           <Link href="/backtest/results" className="hidden md:block text-sm text-green-200 hover:text-white">実績を見る</Link>
+          <Link href="/news" className="hidden md:block text-sm text-green-200 hover:text-white">今週のG1</Link>
           <Link href="/predict"
             className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-4 py-1.5 rounded-full text-sm transition-colors">
             無料で試す
@@ -220,22 +238,12 @@ export default function Home() {
 
         {/* AIバックテスト実績バッジ */}
         <div className="bg-yellow-400/20 border-2 border-yellow-400 rounded-2xl p-4 mb-6 max-w-md mx-auto">
-          <p className="text-yellow-300 text-xs font-bold mb-3 tracking-widest uppercase text-center">📊 AIバックテスト参考値（n=3）</p>
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div className="bg-white/10 rounded-xl px-3 py-2">
-              <div className="text-2xl font-black text-yellow-400">193%</div>
-              <div className="text-green-200 text-xs mt-0.5">参考回収率</div>
-            </div>
-            <div className="bg-white/10 rounded-xl px-3 py-2">
-              <div className="text-2xl font-black text-yellow-400">67%</div>
-              <div className="text-green-200 text-xs mt-0.5">的中率</div>
-            </div>
-            <div className="bg-white/10 rounded-xl px-3 py-2">
-              <div className="text-2xl font-black text-yellow-400">3連単</div>
-              <div className="text-green-200 text-xs mt-0.5">フォーメーション</div>
-            </div>
+          <p className="text-yellow-300 text-xs font-bold mb-3 tracking-widest uppercase text-center">📊 AIバックテスト実施中</p>
+          <div className="bg-white/10 rounded-xl px-4 py-4 text-center">
+            <p className="text-yellow-300 font-bold text-sm mb-1">データ蓄積中</p>
+            <p className="text-green-200 text-xs">バックテストを継続実施中です。実績値は蓄積後に公開します。</p>
           </div>
-          <p className="text-green-400 text-xs text-center mt-2">※3レース検証済み（バックテスト継続中）</p>
+          <p className="text-green-400 text-xs text-center mt-2">※<Link href="/backtest/results" className="underline">バックテストページ</Link>で全記録を確認できます（外れも全公開）</p>
         </div>
 
         {/* 実績ベース訴求（バックテスト公開・透明性重視） */}
@@ -321,6 +329,25 @@ export default function Home() {
         );
       })()}
 
+      {/* バックテスト実績 */}
+      <section className="py-12 px-6 bg-white border-b border-gray-100">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-6">
+            <span className="inline-block bg-yellow-400 text-green-900 text-xs font-black px-3 py-1 rounded-full mb-3">バックテスト実施中</span>
+            <h2 className="text-xl font-bold text-gray-900">AI予想バックテスト</h2>
+            <p className="text-gray-500 text-xs mt-1">的中も外れも全記録公開中。データが蓄積され次第、実績値を公開します。</p>
+          </div>
+          <div className="bg-green-50 border border-green-200 rounded-xl px-6 py-8 text-center">
+            <p className="text-green-700 font-bold text-sm mb-2">バックテストページで実際のバックテストが確認できます</p>
+            <p className="text-green-600 text-xs mb-4">的中も外れも隠さず全件記録。現在データ蓄積中です。</p>
+            <Link href="/backtest/results" className="inline-block bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-6 rounded-full text-sm transition-colors">
+              バックテスト全記録を確認する →
+            </Link>
+          </div>
+          <p className="text-xs text-gray-400 text-center mt-3">※的中・収益を保証するものではありません。少サンプルのためデータの解釈にはご注意ください。</p>
+        </div>
+      </section>
+
       {/* Stats */}
       <section className="py-10 px-6 bg-green-800 text-white">
         <div className="flex justify-center mb-4">
@@ -328,8 +355,8 @@ export default function Home() {
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
-            { num: "193%", label: "参考回収率（n=3 初期検証）" },
-            { num: "67%", label: "的中率（2/3レース）" },
+            { num: "検証中", label: "参考回収率（/backtestで確認）" },
+            { num: "検証中", label: "的中率（/backtestで確認）" },
             { num: "30秒", label: "AI分析完了まで" },
             { num: "G1 20戦", label: "2026年全G1対応" },
           ].map(s => (
@@ -339,7 +366,7 @@ export default function Home() {
             </div>
           ))}
         </div>
-        <p className="text-green-500 text-xs text-center mt-4">※回収率・的中率はn=3レースの初期バックテスト値です。統計的有意性の確保には20〜30レースが必要です。</p>
+        <p className="text-green-500 text-xs text-center mt-4">※回収率・的中率はバックテスト実施中です。実績値は<Link href="/backtest/results" className="underline">バックテストページ</Link>でご確認ください。</p>
       </section>
 
       {/* 月次回収率推移グラフ + バックテスト連動说明 */}
@@ -357,8 +384,8 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-3 gap-4 mb-6">
             {[
-              { label: "重賞的中率", value: "67%", sub: "2/3レース検証済み" },
-              { label: "参考回収率", value: "193%", sub: "n=3 初期バックテスト" },
+              { label: "重賞的中率", value: "検証中", sub: "/backtestで確認" },
+              { label: "参考回収率", value: "検証中", sub: "/backtestで確認" },
               { label: "スキップ率", value: "高", sub: "一般戦は除外で精度維持" },
             ].map((stat) => (
               <div key={stat.label} className="bg-slate-800/90 rounded-xl p-4 text-center border border-slate-600">
@@ -463,6 +490,68 @@ export default function Home() {
             <Link href="/backtest/results" className="inline-block bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-8 rounded-full text-sm transition-colors">
               全バックテスト記録を見る →
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* AI予想根拠の可視化 */}
+      <section className="py-14 px-6 bg-green-900 text-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <span className="inline-block bg-yellow-400 text-green-900 text-xs font-black px-3 py-1 rounded-full mb-3">透明性の可視化</span>
+            <h2 className="text-2xl font-bold text-white">AIの予想根拠を4軸で表示</h2>
+            <p className="text-green-300 text-sm mt-2">「なぜこの馬を推奨するのか」をレーダーチャートで分かりやすく可視化します</p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            {/* レーダーチャート（CSS実装） */}
+            <div className="bg-green-800/50 border border-green-700 rounded-2xl p-6">
+              <p className="text-yellow-300 text-xs font-bold text-center mb-4">📊 サンプル: 高松宮記念 推奨馬 予想根拠スコア</p>
+              <div className="space-y-3">
+                {RADAR_AXES.map((axis) => (
+                  <div key={axis.label}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-green-200 text-xs font-bold">{axis.label}</span>
+                      <span className="text-yellow-300 text-xs font-black">{axis.value}/100</span>
+                    </div>
+                    <div className="bg-green-900/60 rounded-full h-3 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-yellow-400 to-green-400 h-full rounded-full transition-all"
+                        style={{ width: `${axis.value}%` }}
+                      />
+                    </div>
+                    <p className="text-green-400 text-xs mt-0.5">{axis.desc}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 bg-yellow-400/10 border border-yellow-400/30 rounded-xl p-3 text-center">
+                <p className="text-yellow-300 text-xs font-bold">総合スコア: 74/100</p>
+                <p className="text-green-300 text-xs mt-0.5">→ 複勝推奨（1〜2番人気想定）</p>
+              </div>
+            </div>
+            {/* 説明テキスト */}
+            <div>
+              <div className="space-y-4">
+                {[
+                  { icon: "📈", title: "過去成績スコア", desc: "直近5走の着順・タイム偏差・クラス上昇度を数値化。安定した実績を持つ馬ほどスコアが高くなります。" },
+                  { icon: "🏇", title: "コース適性スコア", desc: "レースのコース・距離・回り・馬場状態との相性を過去データから算出。得意コースへの出走は評価アップ。" },
+                  { icon: "👤", title: "騎手相性スコア", desc: "騎手と馬の組み合わせ実績・騎手のコース別成績をAIが総合判断。名手への乗り替わりも適切に評価。" },
+                  { icon: "🌿", title: "当日馬場スコア", desc: "開催日の馬場状態（良/稍重/重）と馬の脚質適合度を計算。差し馬は重馬場で評価が下がる場合も。" },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <span className="text-xl shrink-0">{item.icon}</span>
+                    <div>
+                      <p className="font-bold text-white text-sm">{item.title}</p>
+                      <p className="text-green-300 text-xs leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-6">
+                <Link href="/predict" className="inline-block bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-8 py-3 rounded-xl transition-colors">
+                  実際の予想根拠を確認する →
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
