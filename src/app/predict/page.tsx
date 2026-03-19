@@ -7,6 +7,17 @@ import { track } from '@vercel/analytics';
 
 const FREE_LIMIT = 2;
 const STORAGE_KEY = "keiba_predict_count";
+const FAVORITES_KEY = "keiba_favorites";
+const MAX_FAVORITES = 10;
+
+const POPULAR_HORSES = [
+  "イクイノックス",
+  "ドウデュース",
+  "リバティアイランド",
+  "ソールオリエンス",
+  "タスティエーラ",
+  "ジャスティンパレス",
+];
 
 interface Race {
   raceId: string;
@@ -251,9 +262,18 @@ export default function PredictPage() {
   const [showPayjp, setShowPayjp] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState("basic");
 
+  // お気に入り馬
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [favInput, setFavInput] = useState("");
+  const [showFavPanel, setShowFavPanel] = useState(false);
+
   useEffect(() => {
     fetch("/api/auth/status").then((r) => r.json()).then((d) => setIsPremium(d.isPremium));
     setUsageCount(Number(localStorage.getItem(STORAGE_KEY) || "0"));
+    try {
+      const saved = JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]");
+      if (Array.isArray(saved)) setFavorites(saved);
+    } catch { /* ignore */ }
   }, []);
 
   useEffect(() => {
@@ -370,6 +390,20 @@ export default function PredictPage() {
 
   const eligibleRaces = races.filter((r) => !isSkipRace(r.label));
   const skippedCount = races.length - eligibleRaces.length;
+
+  const addFavorite = (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed || favorites.includes(trimmed) || favorites.length >= MAX_FAVORITES) return;
+    const next = [...favorites, trimmed];
+    setFavorites(next);
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(next));
+  };
+
+  const removeFavorite = (name: string) => {
+    const next = favorites.filter((f) => f !== name);
+    setFavorites(next);
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(next));
+  };
 
   const venueGroups = eligibleRaces.reduce<Record<string, Race[]>>((acc, race) => {
     if (!acc[race.venue]) acc[race.venue] = [];
@@ -522,6 +556,73 @@ export default function PredictPage() {
                 className="w-full border border-gray-300 rounded-xl pl-8 pr-16 py-3 focus:outline-none focus:border-green-500 bg-gray-50" />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">円</span>
             </div>
+          </div>
+
+          {/* お気に入り馬 */}
+          <div className="mb-5">
+            <button
+              onClick={() => setShowFavPanel(!showFavPanel)}
+              className="flex items-center gap-1.5 text-sm font-medium text-green-700 hover:text-green-900 transition-colors"
+            >
+              <span>⭐</span>
+              <span>お気に入り馬</span>
+              <span className="text-xs text-gray-400 ml-1">({favorites.length}/{MAX_FAVORITES})</span>
+              <span className="text-xs text-gray-400">{showFavPanel ? "▲" : "▼"}</span>
+            </button>
+            {showFavPanel && (
+              <div className="mt-2 bg-green-50 border border-green-200 rounded-xl p-4">
+                {/* 人気馬プリセット */}
+                <p className="text-xs font-bold text-green-700 mb-2">🏆 人気馬を追加</p>
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {POPULAR_HORSES.map((horse) => (
+                    <button
+                      key={horse}
+                      onClick={() => addFavorite(horse)}
+                      disabled={favorites.includes(horse)}
+                      className={`px-2.5 py-1 text-xs rounded-lg border font-medium transition-colors ${favorites.includes(horse) ? "bg-green-100 text-green-400 border-green-200 cursor-default" : "bg-white text-green-700 border-green-300 hover:bg-green-100"}`}
+                    >
+                      {favorites.includes(horse) ? "✓ " : "+ "}{horse}
+                    </button>
+                  ))}
+                </div>
+                {/* 手動追加 */}
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={favInput}
+                    onChange={(e) => setFavInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { addFavorite(favInput); setFavInput(""); } }}
+                    placeholder="馬名を入力して追加..."
+                    maxLength={20}
+                    className="flex-1 border border-green-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-green-500 bg-white"
+                  />
+                  <button
+                    onClick={() => { addFavorite(favInput); setFavInput(""); }}
+                    disabled={!favInput.trim() || favorites.length >= MAX_FAVORITES}
+                    className="px-3 py-1.5 bg-green-700 text-white text-xs font-bold rounded-lg hover:bg-green-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                  >
+                    追加
+                  </button>
+                </div>
+                {/* 登録済みお気に入り一覧 */}
+                {favorites.length > 0 ? (
+                  <>
+                    <p className="text-xs font-bold text-green-700 mb-1.5">⭐ 登録済み馬</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {favorites.map((horse) => (
+                        <span key={horse} className="flex items-center gap-1 bg-green-700 text-white text-xs px-2.5 py-1 rounded-lg font-medium">
+                          {horse}
+                          <button onClick={() => removeFavorite(horse)} className="text-green-300 hover:text-white leading-none ml-0.5" aria-label="削除">×</button>
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2">※ お気に入り馬はメモとして保存されます。予想時に本命と照合しよう！</p>
+                  </>
+                ) : (
+                  <p className="text-xs text-gray-400">まだ登録がありません。気になる馬を追加しよう！</p>
+                )}
+              </div>
+            )}
           </div>
 
           {racePast && (
