@@ -701,9 +701,9 @@ export default function PredictPage() {
                       className="flex items-center gap-1.5 px-4 py-2 bg-[#06C755] text-white text-sm font-bold rounded-xl hover:bg-[#05b04c] transition-colors">
                       LINE でシェア
                     </a>
-                    <Link href="/tracker"
+                    <Link href={`/tracker?race=${encodeURIComponent(shareLabel)}&date=${date}`}
                       className="flex items-center gap-1.5 px-4 py-2 bg-green-50 text-green-700 text-sm font-bold rounded-xl hover:bg-green-100 transition-colors border border-green-200">
-                      📊 結果を記録
+                      📊 回収率に記録
                     </Link>
                   </div>
                   {/* 次のアクション3選 */}

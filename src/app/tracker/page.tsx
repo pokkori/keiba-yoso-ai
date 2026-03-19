@@ -18,6 +18,15 @@ export default function TrackerPage() {
   const [investment, setInvestment] = useState("");
   const [recovery, setRecovery] = useState("");
 
+  // URLパラメータからレース情報を自動入力
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const raceParam = params.get("race");
+    const dateParam = params.get("date");
+    if (raceParam) setRace(raceParam);
+    if (dateParam) setDate(dateParam);
+  }, []);
+
   useEffect(() => {
     const saved = localStorage.getItem("keiba-records");
     if (saved) setRecords(JSON.parse(saved));
@@ -55,10 +64,12 @@ export default function TrackerPage() {
     <div className="min-h-screen bg-white">
       <nav className="flex items-center justify-between px-6 py-4 border-b border-green-200 bg-green-900">
         <Link href="/" className="text-xl font-bold text-white">🏇 競馬予想AI</Link>
+        <Link href="/predict" className="text-sm text-green-200 hover:text-white transition-colors">予想する →</Link>
       </nav>
 
       <div className="max-w-3xl mx-auto py-12 px-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">回収率トラッカー</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">回収率トラッカー</h1>
+        <p className="text-gray-500 text-sm mb-8">馬券成績を記録して回収率を管理しましょう</p>
 
         {/* 集計 */}
         <div className="grid grid-cols-3 gap-4 mb-8">
@@ -113,7 +124,7 @@ export default function TrackerPage() {
         </div>
 
         {/* 履歴 */}
-        {records.length > 0 && (
+        {records.length > 0 ? (
           <div>
             <h2 className="text-lg font-bold text-gray-900 mb-4">履歴</h2>
             <div className="space-y-3">
@@ -126,13 +137,19 @@ export default function TrackerPage() {
                   <div className="text-right mr-4">
                     <p className="text-sm text-gray-500">投資 ¥{r.investment.toLocaleString()} → 回収 ¥{r.recovery.toLocaleString()}</p>
                     <p className={`font-bold ${r.recovery >= r.investment ? "text-green-600" : "text-red-500"}`}>
-                      {((r.recovery / r.investment) * 100).toFixed(0)}%
+                      {r.investment > 0 ? ((r.recovery / r.investment) * 100).toFixed(0) : "0"}%
                     </p>
                   </div>
                   <button onClick={() => deleteRecord(r.id)} className="text-gray-400 hover:text-red-500 text-sm">削除</button>
                 </div>
               ))}
             </div>
+          </div>
+        ) : (
+          <div className="text-center py-12 text-gray-400">
+            <p className="text-4xl mb-3">🏇</p>
+            <p>まだ記録がありません</p>
+            <p className="text-sm mt-1">レース結果を記録して回収率を管理しましょう</p>
           </div>
         )}
       </div>
