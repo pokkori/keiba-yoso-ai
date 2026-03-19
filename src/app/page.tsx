@@ -873,6 +873,41 @@ export default function Home() {
         </div>
       </section>
 
+      {/* G1レース個別予想ガイド */}
+      <section className="py-12 px-4 bg-yellow-50 border-y border-yellow-200">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-6">
+            <p className="text-xs font-bold text-yellow-700 tracking-widest uppercase mb-2">G1レース完全攻略ガイド</p>
+            <h2 className="text-xl font-bold text-gray-900">AIが分析する春G1攻略法</h2>
+            <p className="text-gray-500 text-sm mt-1">レースごとのコース特性・過去傾向・AIの重視ポイントを徹底解説</p>
+          </div>
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {[
+              { slug: "takamatsunomiya-kinen", name: "高松宮記念", date: "3/29（日）", venue: "中京 1200m芝", badge: "スプリント" },
+              { slug: "osaka-hai", name: "大阪杯", date: "4/5（日）", venue: "阪神 2000m芝", badge: "中距離" },
+              { slug: "sakurahana-sho", name: "桜花賞", date: "4/12（日）", venue: "阪神 1600m芝", badge: "牝馬" },
+              { slug: "satsuki-sho", name: "皐月賞", date: "4/19（日）", venue: "中山 2000m芝", badge: "牡馬" },
+              { slug: "nihon-derby", name: "日本ダービー", date: "5/31（日）", venue: "東京 2400m芝", badge: "クラシック" },
+              { slug: "arima-kinen", name: "有馬記念", date: "12/27（日）", venue: "中山 2500m芝", badge: "グランプリ" },
+            ].map((race) => (
+              <Link key={race.slug} href={`/race/${race.slug}`}
+                className="bg-white rounded-xl border border-yellow-200 p-4 hover:border-green-400 hover:shadow-md transition-all group">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs bg-yellow-400 text-green-900 font-black px-2 py-0.5 rounded-full">G1</span>
+                  <span className="text-xs bg-green-100 text-green-700 font-medium px-2 py-0.5 rounded-full">{race.badge}</span>
+                </div>
+                <div className="text-sm font-bold text-gray-900 mb-1 group-hover:text-green-700">{race.name}</div>
+                <div className="text-xs text-gray-500 space-y-0.5">
+                  <div>📅 {race.date}</div>
+                  <div>📍 {race.venue}</div>
+                </div>
+                <div className="mt-2 text-xs font-bold text-green-600">AI攻略ガイドを見る →</div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* もっと楽しむ3選 */}
       <section className="py-8 px-4 max-w-lg mx-auto">
         <h2 className="text-center text-base font-bold text-green-800 mb-4">🏇 競馬AIをもっと楽しむ3選</h2>
