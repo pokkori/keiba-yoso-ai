@@ -742,9 +742,9 @@ export default function Home() {
         <p className="text-center text-xs text-gray-500 mb-4">AI予想と合わせて使うと的中率がさらにアップ <span className="text-gray-400">PR</span></p>
         <div className="space-y-3">
           <a
-            href="https://px.a8.net/svt/ejp?a8mat=3Z7M6T+EXAMPLE1+RAKUTEN+KEIBA"
+            href="https://keiba.rakuten.co.jp/"
             target="_blank"
-            rel="noopener noreferrer sponsored"
+            rel="noopener noreferrer"
             className="flex items-center gap-3 p-3 rounded-xl border border-green-200 bg-green-50 hover:bg-green-100 transition-colors"
           >
             <span className="text-2xl">🐎</span>
@@ -755,9 +755,9 @@ export default function Home() {
             <span className="text-xs text-green-600 font-bold shrink-0">無料登録 →</span>
           </a>
           <a
-            href="https://px.a8.net/svt/ejp?a8mat=3Z7M6T+EXAMPLE2+ODDS+PARK"
+            href="https://www.oddspark.com/"
             target="_blank"
-            rel="noopener noreferrer sponsored"
+            rel="noopener noreferrer"
             className="flex items-center gap-3 p-3 rounded-xl border border-green-200 bg-green-50 hover:bg-green-100 transition-colors"
           >
             <span className="text-2xl">📊</span>
