@@ -720,7 +720,7 @@ export default function Home() {
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
                 <p className="text-yellow-300 text-xs font-bold mb-1">📊 G1・重賞レースのAI実績（バックテスト）</p>
-                <p className="text-green-200 text-xs">重賞・G1クラス的中率 67%（2/3レース）| 回収率 193% | 複勝モード安定的中中</p>
+                <p className="text-green-200 text-xs">バックテスト実施中 — 実績値は蓄積後に公開します | 複勝モード稼働中</p>
               </div>
               <Link href="/backtest/results"
                 className="text-xs bg-yellow-400 text-green-900 font-bold px-4 py-2 rounded-full whitespace-nowrap hover:bg-yellow-300 transition-colors">
