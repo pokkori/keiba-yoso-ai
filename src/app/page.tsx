@@ -194,6 +194,7 @@ export default function Home() {
           <Link href="/tracker" className="hidden md:block text-sm text-green-200 hover:text-white">回収率管理</Link>
           <Link href="/backtest/results" className="hidden md:block text-sm text-green-200 hover:text-white">実績を見る</Link>
           <Link href="/news" className="hidden md:block text-sm text-green-200 hover:text-white">今週のG1</Link>
+          <Link href="/how-to" className="hidden md:block text-sm text-green-200 hover:text-white">使い方ガイド</Link>
           <Link href="/predict"
             className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-4 py-1.5 rounded-full text-sm transition-colors">
             無料で試す
@@ -909,6 +910,66 @@ export default function Home() {
               </Link>
               <p className="text-green-400 text-xs mt-2">登録不要・30秒で予想完了</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* オッズ別期待値解説コンテンツ（SEOコンテンツ） */}
+      <section className="py-14 px-6 bg-green-50 border-y border-green-200">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <span className="inline-block bg-yellow-400 text-green-900 text-xs font-black px-3 py-1 rounded-full mb-3">期待値ガイド</span>
+            <h2 className="text-2xl font-bold text-gray-900">複勝オッズ別・回収率の目安と買い方</h2>
+            <p className="text-gray-500 text-sm mt-2">「どのオッズ帯で買うか」が回収率を大きく左右します</p>
+          </div>
+          <div className="overflow-x-auto rounded-xl border border-green-200 mb-6">
+            <table className="w-full text-sm">
+              <thead className="bg-green-800 text-white">
+                <tr>
+                  <th className="px-4 py-3 text-left font-bold">複勝オッズ帯</th>
+                  <th className="px-4 py-3 text-center font-bold">期待値目安</th>
+                  <th className="px-4 py-3 text-center font-bold">AIの推奨度</th>
+                  <th className="px-4 py-3 text-left font-bold">理由・解説</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-green-100 bg-white">
+                {[
+                  { odds: "1.0〜1.5倍", ev: "マイナス", badge: "スキップ推奨", badgeColor: "bg-red-100 text-red-600", desc: "返金がわずか。1回外れると複数レース分の損失。長期では必ずマイナスになるゾーン。" },
+                  { odds: "1.5〜2.0倍", ev: "やや低め", badge: "条件次第", badgeColor: "bg-yellow-100 text-yellow-700", desc: "AIスコア80点超かつリスク低のみ検討。安定感はあるが旨みが薄く、長期収支改善は難しい。" },
+                  { odds: "2.0〜5.0倍", ev: "◎ ベスト", badge: "積極推奨", badgeColor: "bg-green-100 text-green-700", desc: "的中率と配当のバランスが最良。複数回の外れをカバーできる。AIが最も重視するゾーン。" },
+                  { odds: "5.0〜10.0倍", ev: "高リターン", badge: "少額勝負", badgeColor: "bg-blue-100 text-blue-700", desc: "高配当だが的中率低下。AIの「穴推奨」が出たときのみ少額で。資金の10%以内を厳守。" },
+                  { odds: "10倍超", ev: "ギャンブル", badge: "基本スキップ", badgeColor: "bg-gray-100 text-gray-500", desc: "的中率が非常に低く、システム的にプラスにするのは困難。AIは基本的に推奨しない。" },
+                ].map((row, i) => (
+                  <tr key={i} className={i === 2 ? "bg-green-50" : ""}>
+                    <td className="px-4 py-3 font-bold text-gray-900">{row.odds}</td>
+                    <td className="px-4 py-3 text-center font-bold text-gray-700">{row.ev}</td>
+                    <td className="px-4 py-3 text-center"><span className={`text-xs font-bold px-2 py-1 rounded-full ${row.badgeColor}`}>{row.badge}</span></td>
+                    <td className="px-4 py-3 text-xs text-gray-600 leading-relaxed">{row.desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-4 mb-6">
+            {[
+              { icon: "💡", title: "2〜5倍ゾーンを狙う理由", desc: "¥1,000投資で¥2,000〜¥5,000返ってくる。3回に1回当たれば十分なレベル。的中率30〜45%ならこのゾーンが最も期待値プラスに近い。" },
+              { icon: "📊", title: "控除率を知る", desc: "競馬の控除率は約20〜25%。全レースランダムに購入すると長期で75〜80%しか返ってこない。AIで期待値の高いレースに絞ることで控除率の壁を超えることを目指す。" },
+              { icon: "🛡️", title: "損切りのルール", desc: "AIが「スキップ推奨」を出したレースは必ず従う。月の損失が予算の50%を超えたら残りの週は休む。感情的な追い購いが最大の敵。" },
+            ].map((item, i) => (
+              <div key={i} className="bg-white border border-green-200 rounded-xl p-4">
+                <div className="text-2xl mb-2">{item.icon}</div>
+                <p className="font-bold text-gray-900 text-sm mb-1">{item.title}</p>
+                <p className="text-gray-600 text-xs leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="text-center">
+            <Link href="/how-to" className="inline-block bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-8 rounded-full text-sm transition-colors mr-3">
+              AI予想の正しい使い方ガイドを読む →
+            </Link>
+            <Link href="/predict" className="inline-block border border-green-600 text-green-700 hover:bg-green-50 font-bold py-3 px-8 rounded-full text-sm transition-colors">
+              実際に予想を試す（無料）
+            </Link>
           </div>
         </div>
       </section>
