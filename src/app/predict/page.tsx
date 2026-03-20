@@ -492,19 +492,42 @@ export default function PredictPage() {
               <label className="block text-sm font-medium text-gray-600 mb-1.5">レース選択</label>
               {eligibleRaces.length > 0 ? (
                 <>
-                  <select value={selectedRaceId}
-                    onChange={(e) => { setSelectedRaceId(e.target.value); setRawResult(""); setSections([]); setError(""); }}
-                    className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:border-green-500 bg-gray-50">
+                  <div className="space-y-3">
                     {Object.entries(venueGroups).map(([venue, venueRaces]) => (
-                      <optgroup key={venue} label={`── ${venue} ──`}>
-                        {venueRaces.map((r) => (
-                          <option key={r.raceId} value={r.raceId}>
-                            {r.isPast ? `[発走済] ${r.label}` : r.label}
-                          </option>
-                        ))}
-                      </optgroup>
+                      <div key={venue}>
+                        <p className="text-xs font-bold text-gray-500 mb-1.5 flex items-center gap-1">
+                          <span className="w-4 h-0.5 bg-green-400 inline-block"></span>
+                          {venue}
+                          <span className="w-4 h-0.5 bg-green-400 inline-block"></span>
+                        </p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {venueRaces.map((r) => {
+                            const isSelected = selectedRaceId === r.raceId;
+                            const isPast = r.isPast;
+                            return (
+                              <button
+                                key={r.raceId}
+                                onClick={() => { if (!isPast) { setSelectedRaceId(r.raceId); setRawResult(""); setSections([]); setError(""); } }}
+                                disabled={isPast}
+                                className={`text-left px-3 py-2.5 rounded-xl border-2 text-xs font-medium transition-colors ${
+                                  isSelected
+                                    ? "border-green-600 bg-green-600 text-white shadow-sm"
+                                    : isPast
+                                    ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+                                    : "border-gray-200 bg-white text-gray-700 hover:border-green-400 hover:bg-green-50"
+                                }`}
+                              >
+                                <span className="block font-bold truncate">{r.label.replace(/^.*?(\d+R)/, "$1")}</span>
+                                <span className="block text-xs mt-0.5 opacity-70 truncate">
+                                  {isPast ? "発走済" : r.startTime ?? ""}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     ))}
-                  </select>
+                  </div>
                   {skippedCount > 0 && (
                     <p className="text-xs text-gray-400 mt-1.5">
                       ※ 新馬・未勝利・1〜2勝クラス（{skippedCount}レース）は回収率が低いため対象外
