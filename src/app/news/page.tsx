@@ -163,6 +163,7 @@ export default function NewsPage() {
           <a href="#this-week" className="text-xs bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full font-medium transition-colors">今週のG1</a>
           <a href="#ai-verification" className="text-xs bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full font-medium transition-colors">AI的中検証</a>
           <a href="#coming-g1" className="text-xs bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full font-medium transition-colors">春G1スケジュール</a>
+          <Link href="/news/weekly" className="text-xs bg-yellow-400 hover:bg-yellow-300 text-green-900 font-bold px-4 py-2 rounded-full transition-colors">完全版を見る →</Link>
         </div>
       </section>
 
