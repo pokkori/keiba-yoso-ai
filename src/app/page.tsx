@@ -557,6 +557,68 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Claude AIだから分かる3つの視点 — 差別化セクション */}
+      <section className="py-14 px-6 bg-gradient-to-br from-green-950 to-green-900 text-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <span className="inline-block bg-yellow-400 text-green-900 text-xs font-black px-3 py-1 rounded-full mb-3">Claude AI搭載</span>
+            <h2 className="text-2xl font-bold text-white">Claude AIだから分かる<br className="sm:hidden" />3つの独自視点</h2>
+            <p className="text-green-300 text-sm mt-2">netkeiba・SPAIA競馬と決定的に違う「AIの判断プロセスの透明性」</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-5 mb-8">
+            {[
+              {
+                icon: "🧠",
+                title: "「なぜ」を言語化する",
+                badge: "独自機能",
+                desc: "一般的なAI予想は「この馬を推奨」と結論だけ出します。Claude AIは本命の選定理由・リスク要因・展開シナリオを日本語で詳細に説明。馬券購入の「確信度」が全然違います。",
+                highlight: true,
+              },
+              {
+                icon: "⚖️",
+                title: "スキップ推奨が出せる",
+                badge: "損失回避",
+                desc: "「このレースは買うべきでない」と明示できるのがClaude AIの強み。一般クラス戦や期待値が低いレースに対し「スキップ推奨」を出して損切りをサポート。",
+                highlight: false,
+              },
+              {
+                icon: "🔄",
+                title: "文脈を跨いで分析",
+                desc: "前走の着順だけでなく「前走で重馬場を走った後の今回の良馬場への対応力」「騎手交代の意図」など、文脈を読んだ複合的な判断が得意。",
+                highlight: false,
+                badge: "複合分析",
+              },
+            ].map((item, i) => (
+              <div key={i} className={`rounded-2xl p-5 border ${item.highlight ? "bg-yellow-400/10 border-yellow-400/50" : "bg-white/5 border-white/10"}`}>
+                <div className="text-3xl mb-3">{item.icon}</div>
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="font-black text-white text-sm">{item.title}</h3>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${item.highlight ? "bg-yellow-400 text-green-900" : "bg-white/20 text-white/80"}`}>{item.badge}</span>
+                </div>
+                <p className="text-green-200 text-xs leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center">
+            <p className="text-green-300 text-xs mb-3">↓ 実際の予想結果で4軸スコアを確認できます</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              {[
+                { label: "過去成績", color: "bg-emerald-500" },
+                { label: "コース適性", color: "bg-blue-500" },
+                { label: "騎手相性", color: "bg-purple-500" },
+                { label: "当日馬場", color: "bg-amber-500" },
+              ].map((ax) => (
+                <span key={ax.label} className={`${ax.color} text-white text-xs font-bold px-3 py-1 rounded-full`}>{ax.label}</span>
+              ))}
+            </div>
+            <p className="text-green-400 text-xs mt-3">予想結果画面で4軸のスコアバーが表示されます</p>
+            <Link href="/predict" className="inline-block mt-3 bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-8 py-2.5 rounded-xl text-sm transition-colors">
+              実際の予想で4軸スコアを確認する →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Features */}
       <section className="py-16 px-6 max-w-5xl mx-auto">
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-3">なぜ競馬予想AIが選ばれるのか</h2>

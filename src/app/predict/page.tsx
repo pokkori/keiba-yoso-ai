@@ -153,6 +153,114 @@ function ConfidenceBadge({ sections }: { sections: PredictionSection[] }) {
   );
 }
 
+// 4軸スコアバー（予想テキストからスコアを抽出・可視化）
+function FourAxisScorePanel({ sections, isFukusho }: { sections: PredictionSection[]; isFukusho?: boolean }) {
+  const allText = sections.map(s => s.content).join("\n");
+
+  // テキストからスコアを推定
+  function extractAxisScore(keywords: string[], bonusKeywords: string[], penaltyKeywords: string[]): number {
+    let base = 55;
+    keywords.forEach(kw => { if (allText.includes(kw)) base += 8; });
+    bonusKeywords.forEach(kw => { if (allText.includes(kw)) base += 5; });
+    penaltyKeywords.forEach(kw => { if (allText.includes(kw)) base -= 6; });
+    return Math.min(95, Math.max(35, base));
+  }
+
+  const axes = isFukusho ? [
+    {
+      label: "安定度",
+      score: extractAxisScore(["安定", "堅実", "コンスタント", "複数回"], ["1番人気", "断然"], ["荒れ", "波乱", "展開次第"]),
+      icon: "🛡️",
+      desc: "レースの安定性評価",
+    },
+    {
+      label: "複勝オッズ期待値",
+      score: extractAxisScore(["オッズ", "1.", "2.", "3.", "倍"], ["期待値", "割安"], ["10倍超", "大穴", "荒れ"]),
+      icon: "💴",
+      desc: "複勝オッズ帯の期待値",
+    },
+    {
+      label: "コース適性",
+      score: extractAxisScore(["コース", "適性", "実績", "経験"], ["得意", "好走歴", "相性"], ["初経験", "苦手"]),
+      icon: "🏇",
+      desc: "コース・距離の適性",
+    },
+    {
+      label: "リスク低さ",
+      score: extractAxisScore(["リスク低", "安全", "安定", "確実"], ["固い", "本命"], ["リスク高", "波乱", "危険"]),
+      icon: "⚠️",
+      desc: "荒れリスクの低さ",
+    },
+  ] : [
+    {
+      label: "過去成績",
+      score: extractAxisScore(["直近", "成績", "前走", "着順", "実績"], ["連勝", "好調", "5走"], ["大敗", "着外", "不振"]),
+      icon: "📈",
+      desc: "直近5走の着順・タイム",
+    },
+    {
+      label: "コース適性",
+      score: extractAxisScore(["コース", "適性", "距離", "実績"], ["得意", "好走歴", "相性"], ["初距離", "苦手", "初コース"]),
+      icon: "🏇",
+      desc: "コース・距離の相性",
+    },
+    {
+      label: "騎手相性",
+      score: extractAxisScore(["騎手", "ジョッキー", "乗り替わり", "継続"], ["名手", "リーディング", "好相性"], ["初騎乗", "乗り替わり"]),
+      icon: "👤",
+      desc: "騎手との組み合わせ",
+    },
+    {
+      label: "当日馬場",
+      score: extractAxisScore(["馬場", "脚質", "差し", "先行", "逃げ"], ["良馬場", "適性◎"], ["重馬場", "苦手馬場"]),
+      icon: "🌿",
+      desc: "馬場状態との適合度",
+    },
+  ];
+
+  const barColor = isFukusho
+    ? (s: number) => s >= 75 ? "from-amber-500 to-yellow-400" : s >= 55 ? "from-amber-400 to-yellow-300" : "from-gray-400 to-gray-300"
+    : (s: number) => s >= 75 ? "from-green-600 to-emerald-400" : s >= 55 ? "from-yellow-500 to-yellow-300" : "from-red-400 to-rose-300";
+
+  const bgColor = isFukusho ? "bg-amber-900/60 border-amber-700" : "bg-green-900/60 border-green-700";
+  const titleColor = isFukusho ? "text-amber-300" : "text-yellow-300";
+
+  return (
+    <div className={`rounded-2xl border p-4 mb-4 ${bgColor}`}>
+      <p className={`text-xs font-bold mb-3 ${titleColor}`}>📊 AI予想根拠スコア（4軸分析）</p>
+      <div className="space-y-2.5">
+        {axes.map((axis) => (
+          <div key={axis.label}>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-white/80 font-medium flex items-center gap-1">
+                <span>{axis.icon}</span>
+                <span>{axis.label}</span>
+              </span>
+              <div className="flex items-center gap-1.5">
+                <span className={`text-xs font-black ${axis.score >= 75 ? "text-yellow-300" : axis.score >= 55 ? "text-white/70" : "text-red-300"}`}>
+                  {axis.score}
+                </span>
+                <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                  axis.score >= 75 ? "bg-green-500 text-white" :
+                  axis.score >= 55 ? "bg-yellow-500 text-gray-900" :
+                  "bg-red-500/70 text-white"
+                }`}>{axis.score >= 75 ? "◎" : axis.score >= 55 ? "○" : "△"}</span>
+              </div>
+            </div>
+            <div className="w-full bg-white/10 rounded-full h-2.5 overflow-hidden">
+              <div
+                className={`h-2.5 rounded-full bg-gradient-to-r ${barColor(axis.score)} transition-all duration-700`}
+                style={{ width: `${axis.score}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-white/40 mt-2 text-center">※AI予想テキストから算出した参考スコアです</p>
+    </div>
+  );
+}
+
 function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: PredictionSection[]; raceInfo: string; rawText: string; isFukusho?: boolean }) {
   const [activeTab, setActiveTab] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -228,6 +336,10 @@ function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: 
 
       {/* Content */}
       <div className="bg-white p-5">
+        {/* 4軸スコアバー（本命タブのみ表示） */}
+        {activeTab === 0 && sections.length >= 2 && (
+          <FourAxisScorePanel sections={sections} isFukusho={isFukusho} />
+        )}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 flex-wrap">
             <span className={`text-sm font-bold ${titleColor}`}>{current.icon} {current.title}</span>
