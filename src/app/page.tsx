@@ -988,6 +988,57 @@ export default function Home() {
         <p className="text-xs text-gray-400 text-center mt-8">※バックテストはn=3レースの初期データです。少サンプルのため統計的信頼性はありません。全記録はバックテストページで公開中。競馬は公営競技です。馬券購入は各自の判断と責任で行ってください。</p>
       </section>
 
+      {/* FAQ JSON-LD 構造化データ */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "競馬予想AIとは何ですか？",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "競馬予想AIは、JRAの出走馬データ・騎手情報・過去成績をリアルタイムで取得し、AIが本命◎・対抗○・単穴▲と軍資金別の買い目配分を提案するスポーツデータ分析情報提供サービスです。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "無料で使えますか？",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "はい、無料プランで2レース分のAI予想をお試しいただけます。登録・カード不要で今すぐ利用可能です。全レースを無制限に使うにはベーシックプラン（¥980/月）またはプロプラン（¥2,980/月）へのアップグレードが必要です。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "的中率はどのくらいですか？",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "現在バックテストを実施中です。的中率・回収率はバックテストページ（/backtest/results）でリアルタイムに公開しており、的中も外れも全記録を隠さず開示しています。AIも100%の的中を保証することはできません。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "バックテストとは何ですか？",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "バックテストとは、AIが実際に出した予想の的中・外れを記録し、長期的な回収率や的中率を検証する手法です。本サービスでは過去の全予想結果を公開しており、都合の良いデータだけを見せる悪質業者とは異なる透明性を提供しています。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "初心者でも使えますか？",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "はい、競馬初心者の方でも簡単にご利用いただけます。レースを選んでボタンを押すだけでAIが自動分析し、本命馬と具体的な買い目金額まで提案します。複勝モードや使い方ガイド（/how-to）も用意しており、競馬の基礎知識がなくても安心して始められます。"
+              }
+            }
+          ]
+        }) }}
+      />
+
       {/* Final CTA */}
       <section className="py-16 px-4 bg-green-900 text-white text-center overflow-x-hidden">
         <div className="inline-flex items-center gap-2 bg-yellow-400/20 border border-yellow-400/50 rounded-full px-4 py-1.5 mb-4">
