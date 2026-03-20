@@ -449,7 +449,7 @@ export default function PredictPage() {
               </div>
               <div className="flex items-center gap-1 text-xs text-slate-400">
                 <span>💳</span>
-                <span>PAY.JP安全決済</span>
+                <span>KOMOJU安全決済</span>
               </div>
             </div>
             <p className="text-xs text-center text-slate-500 mt-2">
@@ -833,7 +833,7 @@ export default function PredictPage() {
                         </div>
                         <div className="flex items-center gap-1 text-xs text-green-300/70">
                           <span>💳</span>
-                          <span>PAY.JP安全決済</span>
+                          <span>KOMOJU安全決済</span>
                         </div>
                         <div className="flex items-center gap-1 text-xs text-yellow-300 font-bold">
                           <span>🛡️</span>
