@@ -96,11 +96,11 @@ function HitModal({ raceInfo, sections, isFukusho, onClose }: { raceInfo: string
   // 的中フラグ付きOGP URLを生成
   const hitOgUrl = `https://keiba-yoso-ai.vercel.app/api/og?race=${encodeURIComponent(raceInfo)}&horse=${encodeURIComponent(honmeHorse)}&confidence=${confScore}&mode=${isFukusho ? "fukusho" : "standard"}&hit=1`;
   const shareText = [
-    `【AI的中】${raceInfo}`,
+    `🎊【速報・AI的中】${raceInfo}`,
     honmeHorse ? `${isFukusho ? "🎯複勝推奨" : "◎本命"}: ${honmeHorse} が的中！` : "的中しました！",
-    `信頼度${confScore}%の予想が的中🎊`,
-    "競馬予想AIを使ってみた → https://keiba-yoso-ai.vercel.app",
-    isFukusho ? "#競馬複勝的中 #競馬AI予想 #複勝" : "#競馬的中 #競馬予想AI #G1",
+    `信頼度${confScore}%の予想が的中→予想ロジックも全公開中`,
+    "▶ 無料で試す → https://keiba-yoso-ai.vercel.app",
+    isFukusho ? "#競馬複勝的中 #競馬AI予想 #複勝 #keiba" : "#競馬的中 #競馬予想AI #G1 #keiba #競馬",
   ].filter(Boolean).join("\n");
 
   return (
@@ -284,10 +284,11 @@ function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: 
   ));
   const ogUrl = `https://keiba-yoso-ai.vercel.app/api/og?race=${encodeURIComponent(raceInfo)}&horse=${encodeURIComponent(honmeHorse)}&confidence=${confidenceScore}&mode=${isFukusho ? "fukusho" : "standard"}`;
   const shareText = [
-    `【AI予想】${raceInfo}`,
-    honmeHorse ? (isFukusho ? `🎯複勝推奨: ${honmeHorse}` : `◎本命: ${honmeHorse}`) : "",
-    isFukusho ? "#競馬複勝予想 #競馬AI" : "#競馬予想AI #競馬 #G1",
-    "https://keiba-yoso-ai.vercel.app/predict",
+    `🏇【AI予想】${raceInfo}`,
+    honmeHorse ? (isFukusho ? `🎯複勝推奨: ${honmeHorse}（信頼度${confidenceScore}%）` : `◎本命: ${honmeHorse}（信頼度${confidenceScore}%）`) : "",
+    isFukusho ? "複勝4軸スコア分析→予想ロジック全公開中" : "4軸AI分析（過去成績/コース/騎手/馬場）→予想ロジック全公開",
+    "▶ 無料で試す →",
+    isFukusho ? "#競馬複勝予想 #競馬AI #keiba" : "#競馬予想AI #G1 #競馬 #keiba",
   ].filter(Boolean).join("\n");
   const xShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(ogUrl)}`;
 
@@ -876,10 +877,11 @@ export default function PredictPage() {
               ));
               const ogImageUrl = `https://keiba-yoso-ai.vercel.app/api/og?race=${encodeURIComponent(shareLabel)}&horse=${encodeURIComponent(honmeHorse)}&confidence=${confScore}&mode=${mode === "fukusho" ? "fukusho" : "standard"}`;
               const shareText = [
-                `【AI予想】${shareLabel}`,
-                honmeHorse ? (mode === "fukusho" ? `🎯複勝推奨: ${honmeHorse}` : `◎本命: ${honmeHorse}`) : "",
-                mode === "fukusho" ? "#競馬複勝予想 #競馬AI" : "#競馬予想AI #競馬 #G1",
-                "https://keiba-yoso-ai.vercel.app/predict",
+                `🏇【AI予想】${shareLabel}`,
+                honmeHorse ? (mode === "fukusho" ? `🎯複勝推奨: ${honmeHorse}（信頼度${confScore}%）` : `◎本命: ${honmeHorse}（信頼度${confScore}%）`) : "",
+                mode === "fukusho" ? "複勝4軸スコア分析→予想ロジック全公開中" : "4軸AI分析（過去成績/コース/騎手/馬場）→予想ロジック全公開",
+                "▶ 無料で試す →",
+                mode === "fukusho" ? "#競馬複勝予想 #競馬AI #keiba" : "#競馬予想AI #G1 #競馬 #keiba",
               ].filter(Boolean).join("\n");
               return (
                 <>

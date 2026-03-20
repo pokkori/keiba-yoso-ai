@@ -6,11 +6,28 @@ export const metadata: Metadata = {
   description: "今週開催されるG1・重賞レースのAIプレビュー。過去G1でAIが当てた・外した検証コーナーも公開。毎週更新の競馬AI情報メディア。",
 };
 
-// 週次更新用の静的コンテンツテンプレート
-const THIS_WEEK_RACES = [
+// 2026年 中央競馬G1全スケジュール（日付ベース自動抽出用）
+const G1_SCHEDULE_2026 = [
+  {
+    name: "フェブラリーS（G1）",
+    date: "2026-02-16",
+    venue: "東京競馬場 ダート1600m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: ダート短距離の実力馬が集結。東京ダート1600mで機動力が問われる",
+      "AIの注目軸: 前走チャンピオンズC着順・東京ダート経験・内枠有利",
+      "天候・馬場: ダートのため雨天でも比較的安定。良馬場想定",
+      "穴馬情報: 前走地方交流G1組に注目。中央G1初挑戦組もデータ上一定の勝率",
+    ],
+    aiNote: "AIは東京ダート1600m実績×前走着順の組み合わせを最重視。地方交流G1勝ち馬より、前走中央G1での好走馬を高評価する傾向がある。",
+    aiHonmei: "東京ダート実績×前走5着以内の馬",
+    aiConfidence: 78,
+    aiKeyPoint: "東京ダート実績・前走着順",
+  },
   {
     name: "高松宮記念（G1）",
-    date: "2026年3月29日（日）",
+    date: "2026-03-29",
     venue: "中京競馬場 芝1200m",
     badge: "G1",
     badgeColor: "bg-yellow-400 text-green-900",
@@ -23,38 +40,417 @@ const THIS_WEEK_RACES = [
     aiNote: "AIは前走上がり3Fタイム上位かつ中京1200m実績のある馬を高評価。人気サイドの複勝推奨になりやすいレース。",
     aiHonmei: "前走阪急杯上位馬",
     aiConfidence: 82,
+    aiKeyPoint: "前走スプリント実績・中京コース適性",
   },
-];
-
-const NEXT_RACES = [
   {
     name: "大阪杯（G1）",
-    date: "2026年4月5日（日）",
+    date: "2026-04-05",
     venue: "阪神競馬場 芝2000m",
     badge: "G1",
     badgeColor: "bg-yellow-400 text-green-900",
-    preview: "古馬中距離チャンピオン決定戦。阪神内回り2000mで機動力が問われる。宝塚記念との関連性が強く、上位馬の多くが宝塚記念へ向かう。AIは前走着順と阪神コース実績を重視。",
+    headlines: [
+      "有力馬: 古馬中距離のトップ馬が集結。阪神内回り2000mで機動力が問われる",
+      "AIの注目軸: 阪神内回り適性・先行力・G1実績",
+      "天候・馬場: 春競馬シーズン。良馬場想定だが雨天時は差し有利に変化",
+      "穴馬情報: 有馬記念上位組が宝塚記念トライアルとして参戦するケースに注目",
+    ],
+    aiNote: "AIは前走着順と阪神コース実績を重視。宝塚記念との関連性が強く、上位馬の多くが宝塚記念へ向かう。",
+    aiHonmei: "阪神内回り実績×前走G1好走馬",
+    aiConfidence: 80,
     aiKeyPoint: "阪神内回り適性・先行力",
   },
   {
     name: "桜花賞（G1）",
-    date: "2026年4月12日（日）",
+    date: "2026-04-12",
     venue: "阪神競馬場 芝1600m",
     badge: "G1",
     badgeColor: "bg-yellow-400 text-green-900",
-    preview: "3歳牝馬クラシック第1弾。阪神外回りマイルで持続力と瞬発力のバランスが問われる。前哨戦（チューリップ賞・フィリーズレビュー）の内容をAIが総合判断。",
+    headlines: [
+      "有力馬: 3歳牝馬クラシック第1弾。前哨戦チューリップ賞・フィリーズレビュー組が中心",
+      "AIの注目軸: 前哨戦パフォーマンス・阪神外回りマイル適性",
+      "天候・馬場: 良馬場想定。稍重以上になると差し有利に変化",
+      "穴馬情報: 前走重賞未出走の素質馬が激走するケースがある",
+    ],
+    aiNote: "3歳牝馬クラシック第1弾。阪神外回りマイルで持続力と瞬発力のバランスが問われる。前哨戦（チューリップ賞・フィリーズレビュー）の内容をAIが総合判断。",
+    aiHonmei: "チューリップ賞・フィリーズレビュー組上位馬",
+    aiConfidence: 75,
     aiKeyPoint: "チューリップ賞・フィリーズレビュー組実績",
   },
   {
     name: "皐月賞（G1）",
-    date: "2026年4月19日（日）",
+    date: "2026-04-19",
     venue: "中山競馬場 芝2000m",
     badge: "G1",
     badgeColor: "bg-yellow-400 text-green-900",
-    preview: "3歳牡馬クラシック第1弾。中山内回り2000mで機動力と先行力が重要。弥生賞・スプリングS組とホープフルS組の対決。AIは距離実績と中山コース適性を最重視。",
+    headlines: [
+      "有力馬: 3歳牡馬クラシック第1弾。弥生賞・スプリングS組とホープフルS組の対決",
+      "AIの注目軸: 距離実績と中山コース適性を最重視",
+      "天候・馬場: 中山内回り2000m。道悪になると先行有利が強まる",
+      "穴馬情報: 前走大差勝ちの馬より、接戦を制した馬がAIで高評価",
+    ],
+    aiNote: "3歳牡馬クラシック第1弾。中山内回り2000mで機動力と先行力が重要。弥生賞・スプリングS組とホープフルS組の対決。AIは距離実績と中山コース適性を最重視。",
+    aiHonmei: "弥生賞・スプリングS前哨戦上位馬",
+    aiConfidence: 77,
     aiKeyPoint: "弥生賞・スプリングS前哨戦実績",
   },
+  {
+    name: "NHKマイルC（G1）",
+    date: "2026-05-03",
+    venue: "東京競馬場 芝1600m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: 3歳マイルチャンピオン決定戦。東京外回り1600mで瞬発力が問われる",
+      "AIの注目軸: マイル実績・東京コース適性・上がりタイム",
+      "天候・馬場: 東京競馬場の春開催。芝は傷んでくる時期",
+      "穴馬情報: 前走マイル以外から参戦の素質馬が一定の勝率",
+    ],
+    aiNote: "東京外回り1600mで上がりタイムが最重要。前走NHKマイルの前哨戦（ニュージーランドT等）の上がりタイム上位馬を重視する。",
+    aiHonmei: "前走マイル重賞上がりタイム上位馬",
+    aiConfidence: 74,
+    aiKeyPoint: "マイル実績・東京コース適性",
+  },
+  {
+    name: "ヴィクトリアマイル（G1）",
+    date: "2026-05-17",
+    venue: "東京競馬場 芝1600m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: 牝馬限定マイルG1。阪神牝馬S・中山記念組が中心",
+      "AIの注目軸: 東京マイル適性・牝馬専用G1実績",
+      "天候・馬場: 東京開催。良馬場での瞬発力勝負になりやすい",
+      "穴馬情報: 前走大阪杯から転戦の牝馬に注意",
+    ],
+    aiNote: "牝馬限定マイルG1。東京外回り1600mで差し・追込が有利。前走阪神牝馬Sの内容をAIが重視する。",
+    aiHonmei: "阪神牝馬S・中山記念組上位牝馬",
+    aiConfidence: 76,
+    aiKeyPoint: "東京マイル適性・前走内容",
+  },
+  {
+    name: "日本ダービー（G1）",
+    date: "2026-05-31",
+    venue: "東京競馬場 芝2400m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: 3歳クラシック最高峰。東京2400mで究極の瞬発力が問われる",
+      "AIの注目軸: 皐月賞組の東京適性・上がりタイム・距離延長対応",
+      "天候・馬場: 東京開催の最大イベント。良馬場が基本",
+      "穴馬情報: 皐月賞での不利・不運があった馬が巻き返すケースに注目",
+    ],
+    aiNote: "3歳最高峰の東京2400m。AIは皐月賞の着順よりも「東京適性×上がりタイム×距離経験」の組み合わせを重視する。",
+    aiHonmei: "皐月賞上位×東京実績馬",
+    aiConfidence: 79,
+    aiKeyPoint: "皐月賞着順・東京コース適性・上がりタイム",
+  },
+  {
+    name: "安田記念（G1）",
+    date: "2026-06-07",
+    venue: "東京競馬場 芝1600m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: 古馬マイル王決定戦。国内外の強豪が集結",
+      "AIの注目軸: 東京マイル実績・近走コンディション・騎手騎乗成績",
+      "天候・馬場: 東京開催最終盤。芝がやや痛んでいる時期",
+      "穴馬情報: 海外帰り馬・前走大阪杯からの転戦馬に注意",
+    ],
+    aiNote: "古馬マイル最高峰。AIは東京1600m直近実績×騎手の東京成績×馬の上がりタイムを重視。",
+    aiHonmei: "東京マイル実績上位×近走好調馬",
+    aiConfidence: 81,
+    aiKeyPoint: "東京マイル実績・近走コンディション",
+  },
+  {
+    name: "宝塚記念（G1）",
+    date: "2026-06-28",
+    venue: "阪神競馬場 芝2200m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: 上半期グランドファイナル。阪神内回り2200mでパワーが問われる",
+      "AIの注目軸: 阪神内回り適性・パワー型かどうか・斤量",
+      "天候・馬場: 梅雨時期で道悪になりやすい。タフな条件",
+      "穴馬情報: 道悪得意な馬が急上昇するケースに注目",
+    ],
+    aiNote: "上半期グランドファイナル。梅雨時期で道悪になりやすく、AIは「道悪実績×阪神内回り適性」を重視する。良馬場想定の評価が狂いやすいレース。",
+    aiHonmei: "阪神内回り実績×道悪実績馬",
+    aiConfidence: 72,
+    aiKeyPoint: "阪神内回り適性・道悪実績",
+  },
+  {
+    name: "スプリンターズS（G1）",
+    date: "2026-09-27",
+    venue: "中山競馬場 芝1200m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: 秋のスプリント頂上決戦。中山1200mで爆発的な瞬発力が問われる",
+      "AIの注目軸: 中山1200m実績・前走スプリント重賞着順",
+      "天候・馬場: 秋開催。良馬場での瞬発力勝負が基本",
+      "穴馬情報: 夏競馬で好走した伏兵馬が激走するケース",
+    ],
+    aiNote: "秋の短距離頂上決戦。AIは中山芝1200m実績と前走高松宮記念・セントウルSの着順を重視する。",
+    aiHonmei: "前走スプリント重賞好走×中山実績馬",
+    aiConfidence: 76,
+    aiKeyPoint: "中山1200m実績・前走スプリント重賞着順",
+  },
+  {
+    name: "秋華賞（G1）",
+    date: "2026-10-18",
+    venue: "阪神競馬場 芝2000m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: 3歳牝馬クラシック最終戦。桜花賞・オークス組の対決",
+      "AIの注目軸: 桜花賞・オークス着順・阪神内回り適性",
+      "天候・馬場: 秋開催の阪神。芝状態は良好なことが多い",
+      "穴馬情報: 夏競馬で素質を開花させた伏兵牝馬に注意",
+    ],
+    aiNote: "3歳牝馬クラシック最終戦。阪神内回り2000mで機動力が問われる。AIは桜花賞・オークスの着順と阪神コース実績を総合判断する。",
+    aiHonmei: "桜花賞・オークス上位×阪神実績牝馬",
+    aiConfidence: 74,
+    aiKeyPoint: "桜花賞・オークス着順・阪神内回り適性",
+  },
+  {
+    name: "菊花賞（G1）",
+    date: "2026-10-25",
+    venue: "京都競馬場 芝3000m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: 3歳牡馬クラシック最終戦。京都3000mで究極のスタミナが問われる",
+      "AIの注目軸: 距離適性・スタミナ証明・京都外回りコース適性",
+      "天候・馬場: 秋の京都。良馬場での瞬発力が最終的な鍵",
+      "穴馬情報: 皐月賞・ダービー非参戦の素質馬が激走するケース",
+    ],
+    aiNote: "スタミナと瞬発力の究極バランスが問われる菊花賞。AIは2000m以上の重賞実績×京都外回りコース経験×末脚タイムを重視する。",
+    aiHonmei: "皐月賞・ダービー上位×長距離実績馬",
+    aiConfidence: 73,
+    aiKeyPoint: "距離適性・スタミナ・京都コース適性",
+  },
+  {
+    name: "天皇賞（秋）（G1）",
+    date: "2026-10-25",
+    venue: "東京競馬場 芝2000m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: 古馬中距離の最高峰。東京2000mで瞬発力が問われる",
+      "AIの注目軸: 東京2000m実績・近走コンディション・騎手成績",
+      "天候・馬場: 東京秋開催。良馬場での上がり勝負が基本",
+      "穴馬情報: 宝塚記念惜敗組が東京替わりで巻き返すケース",
+    ],
+    aiNote: "古馬中距離最高峰。AIは東京2000m直近実績×上がりタイム×近走4走の安定性を重視する。",
+    aiHonmei: "東京2000m実績×近走好調馬",
+    aiConfidence: 84,
+    aiKeyPoint: "東京2000m実績・上がりタイム",
+  },
+  {
+    name: "エリザベス女王杯（G1）",
+    date: "2026-11-15",
+    venue: "阪神競馬場 芝2200m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: 牝馬中長距離の最高峰。古馬×3歳牝馬の世代対決",
+      "AIの注目軸: 阪神2200m適性・牝馬G1実績・近走の充実度",
+      "天候・馬場: 秋の阪神。芝良好な時期",
+      "穴馬情報: 秋華賞からの直行組が激走するケースに注意",
+    ],
+    aiNote: "牝馬中長距離最高峰。AIは阪神外回り2200mの実績と直近の牝馬G1での着順を重視する。",
+    aiHonmei: "阪神外回り実績×牝馬G1好走馬",
+    aiConfidence: 75,
+    aiKeyPoint: "阪神2200m適性・牝馬G1実績",
+  },
+  {
+    name: "マイルCS（G1）",
+    date: "2026-11-22",
+    venue: "阪神競馬場 芝1600m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: 秋のマイル王決定戦。安田記念組との再対決",
+      "AIの注目軸: 阪神外回りマイル実績・近走マイル着順",
+      "天候・馬場: 晩秋の阪神。芝の状態に注意",
+      "穴馬情報: 安田記念で力を出し切れなかった馬の巻き返しに注意",
+    ],
+    aiNote: "秋のマイル王決定戦。AIは阪神外回りマイル実績×安田記念着順×近走上がりタイムを重視する。",
+    aiHonmei: "安田記念好走×阪神外回り実績馬",
+    aiConfidence: 78,
+    aiKeyPoint: "阪神外回りマイル実績・安田記念との比較",
+  },
+  {
+    name: "ジャパンC（G1）",
+    date: "2026-11-29",
+    venue: "東京競馬場 芝2400m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: 国際G1。海外馬も参戦する日本最大級の国際レース",
+      "AIの注目軸: 東京2400m実績・国際レースでの実績・状態",
+      "天候・馬場: 東京晩秋。良馬場での瞬発力勝負",
+      "穴馬情報: 秋天（G1）からの直行組が定番の好走パターン",
+    ],
+    aiNote: "国際G1。AIは東京2400m実績×前走天皇賞（秋）の内容×近走コンディションを重視する。海外馬は日本馬場への適応度も加味。",
+    aiHonmei: "天皇賞（秋）好走×東京2400m実績馬",
+    aiConfidence: 80,
+    aiKeyPoint: "東京2400m実績・天皇賞（秋）との関連",
+  },
+  {
+    name: "チャンピオンズC（G1）",
+    date: "2026-12-06",
+    venue: "中京競馬場 ダート1800m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: ダート中距離の最高峰。フェブラリーS組との再対決",
+      "AIの注目軸: 中京ダート実績・JBCダート組の適応度",
+      "天候・馬場: 初冬の中京。ダートの状態に注意",
+      "穴馬情報: 地方競馬からの参戦馬が中央ダートで激走するケース",
+    ],
+    aiNote: "ダート中距離最高峰。AIは中京ダート1800m実績×フェブラリーSの着順×近走ダートG1での好走を重視する。",
+    aiHonmei: "中京ダート実績×フェブラリーS好走馬",
+    aiConfidence: 77,
+    aiKeyPoint: "中京ダート実績・フェブラリーSとの比較",
+  },
+  {
+    name: "阪神JF（G1）",
+    date: "2026-12-13",
+    venue: "阪神競馬場 芝1600m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: 2歳牝馬最高峰。翌年クラシックへの登竜門",
+      "AIの注目軸: 前走重賞着順・阪神外回りマイル適性",
+      "天候・馬場: 晩秋の阪神。芝良好",
+      "穴馬情報: 前走圧勝馬より、接戦を制した馬を評価",
+    ],
+    aiNote: "2歳牝馬最高峰。AIは前走着順と阪神外回りマイルの適性を重視。次の年の桜花賞候補を見極めるレース。",
+    aiHonmei: "前走重賞上位×阪神マイル経験馬",
+    aiConfidence: 70,
+    aiKeyPoint: "前走重賞着順・阪神外回り適性",
+  },
+  {
+    name: "朝日杯FS（G1）",
+    date: "2026-12-20",
+    venue: "阪神競馬場 芝1600m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: 2歳牡馬最高峰。翌年クラシックへの登竜門",
+      "AIの注目軸: 前走重賞着順・阪神マイル適性",
+      "天候・馬場: 晩秋の阪神。良馬場基本",
+      "穴馬情報: 重賞未経験の素質馬が激走するケースも",
+    ],
+    aiNote: "2歳牡馬最高峰。AIは前走新馬・重賞の上がりタイムと阪神1600m適性を重視する。皐月賞への重要な前哨戦。",
+    aiHonmei: "前走重賞上位×上がりタイム優秀馬",
+    aiConfidence: 68,
+    aiKeyPoint: "前走重賞着順・上がりタイム",
+  },
+  {
+    name: "有馬記念（G1）",
+    date: "2026-12-27",
+    venue: "中山競馬場 芝2500m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: 年間最大イベント。中山内回り2500mで総合力が問われる",
+      "AIの注目軸: 中山2500m実績・年間を通じた安定性・ファン投票上位馬",
+      "天候・馬場: 真冬の中山。道悪になることも",
+      "穴馬情報: ファン投票上位≠実力。地力でまだ動ける馬に注意",
+    ],
+    aiNote: "年間最大G1。AIは中山内回り2500m実績×年間の安定性×近走コンディションを重視する。ファン人気より「直近のデータ」を信頼する傾向がある。",
+    aiHonmei: "中山実績×年間安定組",
+    aiConfidence: 76,
+    aiKeyPoint: "中山コース実績・年間安定性・道悪適性",
+  },
+  {
+    name: "ホープフルS（G1）",
+    date: "2026-12-27",
+    venue: "中山競馬場 芝2000m",
+    badge: "G1",
+    badgeColor: "bg-yellow-400 text-green-900",
+    headlines: [
+      "有力馬: 2歳クラシック最終戦。翌年皐月賞への最重要前哨戦",
+      "AIの注目軸: 前走重賞着順・中山2000m適性",
+      "天候・馬場: 真冬の中山。道悪に対応できる馬を高評価",
+      "穴馬情報: 前走未勝利大差勝ちの馬より、重賞実績のある馬を優先",
+    ],
+    aiNote: "2歳クラシック最終戦。AIは前走重賞着順×中山2000m適性×スタミナ指標を重視する。皐月賞に直結するため実力馬が凡走しにくいレース。",
+    aiHonmei: "前走重賞上位×中山2000m経験馬",
+    aiConfidence: 71,
+    aiKeyPoint: "前走重賞着順・中山2000m適性",
+  },
 ];
+
+// 日付計算ユーティリティ: 今週（月曜〜日曜）の範囲を取得
+function getThisWeekRange(): { start: Date; end: Date } {
+  const now = new Date();
+  // JST補正 (UTC+9)
+  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const dayOfWeek = jst.getUTCDay(); // 0=日, 1=月, ..., 6=土
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(jst);
+  monday.setUTCDate(jst.getUTCDate() + diffToMonday);
+  monday.setUTCHours(0, 0, 0, 0);
+  const sunday = new Date(monday);
+  sunday.setUTCDate(monday.getUTCDate() + 6);
+  sunday.setUTCHours(23, 59, 59, 999);
+  return { start: monday, end: sunday };
+}
+
+// 今週・来週・今後のレースを日付から自動分類
+function classifyRaces() {
+  const { start: weekStart, end: weekEnd } = getThisWeekRange();
+  const nextWeekStart = new Date(weekEnd);
+  nextWeekStart.setUTCDate(weekEnd.getUTCDate() + 1);
+  const nextWeekEnd = new Date(nextWeekStart);
+  nextWeekEnd.setUTCDate(nextWeekStart.getUTCDate() + 6);
+
+  const thisWeek: typeof G1_SCHEDULE_2026 = [];
+  const nextRaces: typeof G1_SCHEDULE_2026 = [];
+
+  for (const race of G1_SCHEDULE_2026) {
+    const raceDate = new Date(race.date + "T00:00:00Z");
+    if (raceDate >= weekStart && raceDate <= weekEnd) {
+      thisWeek.push(race);
+    } else if (raceDate > weekEnd) {
+      nextRaces.push(race);
+    }
+  }
+  return { thisWeek, nextRaces: nextRaces.slice(0, 4) };
+}
+
+// 今日の曜日ベースのコメント
+function getTodayContext(): { dayLabel: string; message: string; isRaceDay: boolean } {
+  const now = new Date();
+  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const day = jst.getUTCDay();
+  const isRaceDay = day === 0 || day === 6; // 土日
+  const dayLabels = ["日曜", "月曜", "火曜", "水曜", "木曜", "金曜", "土曜"];
+  const messages: Record<number, string> = {
+    0: "今日は日曜日。G1・重賞レース当日。AI予想ツールで今すぐ予想しよう！",
+    1: "月曜日。今週末のG1に向けてAIプレビューを確認しておこう。",
+    2: "火曜日。今週のレースを予習してイメージを固めよう。",
+    3: "水曜日。週の折り返し。バックテストで先週の振り返りもおすすめ。",
+    4: "木曜日。今週末に向けてAIの注目馬を確認しておこう。",
+    5: "金曜日。明日は土曜開催。AI予想の準備は万端？",
+    6: "今日は土曜日。開催日！AI予想ツールで今すぐ予想しよう！",
+  };
+  return {
+    dayLabel: dayLabels[day],
+    message: messages[day] ?? "",
+    isRaceDay,
+  };
+}
+
+// 現在の日付を日本語フォーマット
+function getTodayJPString(): string {
+  const now = new Date();
+  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  return `${jst.getUTCFullYear()}年${jst.getUTCMonth() + 1}月${jst.getUTCDate()}日`;
+}
 
 // 過去G1 AIが当てた・外した検証コーナー
 const PAST_G1_VERIFICATIONS = [
@@ -126,12 +522,12 @@ const AI_TIPS = [
   {
     icon: "📊",
     title: "今週のAI予想のポイント",
-    body: "高松宮記念はスプリント実績と中京コース適性が最重要。内枠の先行馬を中心に、前走上がり3Fタイム上位馬から複勝推奨が出やすいレース構造。AIは1〜2番人気からの複勝買いを基本スタンスにする見込み。",
+    body: "G1・重賞レースはスプリント実績とコース適性が最重要。AIは「コース×距離×前走着順×上がりタイム」の4軸で本命を選定します。人気馬でも4軸が揃わない場合は評価を下げます。",
   },
   {
     icon: "🎯",
     title: "バックテスト継続中",
-    body: "上記「AI検証コーナー」で直近G1の的中・外れを全公開。今週の高松宮記念も含めてデータを蓄積中。AIの精度変化をリアルタイムで確認できます。",
+    body: "上記「AI検証コーナー」で直近G1の的中・外れを全公開。AIの精度変化をリアルタイムで確認できます。透明性のある予想情報提供を心がけています。",
   },
   {
     icon: "💡",
@@ -141,6 +537,14 @@ const AI_TIPS = [
 ];
 
 export default function NewsPage() {
+  const { thisWeek, nextRaces } = classifyRaces();
+  const todayContext = getTodayContext();
+  const todayStr = getTodayJPString();
+
+  // 今週レースがない場合は直近の未来レースを「今週の注目」として表示
+  const displayRaces = thisWeek.length > 0 ? thisWeek : nextRaces.slice(0, 1);
+  const displayNextRaces = thisWeek.length > 0 ? nextRaces : nextRaces.slice(1, 4);
+
   return (
     <main className="min-h-screen bg-white">
       <nav className="flex items-center justify-between px-4 py-4 border-b border-green-200 bg-green-900 sticky top-0 z-10">
@@ -154,10 +558,18 @@ export default function NewsPage() {
       </nav>
 
       <section className="bg-green-900 text-white py-10 px-4 text-center">
-        <span className="inline-block bg-yellow-400 text-green-900 text-xs font-black px-3 py-1 rounded-full mb-3">毎週更新</span>
+        <span className="inline-block bg-yellow-400 text-green-900 text-xs font-black px-3 py-1 rounded-full mb-3">毎週自動更新</span>
         <h1 className="text-2xl md:text-3xl font-bold mb-2">今週のG1 AIプレビュー</h1>
         <p className="text-green-300 text-sm">今週末の開催レースを中心にAIが注目するポイントをまとめています</p>
-        <p className="text-green-400 text-xs mt-2">最終更新: 2026年3月20日</p>
+        <p className="text-green-400 text-xs mt-2">自動更新: {todayStr}（{todayContext.dayLabel}）</p>
+        {/* 今日の一言 */}
+        {todayContext.isRaceDay ? (
+          <div className="mt-3 inline-block bg-yellow-400 text-green-900 text-xs font-black px-4 py-2 rounded-full animate-pulse">
+            🏇 {todayContext.message}
+          </div>
+        ) : (
+          <p className="text-green-300 text-xs mt-2">{todayContext.message}</p>
+        )}
         {/* ナビ */}
         <div className="flex justify-center gap-3 mt-5 flex-wrap">
           <a href="#this-week" className="text-xs bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full font-medium transition-colors">今週のG1</a>
@@ -167,13 +579,57 @@ export default function NewsPage() {
         </div>
       </section>
 
+      {/* 次のG1特集バナー */}
+      {(() => {
+        const now = new Date();
+        const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+        const upcomingG1 = G1_SCHEDULE_2026
+          .filter(r => new Date(r.date + "T00:00:00Z") >= jst)
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+        if (!upcomingG1) return null;
+        const daysUntil = Math.ceil((new Date(upcomingG1.date + "T00:00:00Z").getTime() - jst.getTime()) / (1000 * 60 * 60 * 24));
+        return (
+          <div className="bg-amber-900/20 border-y border-amber-500/40 py-4 px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-amber-900/30 border border-amber-500 rounded-xl p-4">
+                <div className="shrink-0">
+                  <span className="text-amber-400 text-xs font-black bg-amber-900/50 px-2 py-1 rounded-full">
+                    次のG1特集 あと{daysUntil}日
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-black text-white">{upcomingG1.name}</h2>
+                  <p className="text-amber-200 text-xs mt-0.5">
+                    {new Date(upcomingG1.date + "T00:00:00Z").toLocaleDateString("ja-JP", { month: "long", day: "numeric", weekday: "short" })} | {upcomingG1.venue}
+                  </p>
+                  <p className="text-gray-300 text-xs mt-1">
+                    <span className="text-yellow-400 font-bold">AI注目軸: </span>{upcomingG1.aiKeyPoint}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-green-300 text-xs mb-1">AI信頼度</p>
+                  <p className="text-yellow-400 font-black text-xl">{upcomingG1.aiConfidence}%</p>
+                  <Link href="/predict" className="mt-1 inline-block bg-amber-500 hover:bg-amber-400 text-black font-bold px-4 py-1.5 rounded-full text-xs transition-colors">
+                    このG1を予想する →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* 今週の注目レース */}
       <section id="this-week" className="py-12 px-4 max-w-4xl mx-auto">
-        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+        <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
           <span className="text-yellow-500">🏆</span> 今週の注目レース
+          {thisWeek.length === 0 && (
+            <span className="text-sm font-normal text-gray-500">（今週G1はありません — 次の注目レースを表示）</span>
+          )}
         </h2>
+        <p className="text-xs text-gray-400 mb-6">G1スケジュールから今週（月〜日）の開催レースを自動抽出しています</p>
         <div className="space-y-6">
-          {THIS_WEEK_RACES.map((race) => (
+          {displayRaces.map((race) => (
             <div key={race.name} className="border-2 border-green-200 rounded-2xl overflow-hidden">
               <div className="bg-green-800 text-white px-6 py-4">
                 <div className="flex items-center justify-between flex-wrap gap-2">
@@ -182,7 +638,7 @@ export default function NewsPage() {
                     <span className="font-bold text-lg">{race.name}</span>
                   </div>
                   <div className="text-green-300 text-sm">
-                    <span>{race.date}</span>
+                    <span>{new Date(race.date + "T00:00:00Z").toLocaleDateString("ja-JP", { month: "long", day: "numeric", weekday: "short" })}</span>
                     <span className="mx-2">|</span>
                     <span>{race.venue}</span>
                   </div>
@@ -321,7 +777,7 @@ export default function NewsPage() {
           <span>📅</span> 今後の春G1スケジュール
         </h2>
         <div className="space-y-4">
-          {NEXT_RACES.map((race) => (
+          {displayNextRaces.map((race) => (
             <div key={race.name} className="border border-gray-200 rounded-xl p-5 bg-white hover:border-green-300 transition-colors">
               <div className="flex items-start justify-between flex-wrap gap-2 mb-3">
                 <div className="flex items-center gap-2">
@@ -329,12 +785,12 @@ export default function NewsPage() {
                   <span className="font-bold text-gray-900">{race.name}</span>
                 </div>
                 <div className="text-xs text-gray-500">
-                  <span>{race.date}</span>
+                  <span>{new Date(race.date + "T00:00:00Z").toLocaleDateString("ja-JP", { month: "long", day: "numeric", weekday: "short" })}</span>
                   <span className="mx-1">|</span>
                   <span>{race.venue}</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed mb-2">{race.preview}</p>
+              <p className="text-sm text-gray-600 leading-relaxed mb-2">{race.aiNote}</p>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-green-700 font-bold bg-green-50 border border-green-200 px-2 py-1 rounded-full">
                   🤖 AI注目軸: {race.aiKeyPoint}
