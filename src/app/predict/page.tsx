@@ -87,30 +87,47 @@ function parseFukusho(text: string): PredictionSection[] {
 function HitModal({ raceInfo, sections, isFukusho, onClose }: { raceInfo: string; sections: PredictionSection[]; isFukusho?: boolean; onClose: () => void }) {
   const honmeSec = sections.find(s => s.title.includes("本命") || s.title.includes("複勝推奨"));
   const honmeHorse = honmeSec?.content.match(/^([^\n（(【\s]{1,12})/)?.[1] ?? "";
+  const confScore = Math.min(95, Math.max(55,
+    60 +
+    (sections.length >= 5 ? 15 : sections.length * 3) +
+    (sections.some(s => s.content.length > 200) ? 10 : 0) +
+    (sections.some(s => s.title.includes("買い目")) ? 10 : 0)
+  ));
+  // 的中フラグ付きOGP URLを生成
+  const hitOgUrl = `https://keiba-yoso-ai.vercel.app/api/og?race=${encodeURIComponent(raceInfo)}&horse=${encodeURIComponent(honmeHorse)}&confidence=${confScore}&mode=${isFukusho ? "fukusho" : "standard"}&hit=1`;
   const shareText = [
-    `🎊【的中報告】${raceInfo}`,
+    `【AI的中】${raceInfo}`,
     honmeHorse ? `${isFukusho ? "🎯複勝推奨" : "◎本命"}: ${honmeHorse} が的中！` : "的中しました！",
+    `信頼度${confScore}%の予想が的中🎊`,
     "競馬予想AIを使ってみた → https://keiba-yoso-ai.vercel.app",
-    isFukusho ? "#競馬複勝的中 #競馬AI" : "#競馬的中 #競馬予想AI #G1",
+    isFukusho ? "#競馬複勝的中 #競馬AI予想 #複勝" : "#競馬的中 #競馬予想AI #G1",
   ].filter(Boolean).join("\n");
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
       <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
-        <div className="text-6xl mb-4 animate-bounce">🎊</div>
+        <div className="text-6xl mb-2 animate-bounce">🎊</div>
+        <div className="inline-block bg-green-600 text-white text-sm font-black px-4 py-1.5 rounded-full mb-3">
+          AI的中！
+        </div>
         <h2 className="text-2xl font-black text-gray-900 mb-2">的中おめでとう！</h2>
-        <p className="text-gray-600 text-sm mb-6">
+        <p className="text-gray-600 text-sm mb-4">
           {raceInfo && <span className="block font-bold text-green-700 mb-1">{raceInfo}</span>}
-          {honmeHorse && <span className="text-lg font-bold text-gray-900">{honmeHorse}</span>}
+          {honmeHorse && <span className="text-xl font-black text-gray-900">{honmeHorse}</span>}
           {honmeHorse && <span className="text-gray-600 block text-sm mt-1">が{isFukusho ? "複勝" : ""}的中！Xでシェアしよう</span>}
         </p>
+        {/* シェアテキストプレビュー */}
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 text-left mb-4">
+          <p className="text-xs text-gray-500 font-bold mb-1">シェア文章プレビュー</p>
+          <p className="text-xs text-gray-700 whitespace-pre-line leading-relaxed">{shareText}</p>
+        </div>
         <a
-          href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`}
+          href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(hitOgUrl)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="block w-full bg-black hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-xl mb-3 transition-colors"
         >
-          𝕏 的中をシェアする
+          𝕏 的中をシェアする（OGPカード付き）
         </a>
         <button onClick={onClose} className="text-gray-400 text-sm hover:text-gray-600">閉じる</button>
       </div>
