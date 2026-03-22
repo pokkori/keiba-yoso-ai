@@ -129,7 +129,7 @@ function HitModal({ raceInfo, sections, isFukusho, onClose }: { raceInfo: string
         >
           𝕏 的中をシェアする（OGPカード付き）
         </a>
-        <button onClick={onClose} className="text-gray-400 text-sm hover:text-gray-600">閉じる</button>
+        <button onClick={onClose} aria-label="的中報告モーダルを閉じる" className="text-gray-400 text-sm hover:text-gray-600">閉じる</button>
       </div>
     </div>
   );
@@ -318,6 +318,7 @@ function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: 
             🐦 Xでシェア
           </a>
           <button onClick={() => handleCopy(rawText, true)}
+            aria-label="AI予想の全文をクリップボードにコピーする"
             className="text-xs bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap">
             {copiedAll ? "✓ コピー済み" : "全文コピー"}
           </button>
@@ -328,8 +329,10 @@ function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: 
       <div className={`flex overflow-x-auto border-b ${tabBg}`}>
         {sections.map((s, i) => (
           <button key={i} onClick={() => setActiveTab(i)}
+            aria-label={`${s.title}タブを表示`}
+            aria-pressed={activeTab === i}
             className={`flex items-center gap-1 px-3 py-2.5 text-xs font-bold whitespace-nowrap transition-colors border-b-2 ${activeTab === i ? tabActive : "border-transparent text-gray-500 hover:text-gray-700"}`}>
-            <span>{s.icon}</span>
+            <span aria-hidden="true">{s.icon}</span>
             <span className="hidden sm:inline">{s.title}</span>
           </button>
         ))}
@@ -347,6 +350,7 @@ function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: 
             {activeTab === 0 && <ConfidenceBadge sections={sections} />}
           </div>
           <button onClick={() => handleCopy(current.content)}
+            aria-label={`${current.title}の内容をクリップボードにコピーする`}
             className={`text-xs ${copyBg} px-3 py-1 rounded-lg font-medium transition-colors`}>
             {copied ? "✓ コピー" : "コピー"}
           </button>
@@ -357,9 +361,10 @@ function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: 
           <div className="mt-4 pt-3 border-t border-gray-100">
             <button
               onClick={() => setShowHitModal(true)}
+              aria-label="的中報告モーダルを開いてXでシェアする"
               className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-4 py-2 rounded-xl text-sm transition-colors"
             >
-              🎊 当たった！的中報告
+              <span aria-hidden="true">🎊</span> 当たった！的中報告
             </button>
           </div>
         )}
@@ -547,7 +552,7 @@ export default function PredictPage() {
       {showPaywall && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full text-center relative">
-            <button onClick={() => setShowPaywall(false)} className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold leading-none">×</button>
+            <button onClick={() => setShowPaywall(false)} aria-label="アップグレード案内を閉じる" className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold leading-none">×</button>
             <div className="text-4xl mb-3">🏇</div>
             <h2 className="text-xl font-bold text-gray-800 mb-2">このまま終わらせますか？</h2>
             <p className="text-gray-500 text-sm mb-1">
@@ -560,10 +565,12 @@ export default function PredictPage() {
               <li>✓ 回収率トラッキングで自分の成績を可視化</li>
             </ul>
             <button onClick={() => { track('upgrade_click', { service: '競馬予想AI', plan: 'basic' }); setCheckoutPlan("basic"); setShowPayjp(true); setShowPaywall(false); }}
+              aria-label="ベーシックプラン月980円にアップグレードして予想を続ける"
               className="w-full bg-gradient-to-r from-green-700 to-green-600 text-white py-3 rounded-xl font-bold hover:from-green-800 hover:to-green-700 transition-all mb-2">
               ベーシックで続ける（¥980/月）
             </button>
             <button onClick={() => { track('upgrade_click', { service: '競馬予想AI', plan: 'pro' }); setCheckoutPlan("pro"); setShowPayjp(true); setShowPaywall(false); }}
+              aria-label="プロプラン月2980円にアップグレードしてG1・重賞の詳細分析を使う"
               className="w-full border border-green-300 text-green-700 py-2 rounded-xl text-sm font-medium hover:bg-green-50 transition-colors mb-1">
               G1・重賞の詳細分析も欲しい → プロプラン（¥2,980/月）
             </button>
@@ -608,8 +615,8 @@ export default function PredictPage() {
 
           {/* 日付選択 */}
           <div className="mb-5">
-            <label className="block text-sm font-medium text-gray-600 mb-1.5">開催日</label>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+            <label htmlFor="keiba-date" className="block text-sm font-medium text-gray-600 mb-1.5">開催日</label>
+            <input id="keiba-date" aria-label="予想するレースの開催日" type="date" value={date} onChange={(e) => setDate(e.target.value)}
               className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:border-green-500 bg-gray-50" />
           </div>
 
@@ -639,6 +646,8 @@ export default function PredictPage() {
                                 key={r.raceId}
                                 onClick={() => { if (!isPast) { setSelectedRaceId(r.raceId); setRawResult(""); setSections([]); setError(""); } }}
                                 disabled={isPast}
+                                aria-label={`${r.label}を選択${isPast ? "（発走済み）" : ""}`}
+                                aria-pressed={isSelected}
                                 className={`text-left px-3 py-2.5 rounded-xl border-2 text-xs font-medium transition-colors ${
                                   isSelected
                                     ? "border-green-600 bg-green-600 text-white shadow-sm"
@@ -678,14 +687,18 @@ export default function PredictPage() {
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setMode("standard")}
+                aria-label="スタンダードモードを選択（本命・対抗・単穴と買い目を予想）"
+                aria-pressed={mode === "standard"}
                 className={`py-2.5 rounded-xl text-sm font-bold border-2 transition-colors ${mode === "standard" ? "bg-green-700 text-white border-green-700" : "bg-white text-gray-500 border-gray-200 hover:border-green-300"}`}>
-                🏇 スタンダード
+                <span aria-hidden="true">🏇</span> スタンダード
                 <span className="block text-xs font-normal mt-0.5">{mode === "standard" ? "◎○▲ + 買い目" : "◎○▲ + 買い目"}</span>
               </button>
               <button
                 onClick={() => setMode("fukusho")}
+                aria-label="複勝モードを選択（堅実戦略・的中重視の複勝予想）"
+                aria-pressed={mode === "fukusho"}
                 className={`py-2.5 rounded-xl text-sm font-bold border-2 transition-colors ${mode === "fukusho" ? "bg-amber-500 text-white border-amber-500" : "bg-white text-gray-500 border-gray-200 hover:border-amber-300"}`}>
-                🎯 複勝モード
+                <span aria-hidden="true">🎯</span> 複勝モード
                 <span className="block text-xs font-normal mt-0.5">堅実戦略・的中重視</span>
               </button>
             </div>
@@ -704,7 +717,7 @@ export default function PredictPage() {
             </label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">¥</span>
-              <input type="number" value={budget} onChange={(e) => setBudget(e.target.value)}
+              <input aria-label="軍資金の金額（任意）入力すると具体的な購入金額を提案" type="number" value={budget} onChange={(e) => setBudget(e.target.value)}
                 placeholder="例: 3000" min={100} max={1000000}
                 className="w-full border border-gray-300 rounded-xl pl-8 pr-16 py-3 focus:outline-none focus:border-green-500 bg-gray-50" />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">円</span>
@@ -715,12 +728,14 @@ export default function PredictPage() {
           <div className="mb-5">
             <button
               onClick={() => setShowFavPanel(!showFavPanel)}
+              aria-label={`お気に入り馬パネルを${showFavPanel ? "閉じる" : "開く"}（${favorites.length}/${MAX_FAVORITES}件登録中）`}
+              aria-expanded={showFavPanel}
               className="flex items-center gap-1.5 text-sm font-medium text-green-700 hover:text-green-900 transition-colors"
             >
-              <span>⭐</span>
+              <span aria-hidden="true">⭐</span>
               <span>お気に入り馬</span>
               <span className="text-xs text-gray-400 ml-1">({favorites.length}/{MAX_FAVORITES})</span>
-              <span className="text-xs text-gray-400">{showFavPanel ? "▲" : "▼"}</span>
+              <span aria-hidden="true" className="text-xs text-gray-400">{showFavPanel ? "▲" : "▼"}</span>
             </button>
             {showFavPanel && (
               <div className="mt-2 bg-green-50 border border-green-200 rounded-xl p-4">
@@ -732,6 +747,8 @@ export default function PredictPage() {
                       key={horse}
                       onClick={() => addFavorite(horse)}
                       disabled={favorites.includes(horse)}
+                      aria-label={favorites.includes(horse) ? `${horse}はお気に入りに追加済み` : `${horse}をお気に入りに追加`}
+                      aria-pressed={favorites.includes(horse)}
                       className={`px-2.5 py-1 text-xs rounded-lg border font-medium transition-colors ${favorites.includes(horse) ? "bg-green-100 text-green-400 border-green-200 cursor-default" : "bg-white text-green-700 border-green-300 hover:bg-green-100"}`}
                     >
                       {favorites.includes(horse) ? "✓ " : "+ "}{horse}
@@ -747,11 +764,13 @@ export default function PredictPage() {
                     onKeyDown={(e) => { if (e.key === "Enter") { addFavorite(favInput); setFavInput(""); } }}
                     placeholder="馬名を入力して追加..."
                     maxLength={20}
+                    aria-label="お気に入りに追加する馬名を入力"
                     className="flex-1 border border-green-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-green-500 bg-white"
                   />
                   <button
                     onClick={() => { addFavorite(favInput); setFavInput(""); }}
                     disabled={!favInput.trim() || favorites.length >= MAX_FAVORITES}
+                    aria-label="入力した馬名をお気に入りに追加"
                     className="px-3 py-1.5 bg-green-700 text-white text-xs font-bold rounded-lg hover:bg-green-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                   >
                     追加
@@ -805,7 +824,7 @@ export default function PredictPage() {
 
           {!isPremium && (
             <p className="text-center text-xs text-gray-400 mt-3">
-              無料 {FREE_LIMIT} 回 → <button onClick={() => setShowPaywall(true)} className="text-green-600 font-medium hover:underline">プレミアムで全レース無制限</button>
+              無料 {FREE_LIMIT} 回 → <button onClick={() => setShowPaywall(true)} aria-label="プレミアムプランに切り替えて全レース無制限で使う" className="text-green-600 font-medium hover:underline">プレミアムで全レース無制限</button>
             </p>
           )}
         </div>
@@ -945,10 +964,12 @@ export default function PredictPage() {
                       <p className="text-green-200 text-xs mb-4">土日毎週20〜30レースが全部使い放題。</p>
                       <div className="flex flex-col sm:flex-row gap-2 justify-center">
                         <button onClick={() => { track('upgrade_click', { service: '競馬予想AI', plan: 'basic' }); setCheckoutPlan("basic"); setShowPayjp(true); }}
+                          aria-label="ベーシックプラン月980円にアップグレードして次のレースを予想する"
                           className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-2.5 px-6 rounded-full text-sm transition-colors">
                           次のレースへ → ¥980/月
                         </button>
                         <button onClick={() => { track('upgrade_click', { service: '競馬予想AI', plan: 'pro' }); setCheckoutPlan("pro"); setShowPayjp(true); }}
+                          aria-label="プロプラン月2980円にアップグレードしてG1・重賞の詳細分析を使う"
                           className="bg-white/15 hover:bg-white/25 text-white border border-white/30 font-bold py-2.5 px-6 rounded-full text-sm transition-colors">
                           G1詳細分析 → プロ ¥2,980/月
                         </button>
@@ -989,15 +1010,15 @@ export default function PredictPage() {
       {showPayjp && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl relative">
-            <button onClick={() => setShowPayjp(false)} className="absolute top-3 right-3 text-gray-400 text-xl">✕</button>
-            <div className="text-3xl mb-3 text-center">🏇</div>
+            <button onClick={() => setShowPayjp(false)} aria-label="プレミアムプラン申込みモーダルを閉じる" className="absolute top-3 right-3 text-gray-400 text-xl">✕</button>
+            <div aria-hidden="true" className="text-3xl mb-3 text-center">🏇</div>
             <h2 className="text-lg font-bold mb-2 text-center">競馬予想AIプレミアム</h2>
             <KomojuButton
               planId={checkoutPlan}
               planLabel={checkoutPlan === "pro" ? "プロプラン ¥2,980/月（税込）— G1・重賞の詳細分析付き" : "ベーシックプラン ¥980/月（税込）— 全レース無制限予想"}
               className="w-full bg-green-700 text-white font-bold py-3 rounded-xl hover:bg-green-800 disabled:opacity-50"
             />
-            <button onClick={() => setShowPayjp(false)} className="text-xs text-gray-400 mt-2 block w-full text-center">閉じる</button>
+            <button onClick={() => setShowPayjp(false)} aria-label="プレミアムプラン申込みモーダルを閉じる" className="text-xs text-gray-400 mt-2 block w-full text-center">閉じる</button>
           </div>
         </div>
       )}
