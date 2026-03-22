@@ -62,34 +62,67 @@ const RADAR_AXES = [
   { label: "当日馬場", value: 70, desc: "馬場状態×脚質適合度" },
 ];
 
+const FEATURE_ICONS = {
+  data: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-7 h-7" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
+    </svg>
+  ),
+  money: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-7 h-7" aria-hidden="true">
+      <circle cx="12" cy="12" r="10"/><path d="M12 6v2m0 8v2M9 9h4a2 2 0 010 4H9a2 2 0 000 4h6"/>
+    </svg>
+  ),
+  fukusho: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-7 h-7" aria-hidden="true">
+      <path d="M12 2L8 8H2l5 4-2 7 7-4 7 4-2-7 5-4h-6z"/>
+    </svg>
+  ),
+  chart: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-7 h-7" aria-hidden="true">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    </svg>
+  ),
+  bolt: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-7 h-7" aria-hidden="true">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    </svg>
+  ),
+  trophy: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-7 h-7" aria-hidden="true">
+      <path d="M6 9H4a2 2 0 01-2-2V5a2 2 0 012-2h2m12 6h2a2 2 0 002-2V5a2 2 0 00-2-2h-2"/><path d="M6 3h12v10a6 6 0 01-12 0V3z"/><path d="M9 21h6m-3-4v4"/>
+    </svg>
+  ),
+} as const;
+
 const FEATURES = [
   {
-    icon: "📋",
+    iconKey: "data" as keyof typeof FEATURE_ICONS,
     title: "リアル出走表データで予想",
     desc: "netkeiba から出走馬・騎手・過去成績を自動取得。AIが実際のデータを分析して本命◎・対抗○・単穴▲を提案。",
   },
   {
-    icon: "🎯",
+    iconKey: "money" as keyof typeof FEATURE_ICONS,
     title: "軍資金別の買い目配分",
     desc: "「今日の軍資金3,000円」と入力するだけで、三連複・馬連・単勝の具体的な購入金額まで提案。",
   },
   {
-    icon: "🌿",
+    iconKey: "fukusho" as keyof typeof FEATURE_ICONS,
     title: "複勝モード",
     desc: "複勝買いに特化したモード。レース安定度・オッズ想定・リスク要因をAIが分析して、買い目選びの参考情報を提供。",
   },
   {
-    icon: "📊",
+    iconKey: "chart" as keyof typeof FEATURE_ICONS,
     title: "回収率トラッキング",
     desc: "投資額・回収額を記録して累計回収率を自動計算。自分の馬券傾向を客観的に振り返ることができる。",
   },
   {
-    icon: "⚡",
+    iconKey: "bolt" as keyof typeof FEATURE_ICONS,
     title: "30秒で予想完了",
     desc: "レースを選んでボタンを押すだけ。データ取得からAI分析まで全自動。難しい操作は一切不要。",
   },
   {
-    icon: "🏆",
+    iconKey: "trophy" as keyof typeof FEATURE_ICONS,
     title: "G1・重賞の特別分析",
     desc: "プロプランでは重賞レースに特化した詳細分析。展開・ペース・コース適性・前走比較まで徹底解剖。",
   },
@@ -176,7 +209,7 @@ export default function Home() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl relative">
             <button onClick={() => setShowPayjp(false)} aria-label="決済モーダルを閉じる" className="absolute top-3 right-3 text-gray-400 text-xl">✕</button>
-            <div className="text-3xl mb-3 text-center" aria-hidden="true">🏇</div>
+            <div className="flex justify-center mb-3" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-8 h-8 text-green-700"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
             <h2 className="text-lg font-bold mb-2 text-center">競馬予想AIプレミアム</h2>
             <KomojuButton
               planId={payjpPlan}
@@ -188,7 +221,10 @@ export default function Home() {
         </div>
       )}
       <nav className="flex items-center justify-between px-4 py-4 border-b border-green-200 bg-green-900 sticky top-0 z-10">
-        <span className="text-base md:text-xl font-bold text-white">🏇 競馬予想AI</span>
+        <span className="text-base md:text-xl font-bold text-white flex items-center gap-2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          競馬予想AI
+        </span>
         <div className="flex items-center gap-2 md:gap-4">
           <Link href="/predict" className="hidden md:block text-sm text-green-200 hover:text-white">予想する</Link>
           <Link href="/tracker" className="hidden md:block text-sm text-green-200 hover:text-white">回収率管理</Link>
@@ -679,7 +715,7 @@ export default function Home() {
         <div className="grid md:grid-cols-2 gap-6">
           {FEATURES.map((f) => (
             <div key={f.title} className="p-6 rounded-2xl border border-gray-100 hover:border-green-200 transition-colors bg-white shadow-sm">
-              <div className="text-3xl mb-3">{f.icon}</div>
+              <div className="text-green-700 mb-3">{FEATURE_ICONS[f.iconKey]}</div>
               <h3 className="text-base font-bold text-gray-900 mb-2">{f.title}</h3>
               <p className="text-gray-600 text-sm leading-relaxed">{f.desc}</p>
             </div>
