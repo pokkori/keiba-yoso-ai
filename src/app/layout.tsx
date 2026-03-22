@@ -18,7 +18,10 @@ const DESC = "netkeiba出走馬データをAIが自動取得・分析。本命�
 export const metadata: Metadata = {
   title: TITLE,
   description: DESC,
+  keywords: ["競馬予想", "競馬予想AI", "競馬 AI", "競馬 買い目", "競馬 本命", "複勝 AI", "競馬 回収率", "JRA予想 AI", "G1予想 AI", "競馬 初心者", "netkeiba AI分析", "競馬 無料予想"],
   icons: { icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏇</text></svg>" },
+  alternates: { canonical: SITE_URL },
+  robots: { index: true, follow: true },
   openGraph: {
     title: TITLE,
     description: DESC,
@@ -26,13 +29,14 @@ export const metadata: Metadata = {
     siteName: "競馬予想AI",
     locale: "ja_JP",
     type: "website",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "競馬予想AI" }],
+    images: [{ url: `${SITE_URL}/og.png`, width: 1200, height: 630, alt: "競馬予想AI" }],
   },
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESC,
     site: "@levona_design",
+    images: [`${SITE_URL}/og.png`],
   },
   metadataBase: new URL(SITE_URL),
 };

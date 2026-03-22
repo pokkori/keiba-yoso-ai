@@ -175,15 +175,15 @@ export default function Home() {
       {showPayjp && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl relative">
-            <button onClick={() => setShowPayjp(false)} className="absolute top-3 right-3 text-gray-400 text-xl">✕</button>
-            <div className="text-3xl mb-3 text-center">🏇</div>
+            <button onClick={() => setShowPayjp(false)} aria-label="決済モーダルを閉じる" className="absolute top-3 right-3 text-gray-400 text-xl">✕</button>
+            <div className="text-3xl mb-3 text-center" aria-hidden="true">🏇</div>
             <h2 className="text-lg font-bold mb-2 text-center">競馬予想AIプレミアム</h2>
             <KomojuButton
               planId={payjpPlan}
               planLabel={planLabel}
               className="w-full bg-green-700 text-white font-bold py-3 rounded-xl hover:bg-green-800 disabled:opacity-50"
             />
-            <button onClick={() => setShowPayjp(false)} className="text-xs text-gray-400 mt-2 block w-full text-center">閉じる</button>
+            <button onClick={() => setShowPayjp(false)} aria-label="決済モーダルを閉じる" className="text-xs text-gray-400 mt-2 block w-full text-center">閉じる</button>
           </div>
         </div>
       )}
@@ -195,7 +195,7 @@ export default function Home() {
           <Link href="/backtest/results" className="hidden md:block text-sm text-green-200 hover:text-white">実績を見る</Link>
           <Link href="/news" className="hidden md:block text-sm text-green-200 hover:text-white">今週のG1</Link>
           <Link href="/how-to" className="hidden md:block text-sm text-green-200 hover:text-white">使い方ガイド</Link>
-          <Link href="/predict"
+          <Link href="/predict" aria-label="競馬予想AIを無料で試す"
             className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-4 py-1.5 rounded-full text-sm transition-colors">
             無料で試す
           </Link>
@@ -219,6 +219,27 @@ export default function Home() {
           <div className="bg-red-600 text-white text-center text-sm font-bold py-2 px-4">
             🏆 春G1シーズン開幕！{spring.map(r => r.name).join(" → ")} — AIで予想する
             <Link href="/predict" className="ml-2 underline hover:no-underline">無料で試す →</Link>
+          </div>
+        );
+      })()}
+
+      {/* G1カウントダウンバナー */}
+      {(() => {
+        const nextG1 = getNextG1s(1)[0];
+        if (!nextG1) return null;
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const raceTime = new Date(nextG1.date).getTime();
+        const nowTime = now.getTime();
+        const diffDays = Math.ceil((raceTime - nowTime) / (1000 * 60 * 60 * 24));
+        const isToday = diffDays === 0;
+        return (
+          <div className={`text-center text-sm font-bold py-2.5 px-4 ${isToday ? "bg-red-600 animate-pulse" : "bg-gradient-to-r from-red-700 via-red-600 to-red-700"} text-white`}>
+            {isToday ? (
+              <span>🔥 本日G1開催！ <span className="font-black">{nextG1.name}</span> | {nextG1.venue} {nextG1.distance}</span>
+            ) : (
+              <span>🏆 次のG1: <span className="font-black">{nextG1.name}</span> まであと<span className="text-yellow-300 font-black text-base">{diffDays}日</span> | {nextG1.venue} {nextG1.distance}</span>
+            )}
           </div>
         );
       })()}
@@ -346,6 +367,38 @@ export default function Home() {
             </Link>
           </div>
           <p className="text-xs text-gray-400 text-center mt-3">※的中・収益を保証するものではありません。少サンプルのためデータの解釈にはご注意ください。</p>
+
+          {/* 的中実績ランキング */}
+          {(() => {
+            const filtered = HIT_RANKING.filter(h => h.profit !== "—");
+            if (!filtered.length) return null;
+            return (
+              <div className="mt-8">
+                <h3 className="text-lg font-bold text-gray-900 text-center mb-4">🏆 的中実績ランキング</h3>
+                <div className="space-y-3">
+                  {filtered.map((h, i) => (
+                    <div key={i} className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                      <span className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-xs font-black ${h.badge}`}>
+                        {h.rank}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-gray-900 text-sm">{h.race}</span>
+                          <span className="text-xs text-gray-500">{h.date}</span>
+                        </div>
+                        <div className="text-xs text-gray-600 mt-0.5">
+                          {h.bet} | {h.horse} | {h.odds}
+                        </div>
+                      </div>
+                      <span className={`flex-shrink-0 font-black text-sm ${h.profit.startsWith("+") ? "text-green-500" : "text-gray-500"}`}>
+                        {h.profit}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </section>
 

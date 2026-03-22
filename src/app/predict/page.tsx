@@ -792,6 +792,7 @@ export default function PredictPage() {
           )}
 
           <button onClick={handlePredict}
+            aria-label={mode === "fukusho" ? "選択したレースの複勝推奨馬をAI分析する" : "選択したレースをAIで予想する"}
             disabled={loading || racePast || (!selectedRaceId && !racesLoading)}
             className={`w-full disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-base transition-colors ${mode === "fukusho" ? "bg-amber-500 hover:bg-amber-600" : "bg-green-700 hover:bg-green-800"}`}>
             {loading ? (
