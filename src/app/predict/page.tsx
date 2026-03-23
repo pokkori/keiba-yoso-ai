@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import KomojuButton from "@/components/KomojuButton";
 import { track } from '@vercel/analytics';
+import { updateStreak, loadStreak, type StreakData } from "@/lib/streak";
 
 const FREE_LIMIT = 2;
 const STORAGE_KEY = "keiba_predict_count";
@@ -397,6 +398,7 @@ export default function PredictPage() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [showPayjp, setShowPayjp] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState("basic");
+  const [streakData, setStreakData] = useState<StreakData | null>(null);
 
   // お気に入り馬
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -410,6 +412,7 @@ export default function PredictPage() {
       const saved = JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]");
       if (Array.isArray(saved)) setFavorites(saved);
     } catch { /* ignore */ }
+    setStreakData(loadStreak("keiba"));
   }, []);
 
   useEffect(() => {
@@ -512,6 +515,7 @@ export default function PredictPage() {
       const next = doneMetadata.count ?? usageCount + 1;
       setUsageCount(next);
       localStorage.setItem(STORAGE_KEY, String(next));
+      setStreakData(updateStreak("keiba"));
     } catch (e) {
       setError(e instanceof Error ? e.message : "エラーが発生しました");
     } finally {
@@ -600,6 +604,11 @@ export default function PredictPage() {
       <nav aria-label="メインナビゲーション" className="flex items-center justify-between px-6 py-4 border-b border-green-200 bg-green-900">
         <Link href="/" className="text-xl font-bold text-white">🏇 競馬予想AI</Link>
         <div className="flex items-center gap-4">
+          {streakData && streakData.count >= 1 && (
+            <span aria-label={`${streakData.count}日連続利用中`} className="flex items-center gap-1 text-xs bg-yellow-400 text-green-900 font-bold px-2.5 py-1 rounded-full">
+              <span aria-hidden="true">🔥</span>{streakData.count}日連続
+            </span>
+          )}
           <Link href="/tracker" className="text-sm text-green-300 hover:text-white">回収率管理</Link>
           <Link href="/backtest" className="text-sm text-green-300 hover:text-white">的中検証</Link>
           {isPremium ? (
