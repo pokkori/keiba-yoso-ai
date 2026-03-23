@@ -1,15 +1,9 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
 import "./globals.css";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
 const SITE_URL = "https://keiba-yoso-ai.vercel.app";
 const TITLE = "競馬予想AI｜複勝回収率193%・AIが30秒分析・本命◎対抗○単穴▲を即提案";
@@ -75,7 +69,7 @@ export default function RootLayout({
       <head>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </head>
-      <body className={`${geistSans.variable} antialiased`}>
+      <body className="antialiased">
         {children}
         <PWAInstallBanner />
         <Analytics />
