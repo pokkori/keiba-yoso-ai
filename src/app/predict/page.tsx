@@ -794,7 +794,7 @@ export default function PredictPage() {
                       {favorites.map((horse) => (
                         <span key={horse} className="flex items-center gap-1 bg-green-700 text-white text-xs px-2.5 py-1 rounded-lg font-medium">
                           {horse}
-                          <button onClick={() => removeFavorite(horse)} className="text-green-300 hover:text-white leading-none ml-0.5" aria-label="削除">×</button>
+                          <button onClick={() => removeFavorite(horse)} className="text-green-300 hover:text-white leading-none ml-0.5" aria-label={`${horse}をお気に入りから削除`}>×</button>
                         </span>
                       ))}
                     </div>
@@ -918,17 +918,20 @@ export default function PredictPage() {
                   <div className="mt-4 flex gap-3">
                     <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(ogImageUrl)}`}
                       target="_blank" rel="noopener noreferrer"
+                      aria-label="競馬予想AIのAI予想結果をXにシェアする"
                       className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-colors">
-                      𝕏 でシェア
+                      Xでシェア
                     </a>
-                    <a href={`https://line.me/R/msg/text/?${encodeURIComponent(`${shareLabel}をAIが予想！🏇 #競馬予想AI https://keiba-yoso-ai.vercel.app`)}`}
+                    <a href={`https://line.me/R/msg/text/?${encodeURIComponent(`${shareLabel}をAIが予想！#競馬予想AI https://keiba-yoso-ai.vercel.app`)}`}
                       target="_blank" rel="noopener noreferrer"
+                      aria-label="競馬予想AIのAI予想結果をLINEでシェアする"
                       className="flex items-center gap-1.5 px-4 py-2 bg-[#06C755] text-white text-sm font-bold rounded-xl hover:bg-[#05b04c] transition-colors">
-                      LINE でシェア
+                      LINEでシェア
                     </a>
                     <Link href={`/tracker?race=${encodeURIComponent(shareLabel)}&date=${date}`}
+                      aria-label="このレースの予想結果を回収率トラッカーに記録する"
                       className="flex items-center gap-1.5 px-4 py-2 bg-green-50 text-green-700 text-sm font-bold rounded-xl hover:bg-green-100 transition-colors border border-green-200">
-                      📊 回収率に記録
+                      回収率に記録
                     </Link>
                   </div>
                   {/* 次のアクション3選 */}
@@ -953,18 +956,21 @@ export default function PredictPage() {
                     <div className="grid grid-cols-3 gap-2">
                       {/* TODO: Replace href with A8.net affiliate URL after approval (netkeiba案件) */}
                       <a href="https://regist.netkeiba.com/" target="_blank" rel="noopener noreferrer sponsored"
+                        aria-label="netkeibaで馬券を購入する（外部サイト）"
                         className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-green-700 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition-colors">
-                        🐴 netkeiba
+                        netkeiba
                       </a>
                       {/* TODO: Replace href with A8.net affiliate URL after approval (JRA-VAN案件) */}
                       <a href="https://jra.jp/" target="_blank" rel="noopener noreferrer sponsored"
+                        aria-label="JRA公式サイトで馬券を購入する（外部サイト）"
                         className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-green-700 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition-colors">
-                        🎯 JRA公式
+                        JRA公式
                       </a>
                       {/* TODO: Replace href with 楽天アフィリエイト URL (insId=s00000011623001) after setup */}
                       <a href="https://keiba.rakuten.co.jp/" target="_blank" rel="noopener noreferrer sponsored"
+                        aria-label="楽天競馬で馬券を購入する（外部サイト）"
                         className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-red-700 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-colors">
-                        🛒 楽天競馬
+                        楽天競馬
                       </a>
                     </div>
                   </div>

@@ -226,11 +226,11 @@ export default function Home() {
           競馬予想AI
         </span>
         <div className="flex items-center gap-2 md:gap-4">
-          <Link href="/predict" className="hidden md:block text-sm text-green-200 hover:text-white">予想する</Link>
-          <Link href="/tracker" className="hidden md:block text-sm text-green-200 hover:text-white">回収率管理</Link>
-          <Link href="/backtest/results" className="hidden md:block text-sm text-green-200 hover:text-white">実績を見る</Link>
-          <Link href="/news" className="hidden md:block text-sm text-green-200 hover:text-white">今週のG1</Link>
-          <Link href="/how-to" className="hidden md:block text-sm text-green-200 hover:text-white">使い方ガイド</Link>
+          <Link href="/predict" aria-label="競馬予想AIで今すぐ予想する" className="hidden md:block text-sm text-green-200 hover:text-white">予想する</Link>
+          <Link href="/tracker" aria-label="馬券の回収率を管理する" className="hidden md:block text-sm text-green-200 hover:text-white">回収率管理</Link>
+          <Link href="/backtest/results" aria-label="AIバックテストの全実績を見る" className="hidden md:block text-sm text-green-200 hover:text-white">実績を見る</Link>
+          <Link href="/news" aria-label="今週のG1レース情報を確認する" className="hidden md:block text-sm text-green-200 hover:text-white">今週のG1</Link>
+          <Link href="/how-to" aria-label="競馬予想AIの使い方ガイドを見る" className="hidden md:block text-sm text-green-200 hover:text-white">使い方ガイド</Link>
           <Link href="/predict" aria-label="競馬予想AIを無料で試す"
             className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-4 py-1.5 rounded-full text-sm transition-colors">
             無料で試す
@@ -997,6 +997,7 @@ export default function Home() {
                 </button>
               ) : (
                 <Link href={plan.href!}
+                  aria-label={`${plan.name}プランで競馬予想AIを試す`}
                   className="block text-center py-2.5 rounded-full text-sm font-bold border border-green-300 text-green-700 hover:bg-green-50 transition-colors">
                   {plan.cta}
                 </Link>

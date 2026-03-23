@@ -102,7 +102,7 @@ function SuccessContent() {
         <div className="space-y-4 mb-8">
           <h2 className="font-bold text-gray-800 text-center text-sm">まずはこの3ステップ</h2>
 
-          <Link href="/predict" className="flex items-center gap-4 bg-white border border-gray-200 rounded-xl p-4 hover:border-green-400 hover:shadow-md transition-all group">
+          <Link href="/predict" aria-label="今週末のレースをAIで予想する" className="flex items-center gap-4 bg-white border border-gray-200 rounded-xl p-4 hover:border-green-400 hover:shadow-md transition-all group">
             <div className="w-10 h-10 bg-green-700 text-white rounded-full flex items-center justify-center font-bold text-lg shrink-0 group-hover:bg-green-600">1</div>
             <div className="flex-1">
               <p className="font-bold text-gray-800 text-sm">今週末のレースを予想する</p>
@@ -111,7 +111,7 @@ function SuccessContent() {
             <span className="text-gray-300 group-hover:text-green-600 transition-colors">&rarr;</span>
           </Link>
 
-          <Link href="/predict" className="flex items-center gap-4 bg-white border border-gray-200 rounded-xl p-4 hover:border-green-400 hover:shadow-md transition-all group">
+          <Link href="/predict" aria-label="複勝モードで堅実な予想をする" className="flex items-center gap-4 bg-white border border-gray-200 rounded-xl p-4 hover:border-green-400 hover:shadow-md transition-all group">
             <div className="w-10 h-10 bg-green-700 text-white rounded-full flex items-center justify-center font-bold text-lg shrink-0 group-hover:bg-green-600">2</div>
             <div className="flex-1">
               <p className="font-bold text-gray-800 text-sm">複勝モードを試してみる</p>
@@ -120,7 +120,7 @@ function SuccessContent() {
             <span className="text-gray-300 group-hover:text-green-600 transition-colors">&rarr;</span>
           </Link>
 
-          <Link href="/calendar" className="flex items-center gap-4 bg-white border border-gray-200 rounded-xl p-4 hover:border-green-400 hover:shadow-md transition-all group">
+          <Link href="/calendar" aria-label="G1カレンダーで年間レース日程を確認する" className="flex items-center gap-4 bg-white border border-gray-200 rounded-xl p-4 hover:border-green-400 hover:shadow-md transition-all group">
             <div className="w-10 h-10 bg-green-700 text-white rounded-full flex items-center justify-center font-bold text-lg shrink-0 group-hover:bg-green-600">3</div>
             <div className="flex-1">
               <p className="font-bold text-gray-800 text-sm">G1カレンダーをチェック</p>
@@ -130,11 +130,24 @@ function SuccessContent() {
           </Link>
         </div>
 
+        {/* X Share Button */}
+        <div className="mb-6 text-center">
+          <a
+            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent("競馬予想AIで今日のレースを予想しました！ #競馬予想AI #競馬 #競馬予想 https://keiba-yoso-ai.vercel.app")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="競馬予想AIの予想結果をXにシェアする"
+            className="text-xs px-3 py-1.5 rounded-lg bg-black hover:bg-gray-800 text-white font-medium transition-colors inline-block"
+          >
+            Xでシェア
+          </a>
+        </div>
+
         {/* Bookmark Prompt */}
 
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-400 mb-1">ご感想をお聞かせください（30秒）</p>
-          <a href="mailto:support@pokkorilab.com?subject=%E3%81%94%E6%84%9F%E6%83%B3&body=%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9%E5%90%8D%EF%BC%9A%0A%E6%84%9F%E6%83%B3%EF%BC%9A" className="text-xs text-blue-500 underline hover:text-blue-700">感想を送る →</a>
+          <a href="mailto:support@pokkorilab.com?subject=%E3%81%94%E6%84%9F%E6%83%B3&body=%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9%E5%90%8D%EF%BC%9A%0A%E6%84%9F%E6%83%B3%EF%BC%9A" aria-label="競馬予想AIへのご感想をメールで送る" className="text-xs text-blue-500 underline hover:text-blue-700">感想を送る →</a>
         </div>
         <div className="text-center bg-gray-50 rounded-xl p-4 border border-gray-100">
           <p className="text-xs text-gray-500 mb-1">毎週末の予想にすぐアクセス</p>
