@@ -620,7 +620,7 @@ export default function PredictPage() {
       </nav>
 
       <div className="max-w-2xl mx-auto py-10 px-6">
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/20 p-6 shadow-sm">
           <h1 className="text-xl font-bold text-gray-900 mb-6">🏇 レース予想</h1>
 
           {/* 日付選択 */}
@@ -748,7 +748,7 @@ export default function PredictPage() {
               <span aria-hidden="true" className="text-xs text-gray-400">{showFavPanel ? "▲" : "▼"}</span>
             </button>
             {showFavPanel && (
-              <div className="mt-2 bg-green-50 border border-green-200 rounded-xl p-4">
+              <div className="mt-2 bg-green-50/80 backdrop-blur-sm border border-green-200/60 rounded-xl p-4">
                 {/* 人気馬プリセット */}
                 <p className="text-xs font-bold text-green-700 mb-2">🏆 人気馬を追加</p>
                 <div className="flex flex-wrap gap-1.5 mb-3">
@@ -870,7 +870,7 @@ export default function PredictPage() {
                 LPでAI解説を詳しく見る →
               </a>
             </div>
-            <div className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/20 p-4">
               <p className="text-sm font-bold text-gray-700 mb-3">📊 AIバックテスト実績（G1・重賞）</p>
               <div className="grid grid-cols-3 gap-3">
                 {[
@@ -935,7 +935,7 @@ export default function PredictPage() {
                     </Link>
                   </div>
                   {/* 次のアクション3選 */}
-                  <div className="mt-4 bg-green-50 border border-green-200 rounded-xl p-4">
+                  <div className="mt-4 bg-green-50/80 backdrop-blur-sm border border-green-200/60 rounded-xl p-4">
                     <p className="text-sm font-bold text-green-800 mb-3">📋 次にやるべきこと3選</p>
                     <ol className="space-y-2">
                       {[
