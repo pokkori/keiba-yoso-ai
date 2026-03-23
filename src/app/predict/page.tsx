@@ -314,6 +314,7 @@ function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: 
         <span className="text-white font-bold text-sm">{headerIcon} {raceInfo} {headerLabel}</span>
         <div className="flex items-center gap-2 flex-shrink-0">
           <a href={xShareUrl} target="_blank" rel="noopener noreferrer"
+            aria-label="このレースのAI予想をXでシェアする"
             className="text-xs bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap">
             🐦 Xでシェア
           </a>
@@ -596,7 +597,7 @@ export default function PredictPage() {
         </div>
       )}
 
-      <nav className="flex items-center justify-between px-6 py-4 border-b border-green-200 bg-green-900">
+      <nav aria-label="メインナビゲーション" className="flex items-center justify-between px-6 py-4 border-b border-green-200 bg-green-900">
         <Link href="/" className="text-xl font-bold text-white">🏇 競馬予想AI</Link>
         <div className="flex items-center gap-4">
           <Link href="/tracker" className="text-sm text-green-300 hover:text-white">回収率管理</Link>

@@ -220,7 +220,7 @@ export default function Home() {
           </div>
         </div>
       )}
-      <nav className="flex items-center justify-between px-4 py-4 border-b border-green-200 bg-green-900 sticky top-0 z-10">
+      <nav aria-label="メインナビゲーション" className="flex items-center justify-between px-4 py-4 border-b border-green-200 bg-green-900 sticky top-0 z-10">
         <span className="text-base md:text-xl font-bold text-white flex items-center gap-2">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
           競馬予想AI
@@ -354,6 +354,7 @@ export default function Home() {
             無料で予想を見る →
           </Link>
           <button onClick={() => startCheckout("pro")}
+            aria-label="プロプランを始める（月額2,980円）"
             className="inline-block border-2 border-white/50 hover:border-white text-white font-bold py-4 px-8 rounded-full text-base transition-colors">
             プロプラン ¥2,980/月
           </button>
@@ -386,6 +387,33 @@ export default function Home() {
           </div>
         );
       })()}
+
+      {/* AIの予想実績 — バックテスト表示UI */}
+      <section className="max-w-2xl mx-auto px-4 py-8" aria-label="バックテスト実績">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">AIの予想実績</h2>
+        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-gray-200 bg-green-50">
+          <p className="text-yellow-700 text-sm mb-3">
+            ※ 実績は参考値です。投資・賭博を推奨するものではありません。
+          </p>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-3xl font-bold text-gray-900">--</p>
+              <p className="text-gray-600 text-sm">的中率</p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-gray-900">--</p>
+              <p className="text-gray-600 text-sm">回収率</p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-gray-900">--</p>
+              <p className="text-gray-600 text-sm">分析レース数</p>
+            </div>
+          </div>
+          <p className="text-gray-500 text-xs mt-4 text-center">
+            ※ バックテストデータは順次更新予定
+          </p>
+        </div>
+      </section>
 
       {/* バックテスト実績 */}
       <section className="py-12 px-6 bg-white border-b border-gray-100">
@@ -763,6 +791,7 @@ export default function Home() {
               </ul>
               <button
                 onClick={() => startCheckout("pro")}
+                aria-label="今すぐプロプランで始める"
                 className="w-full mt-5 bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-3 rounded-xl text-sm transition-colors"
               >
                 今すぐプロプランで始める →
@@ -962,6 +991,7 @@ export default function Home() {
               </ul>
               {plan.stripeKey ? (
                 <button onClick={() => startCheckout(plan.stripeKey!)}
+                  aria-label={`${plan.name}プランを申し込む`}
                   className={`w-full py-2.5 rounded-full text-sm font-bold transition-colors ${plan.highlight ? "bg-green-600 hover:bg-green-700 text-white" : "border border-green-300 text-green-700 hover:bg-green-50"}`}>
                   {plan.cta}
                 </button>
@@ -1201,6 +1231,7 @@ export default function Home() {
         <p className="text-green-300 text-xs mb-8">有料プランはいつでも解約可能 · 30日以内なら全額返金</p>
         <div className="flex flex-col gap-4 justify-center items-center w-full max-w-sm mx-auto sm:max-w-none sm:flex-row">
           <button onClick={() => startCheckout("pro")}
+            aria-label="プロプランで始める（月額2,980円）"
             className="w-full sm:w-auto bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-4 px-8 md:px-12 rounded-full text-base md:text-lg transition-colors">
             🏆 プロプランで始める（¥2,980/月）
           </button>
@@ -1322,6 +1353,7 @@ export default function Home() {
             href={"https://twitter.com/intent/tweet?text=" + encodeURIComponent("競馬予想AI — 出馬表をAIが自動分析・本命馬と買い目を30秒で提案🐎 AIの予想参考情報！無料で試せます → https://keiba-yoso-ai.vercel.app #競馬 #競馬予想 #AI")}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="競馬予想AIをXでシェアする"
             className="inline-flex items-center gap-2 bg-black hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-xl text-sm transition-colors"
           >
             <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
@@ -1333,6 +1365,7 @@ export default function Home() {
             href={"https://line.me/R/msg/text/?" + encodeURIComponent("競馬予想AI🐎 出馬表をAIが自動分析・本命馬と買い目を30秒で提案！AIの予想参考情報サービス！無料で試せます → https://keiba-yoso-ai.vercel.app")}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="競馬予想AIをLINEで送る"
             className="inline-flex items-center gap-2 text-white font-bold py-3 px-6 rounded-xl text-sm transition-colors"
             style={{ background: "#06C755" }}
           >
