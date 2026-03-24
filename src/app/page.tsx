@@ -208,7 +208,7 @@ export default function Home() {
       {showPayjp && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl relative">
-            <button onClick={() => setShowPayjp(false)} aria-label="決済モーダルを閉じる" className="absolute top-3 right-3 text-gray-400 text-xl">✕</button>
+            <button onClick={() => setShowPayjp(false)} aria-label="決済モーダルを閉じる" className="absolute top-3 right-3 text-gray-400 text-xl"></button>
             <div className="flex justify-center mb-3" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-8 h-8 text-green-700"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
             <h2 className="text-lg font-bold mb-2 text-center">競馬予想AIプレミアム</h2>
             <KomojuButton
@@ -245,7 +245,7 @@ export default function Home() {
         if (isRaceDay) {
           return (
             <div className="bg-green-600 text-white text-center text-sm font-bold py-2 px-4 animate-pulse">
-              🏇 {dayLabel}はJRA開催中！今すぐAIで予想を確認する
+               {dayLabel}はJRA開催中！今すぐAIで予想を確認する
               <Link href="/predict" className="ml-2 underline hover:no-underline bg-yellow-400 text-green-900 px-2 py-0.5 rounded-full no-underline">今すぐ予想 →</Link>
             </div>
           );
@@ -253,7 +253,7 @@ export default function Home() {
         if (!spring.length) return null;
         return (
           <div className="bg-red-600 text-white text-center text-sm font-bold py-2 px-4">
-            🏆 春G1シーズン開幕！{spring.map(r => r.name).join(" → ")} — AIで予想する
+            TOP 春G1シーズン開幕！{spring.map(r => r.name).join(" → ")} — AIで予想する
             <Link href="/predict" className="ml-2 underline hover:no-underline">無料で試す →</Link>
           </div>
         );
@@ -272,9 +272,9 @@ export default function Home() {
         return (
           <div className={`text-center text-sm font-bold py-2.5 px-4 ${isToday ? "bg-red-600 animate-pulse" : "bg-gradient-to-r from-red-700 via-red-600 to-red-700"} text-white`}>
             {isToday ? (
-              <span>🔥 本日G1開催！ <span className="font-black">{nextG1.name}</span> | {nextG1.venue} {nextG1.distance}</span>
+              <span>HOT 本日G1開催！ <span className="font-black">{nextG1.name}</span> | {nextG1.venue} {nextG1.distance}</span>
             ) : (
-              <span>🏆 次のG1: <span className="font-black">{nextG1.name}</span> まであと<span className="text-yellow-300 font-black text-base">{diffDays}日</span> | {nextG1.venue} {nextG1.distance}</span>
+              <span>TOP 次のG1: <span className="font-black">{nextG1.name}</span> まであと<span className="text-yellow-300 font-black text-base">{diffDays}日</span> | {nextG1.venue} {nextG1.distance}</span>
             )}
           </div>
         );
@@ -283,7 +283,7 @@ export default function Home() {
       {/* Hero */}
       <section className="text-center py-12 md:py-20 px-4 bg-gradient-to-br from-green-900 to-green-700 text-white overflow-x-hidden">
         <div className="inline-flex items-center gap-2 bg-amber-100 border border-amber-400 text-amber-800 font-bold text-sm px-4 py-2 rounded-full mb-4">
-          🏆 バックテスト実施中 — 全記録公開
+          TOP バックテスト実施中 — 全記録公開
         </div>
         <p className="text-xs font-bold text-green-300 mb-3 tracking-widest uppercase">リアルデータ × AI分析</p>
         <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">
@@ -296,7 +296,7 @@ export default function Home() {
 
         {/* AIバックテスト実績バッジ */}
         <div className="bg-yellow-400/20 border-2 border-yellow-400 rounded-2xl p-4 mb-6 max-w-md mx-auto">
-          <p className="text-yellow-300 text-xs font-bold mb-3 tracking-widest uppercase text-center">📊 AIバックテスト実施中</p>
+          <p className="text-yellow-300 text-xs font-bold mb-3 tracking-widest uppercase text-center">データ AIバックテスト実施中</p>
           <div className="bg-white/10 rounded-xl px-4 py-4 text-center">
             <p className="text-yellow-300 font-bold text-sm mb-1">データ蓄積中</p>
             <p className="text-green-200 text-xs">バックテストを継続実施中です。実績値は蓄積後に公開します。</p>
@@ -321,7 +321,7 @@ export default function Home() {
         </div>
         {/* 競合比較バナー */}
         <div className="bg-white/10 backdrop-blur border border-yellow-400/40 rounded-2xl p-4 mb-4 max-w-md mx-auto">
-          <p className="text-yellow-300 text-xs font-bold mb-3 text-center">💰 競合サービスとの価格比較</p>
+          <p className="text-yellow-300 text-xs font-bold mb-3 text-center">収益 競合サービスとの価格比較</p>
           <div className="space-y-2 text-xs">
             <div className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2">
               <span className="text-green-300">netkeiba マスターコース</span>
@@ -333,20 +333,20 @@ export default function Home() {
             </div>
             <div className="flex items-center justify-between bg-yellow-400/20 border border-yellow-400/60 rounded-lg px-3 py-2">
               <span className="text-yellow-300 font-bold">競馬予想AI ベーシック</span>
-              <span className="text-yellow-300 font-black">¥980/月 🏆</span>
+              <span className="text-yellow-300 font-black">¥980/月 TOP</span>
             </div>
           </div>
           <p className="text-green-400 text-xs text-center mt-2">大手の1/5の価格。バックテスト全公開で透明性も◎</p>
         </div>
         {/* Hormozi: 価値スタック */}
         <div className="bg-white/10 backdrop-blur border border-yellow-400/40 rounded-2xl p-4 mb-8 max-w-md mx-auto text-left">
-          <p className="text-yellow-300 text-xs font-bold mb-2 text-center">🎁 無料プランでもこれだけ使える</p>
+          <p className="text-yellow-300 text-xs font-bold mb-2 text-center">特典 無料プランでもこれだけ使える</p>
           <ul className="text-green-100 text-sm space-y-1">
-            <li>✅ AI予想（本命・対抗・単穴・買い目）2レース</li>
-            <li>✅ 複勝モード（高的中率）2レース</li>
-            <li>✅ G1・重賞レース完全対応</li>
+            <li>OK AI予想（本命・対抗・単穴・買い目）2レース</li>
+            <li>OK 複勝モード（高的中率）2レース</li>
+            <li>OK G1・重賞レース完全対応</li>
           </ul>
-          <p className="text-yellow-300 text-xs mt-2 text-center">👑 Pro（¥2,980/月）で無制限 + バックテスト機能</p>
+          <p className="text-yellow-300 text-xs mt-2 text-center">PRO Pro（¥2,980/月）で無制限 + バックテスト機能</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
           <Link href="/predict"
@@ -360,7 +360,7 @@ export default function Home() {
           </button>
         </div>
         <p className="text-sm text-amber-300 mt-2 font-semibold">
-          ⚡ バックテスト継続中 — 全記録をリアルタイム公開
+          高速 バックテスト継続中 — 全記録をリアルタイム公開
         </p>
         <p className="text-green-400 text-sm mt-2">登録不要・カード不要・今すぐ体験</p>
       </section>
@@ -376,7 +376,7 @@ export default function Home() {
         return (
           <div className="bg-yellow-400 py-3 px-6">
             <div className="max-w-5xl mx-auto flex items-center justify-center gap-3 flex-wrap text-green-900">
-              <span className="text-sm font-bold">🏆 次のG1</span>
+              <span className="text-sm font-bold">TOP 次のG1</span>
               <span className="font-black text-lg">{nextRace.name}（{nextRace.displayDate}）</span>
               <span className="bg-red-600 text-white text-xs font-black px-3 py-1 rounded-full">あと{days}日</span>
               <Link href="/predict"
@@ -438,7 +438,7 @@ export default function Home() {
             if (!filtered.length) return null;
             return (
               <div className="mt-8">
-                <h3 className="text-lg font-bold text-gray-900 text-center mb-4">🏆 的中実績ランキング</h3>
+                <h3 className="text-lg font-bold text-gray-900 text-center mb-4">TOP 的中実績ランキング</h3>
                 <div className="space-y-3">
                   {filtered.map((h, i) => (
                     <div key={i} className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
@@ -469,7 +469,7 @@ export default function Home() {
       {/* Stats */}
       <section className="py-10 px-6 bg-green-800 text-white">
         <div className="flex justify-center mb-4">
-          <span className="bg-yellow-400 text-green-900 text-xs font-bold px-3 py-1 rounded-full">📊 AIによる予想情報提供サービス（参考値）</span>
+          <span className="bg-yellow-400 text-green-900 text-xs font-bold px-3 py-1 rounded-full">データ AIによる予想情報提供サービス（参考値）</span>
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
@@ -493,7 +493,7 @@ export default function Home() {
           {/* バックテスト連動 説明バナー */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 mb-5 flex items-center justify-between flex-wrap gap-2">
             <div>
-              <p className="text-xs font-bold text-yellow-800">📋 バックテスト実施中 — 全記録をリアルタイム公開</p>
+              <p className="text-xs font-bold text-yellow-800"> バックテスト実施中 — 全記録をリアルタイム公開</p>
               <p className="text-xs text-yellow-700">的中も外れも隠さず記録。現在n=3（統計的有意性確保には20〜30レース必要）</p>
             </div>
             <Link href="/backtest/results" className="text-xs bg-green-700 text-white font-bold px-3 py-1.5 rounded-lg hover:bg-green-800 transition-colors whitespace-nowrap">
@@ -556,7 +556,7 @@ export default function Home() {
           </div>
           {/* サマリー */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-8 text-sm text-yellow-800">
-            ⚠️ バックテストはn=3レースのみです。統計的に有意な数値を出すには最低20〜30レースが必要です。現在継続中のため、数値の解釈にはご注意ください。
+            ️ バックテストはn=3レースのみです。統計的に有意な数値を出すには最低20〜30レースが必要です。現在継続中のため、数値の解釈にはご注意ください。
           </div>
           {/* 実績テーブル */}
           <div className="overflow-x-auto rounded-2xl border border-gray-100">
@@ -573,19 +573,19 @@ export default function Home() {
                 <tr className="bg-green-50">
                   <td className="px-4 py-3"><span className="font-bold">弥生賞 (G2)</span><br /><span className="text-xs text-gray-500">中山・9頭立て</span></td>
                   <td className="px-4 py-3">4番 ライヒスアドラー</td>
-                  <td className="px-4 py-3 text-center"><span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full">2着 ✓</span></td>
+                  <td className="px-4 py-3 text-center"><span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full">2着 </span></td>
                   <td className="px-4 py-3 text-right font-bold text-green-600">+¥100</td>
                 </tr>
                 <tr className="bg-green-50">
                   <td className="px-4 py-3"><span className="font-bold">小倉大賞典 (G3)</span><br /><span className="text-xs text-gray-500">小倉</span></td>
                   <td className="px-4 py-3">4番 ショウナンアデイブ</td>
-                  <td className="px-4 py-3 text-center"><span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full">3着 ✓</span></td>
+                  <td className="px-4 py-3 text-center"><span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full">3着 </span></td>
                   <td className="px-4 py-3 text-right font-bold text-green-600">+¥3,700</td>
                 </tr>
                 <tr className="bg-red-50">
                   <td className="px-4 py-3"><span className="font-bold">中山記念 (G2)</span><br /><span className="text-xs text-gray-500">中山</span></td>
                   <td className="px-4 py-3">8番 ショウナンマグマ</td>
-                  <td className="px-4 py-3 text-center"><span className="bg-red-400 text-white text-xs font-bold px-2 py-1 rounded-full">圏外 ✗</span></td>
+                  <td className="px-4 py-3 text-center"><span className="bg-red-400 text-white text-xs font-bold px-2 py-1 rounded-full">圏外 </span></td>
                   <td className="px-4 py-3 text-right font-bold text-red-500">-¥1,000</td>
                 </tr>
                 <tr className="bg-gray-50">
@@ -623,7 +623,7 @@ export default function Home() {
           <div className="grid md:grid-cols-2 gap-8 items-center">
             {/* レーダーチャート（CSS実装） */}
             <div className="bg-green-800/50 border border-green-700 rounded-2xl p-6">
-              <p className="text-yellow-300 text-xs font-bold text-center mb-4">📊 サンプル: 高松宮記念 推奨馬 予想根拠スコア</p>
+              <p className="text-yellow-300 text-xs font-bold text-center mb-4">データ サンプル: 高松宮記念 推奨馬 予想根拠スコア</p>
               <div className="space-y-3">
                 {RADAR_AXES.map((axis) => (
                   <div key={axis.label}>
@@ -650,10 +650,10 @@ export default function Home() {
             <div>
               <div className="space-y-4">
                 {[
-                  { icon: "📈", title: "過去成績スコア", desc: "直近5走の着順・タイム偏差・クラス上昇度を数値化。安定した実績を持つ馬ほどスコアが高くなります。" },
-                  { icon: "🏇", title: "コース適性スコア", desc: "レースのコース・距離・回り・馬場状態との相性を過去データから算出。得意コースへの出走は評価アップ。" },
-                  { icon: "👤", title: "騎手相性スコア", desc: "騎手と馬の組み合わせ実績・騎手のコース別成績をAIが総合判断。名手への乗り替わりも適切に評価。" },
-                  { icon: "🌿", title: "当日馬場スコア", desc: "開催日の馬場状態（良/稍重/重）と馬の脚質適合度を計算。差し馬は重馬場で評価が下がる場合も。" },
+                  { icon: "上昇", title: "過去成績スコア", desc: "直近5走の着順・タイム偏差・クラス上昇度を数値化。安定した実績を持つ馬ほどスコアが高くなります。" },
+                  { icon: "", title: "コース適性スコア", desc: "レースのコース・距離・回り・馬場状態との相性を過去データから算出。得意コースへの出走は評価アップ。" },
+                  { icon: "", title: "騎手相性スコア", desc: "騎手と馬の組み合わせ実績・騎手のコース別成績をAIが総合判断。名手への乗り替わりも適切に評価。" },
+                  { icon: "", title: "当日馬場スコア", desc: "開催日の馬場状態（良/稍重/重）と馬の脚質適合度を計算。差し馬は重馬場で評価が下がる場合も。" },
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-3">
                     <span className="text-xl shrink-0">{item.icon}</span>
@@ -685,21 +685,21 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-5 mb-8">
             {[
               {
-                icon: "🧠",
+                icon: "",
                 title: "「なぜ」を言語化する",
                 badge: "独自機能",
                 desc: "一般的なAI予想は「この馬を推奨」と結論だけ出します。Claude AIは本命の選定理由・リスク要因・展開シナリオを日本語で詳細に説明。馬券購入の「確信度」が全然違います。",
                 highlight: true,
               },
               {
-                icon: "⚖️",
+                icon: "️",
                 title: "スキップ推奨が出せる",
                 badge: "損失回避",
                 desc: "「このレースは買うべきでない」と明示できるのがClaude AIの強み。一般クラス戦や期待値が低いレースに対し「スキップ推奨」を出して損切りをサポート。",
                 highlight: false,
               },
               {
-                icon: "🔄",
+                icon: "",
                 title: "文脈を跨いで分析",
                 desc: "前走の着順だけでなく「前走で重馬場を走った後の今回の良馬場への対応力」「騎手交代の意図」など、文脈を読んだ複合的な判断が得意。",
                 highlight: false,
@@ -742,7 +742,7 @@ export default function Home() {
         <p className="text-center text-gray-500 text-sm mb-12">自分で予想する手間なし。データ収集もAI分析も全自動。</p>
         <div className="grid md:grid-cols-2 gap-6">
           {FEATURES.map((f) => (
-            <div key={f.title} className="p-6 rounded-2xl border border-gray-100 hover:border-green-200 transition-colors bg-white shadow-sm">
+            <div key={f.title} className="p-6 rounded-2xl transition-colors" style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
               <div className="text-green-700 mb-3">{FEATURE_ICONS[f.iconKey]}</div>
               <h3 className="text-base font-bold text-gray-900 mb-2">{f.title}</h3>
               <p className="text-gray-600 text-sm leading-relaxed">{f.desc}</p>
@@ -763,31 +763,31 @@ export default function Home() {
             {/* 無料 */}
             <div className="bg-gray-50 border-2 border-gray-200 rounded-2xl p-6">
               <h3 className="font-bold text-gray-600 mb-4 flex items-center gap-2">
-                <span className="text-lg">🔓</span> 無料プラン
+                <span className="text-lg"></span> 無料プラン
               </h3>
               <ul className="space-y-3 text-sm text-gray-600">
-                <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span> AI予想 2レース（本命・対抗・単穴）</li>
-                <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span> 複勝モード 2レース</li>
-                <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span> G1・重賞対応</li>
-                <li className="flex items-center gap-2"><span className="text-red-400 font-bold">✗</span> <span className="text-gray-400">週20〜30レース全予想</span></li>
-                <li className="flex items-center gap-2"><span className="text-red-400 font-bold">✗</span> <span className="text-gray-400">EV（期待値）計算付き分析</span></li>
-                <li className="flex items-center gap-2"><span className="text-red-400 font-bold">✗</span> <span className="text-gray-400">G1前日特別レポート</span></li>
-                <li className="flex items-center gap-2"><span className="text-red-400 font-bold">✗</span> <span className="text-gray-400">回収率トラッキング（無制限）</span></li>
+                <li className="flex items-center gap-2"><span className="text-green-500 font-bold"></span> AI予想 2レース（本命・対抗・単穴）</li>
+                <li className="flex items-center gap-2"><span className="text-green-500 font-bold"></span> 複勝モード 2レース</li>
+                <li className="flex items-center gap-2"><span className="text-green-500 font-bold"></span> G1・重賞対応</li>
+                <li className="flex items-center gap-2"><span className="text-red-400 font-bold"></span> <span className="text-gray-400">週20〜30レース全予想</span></li>
+                <li className="flex items-center gap-2"><span className="text-red-400 font-bold"></span> <span className="text-gray-400">EV（期待値）計算付き分析</span></li>
+                <li className="flex items-center gap-2"><span className="text-red-400 font-bold"></span> <span className="text-gray-400">G1前日特別レポート</span></li>
+                <li className="flex items-center gap-2"><span className="text-red-400 font-bold"></span> <span className="text-gray-400">回収率トラッキング（無制限）</span></li>
               </ul>
             </div>
             {/* プレミアム */}
             <div className="bg-green-900 border-2 border-yellow-400 rounded-2xl p-6 relative">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-green-900 text-xs font-black px-4 py-1 rounded-full">PRO おすすめ</div>
               <h3 className="font-bold text-yellow-400 mb-4 flex items-center gap-2">
-                <span className="text-lg">👑</span> プロプラン ¥2,980/月
+                <span className="text-lg">PRO</span> プロプラン ¥2,980/月
               </h3>
               <ul className="space-y-3 text-sm text-green-100">
-                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">✓</span> AI予想 <strong className="text-white">毎週全レース無制限</strong></li>
-                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">✓</span> <strong className="text-white">EV（期待値）計算付き</strong>詳細分析</li>
-                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">✓</span> G1・重賞の<strong className="text-white">展開・ペース深掘り分析</strong></li>
-                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">✓</span> <strong className="text-white">過去5走の詳細成績</strong>全馬分析</li>
-                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">✓</span> 回収率トラッキング<strong className="text-white">無制限記録</strong></li>
-                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">✓</span> <strong className="text-white">「スキップ推奨」</strong>判定（損切りサポート）</li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold"></span> AI予想 <strong className="text-white">毎週全レース無制限</strong></li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold"></span> <strong className="text-white">EV（期待値）計算付き</strong>詳細分析</li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold"></span> G1・重賞の<strong className="text-white">展開・ペース深掘り分析</strong></li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold"></span> <strong className="text-white">過去5走の詳細成績</strong>全馬分析</li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold"></span> 回収率トラッキング<strong className="text-white">無制限記録</strong></li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold"></span> <strong className="text-white">「スキップ推奨」</strong>判定（損切りサポート）</li>
               </ul>
               <button
                 onClick={() => startCheckout("pro")}
@@ -839,7 +839,7 @@ export default function Home() {
           <section className="py-12 px-6 bg-yellow-50 border-y border-yellow-200">
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center justify-between mb-2">
-                <h2 className="text-lg font-bold text-gray-900">🏆 春G1シーズン — 直近レース</h2>
+                <h2 className="text-lg font-bold text-gray-900">TOP 春G1シーズン — 直近レース</h2>
                 <Link href="/calendar" className="text-sm text-green-700 hover:text-green-800 font-medium">
                   全日程を見る →
                 </Link>
@@ -850,15 +850,15 @@ export default function Home() {
                   const days = Math.ceil((new Date(race.date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
                   return (
                     <Link key={race.name} href="/predict"
-                      className="bg-white rounded-xl border border-yellow-200 p-4 hover:border-green-400 hover:shadow-md transition-all group">
+                      className="rounded-xl p-4 hover:shadow-md transition-all group block" style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px' }}>
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs text-yellow-600 font-bold">G1</span>
                         <span className="bg-red-600 text-white text-xs font-black px-2 py-0.5 rounded-full">あと{days}日</span>
                       </div>
                       <div className="text-base font-bold text-gray-900 mb-2 group-hover:text-green-700">{race.name}</div>
                       <div className="text-xs text-gray-500 space-y-0.5">
-                        <div>📅 {race.displayDate}</div>
-                        <div>📍 {race.venue}　{race.distance}</div>
+                        <div> {race.displayDate}</div>
+                        <div> {race.venue}　{race.distance}</div>
                       </div>
                       <div className="mt-3 text-xs font-bold text-green-600">AIで予想する →</div>
                     </Link>
@@ -883,15 +883,15 @@ export default function Home() {
           {/* AI分析ポイント詳細（SEOコンテンツ） */}
           <div className="grid sm:grid-cols-3 gap-4 mb-4">
             <div className="bg-white/10 border border-white/20 rounded-xl p-4">
-              <div className="text-yellow-400 font-bold text-sm mb-2">📍 コース特性（AI分析）</div>
+              <div className="text-yellow-400 font-bold text-sm mb-2"> コース特性（AI分析）</div>
               <p className="text-green-200 text-xs leading-relaxed">中京1200m芝はポケットスタートで先行争いが激化しやすい。内枠の逃げ先行馬に注意。過去10年で内枠（1〜4枠）の勝率が高め。外差しは直線が短く不利になりやすい。</p>
             </div>
             <div className="bg-white/10 border border-white/20 rounded-xl p-4">
-              <div className="text-yellow-400 font-bold text-sm mb-2">🎯 AIの重視ポイント</div>
+              <div className="text-yellow-400 font-bold text-sm mb-2">的中 AIの重視ポイント</div>
               <p className="text-green-200 text-xs leading-relaxed">前走スプリント実績・中京コース適性・斤量・騎手の中京成績をAIが総合判断。近走の上がり3Fタイムと前走着順（5着以内）が最重要フィルター。</p>
             </div>
             <div className="bg-white/10 border border-white/20 rounded-xl p-4">
-              <div className="text-yellow-400 font-bold text-sm mb-2">💡 過去傾向・狙い目</div>
+              <div className="text-yellow-400 font-bold text-sm mb-2">ヒント 過去傾向・狙い目</div>
               <p className="text-green-200 text-xs leading-relaxed">前哨戦（阪急杯・シルクロードS）好走馬と海外帰り組が中心。1〜3番人気の複勝率が約65%と安定。AIは1〜2番人気から複勝推奨を出しやすいレース。</p>
             </div>
           </div>
@@ -900,7 +900,7 @@ export default function Home() {
           <div className="bg-yellow-400/10 border border-yellow-400/40 rounded-xl p-4 mb-5">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
-                <p className="text-yellow-300 text-xs font-bold mb-1">📊 G1・重賞レースのAI実績（バックテスト）</p>
+                <p className="text-yellow-300 text-xs font-bold mb-1">データ G1・重賞レースのAI実績（バックテスト）</p>
                 <p className="text-green-200 text-xs">バックテスト実施中 — 実績値は蓄積後に公開します | 複勝モード稼働中</p>
               </div>
               <Link href="/backtest/results"
@@ -912,7 +912,7 @@ export default function Home() {
 
           {/* AIが見る重賞5つの判断軸（差別化コンテンツ） */}
           <div className="mb-5">
-            <p className="text-yellow-300 text-xs font-bold mb-3">🤖 AIが高松宮記念で判断する5つの軸</p>
+            <p className="text-yellow-300 text-xs font-bold mb-3">AI AIが高松宮記念で判断する5つの軸</p>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
               {[
                 { label: "前走成績", detail: "5着以内必須" },
@@ -945,7 +945,7 @@ export default function Home() {
         <p className="text-center text-xs text-gray-400 mb-10">※ユーザーからの声（個人の感想です）</p>
         <div className="grid md:grid-cols-3 gap-6">
           {VOICES.map((v, i) => (
-            <div key={i} className="bg-green-50 border border-green-100 rounded-2xl p-5">
+            <div key={i} className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px' }}>
               <p className="text-gray-700 text-sm leading-relaxed mb-4">「{v.text}」</p>
               <p className="text-xs text-gray-500 font-medium">— {v.name}</p>
             </div>
@@ -957,7 +957,7 @@ export default function Home() {
       <section className="py-16 px-6 bg-green-50" id="pricing">
         <div className="max-w-md mx-auto mb-8">
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
-            <p className="font-bold text-green-800">📊 バックテスト全記録公開中</p>
+            <p className="font-bold text-green-800">データ バックテスト全記録公開中</p>
             <p className="text-green-700 text-sm mt-1">的中も外れも隠さず公開。同じAIが今週末のレースも分析します。</p>
           </div>
         </div>
@@ -985,7 +985,7 @@ export default function Home() {
               <ul className="text-sm text-gray-600 space-y-2 mb-6">
                 {plan.features.map((feat) => (
                   <li key={feat} className="flex items-start gap-2">
-                    <span className="text-green-500 mt-0.5">✓</span>{feat}
+                    <span className="text-green-500 mt-0.5"></span>{feat}
                   </li>
                 ))}
               </ul>
@@ -1012,9 +1012,9 @@ export default function Home() {
         <h2 className="text-xl font-bold text-center text-gray-800 mb-6">こんな経験ありませんか？</h2>
         <div className="space-y-4">
           {[
-            { icon: "😓", text: "出馬表を調べるのに時間がかかりすぎて、肝心の分析が疎かに..." },
-            { icon: "😤", text: "過去データを調べても、どの馬に注目すべきかわからない..." },
-            { icon: "💸", text: "感覚で買い続けて、なかなかプラス収支にならない..." },
+            { icon: "", text: "出馬表を調べるのに時間がかかりすぎて、肝心の分析が疎かに..." },
+            { icon: "", text: "過去データを調べても、どの馬に注目すべきかわからない..." },
+            { icon: "", text: "感覚で買い続けて、なかなかプラス収支にならない..." },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-4 bg-red-50 border border-red-200 rounded-xl p-4">
               <span className="text-2xl">{item.icon}</span>
@@ -1053,7 +1053,7 @@ export default function Home() {
           </div>
           {/* 料金比較表 — 強化版 */}
           <div className="bg-white/5 border border-white/20 rounded-2xl p-5">
-            <p className="text-yellow-300 text-xs font-bold text-center mb-4">📊 なぜ競馬予想AIが選ばれるのか — 競合詳細比較</p>
+            <p className="text-yellow-300 text-xs font-bold text-center mb-4">データ なぜ競馬予想AIが選ばれるのか — 競合詳細比較</p>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
@@ -1061,7 +1061,7 @@ export default function Home() {
                     <th className="text-left text-green-300 pb-2 pr-4">比較項目</th>
                     <th className="text-center text-green-300 pb-2 px-3">netkeiba<br/>マスターコース</th>
                     <th className="text-center text-green-300 pb-2 px-3">SPAIA競馬<br/>プラチナ</th>
-                    <th className="text-center text-yellow-400 font-black pb-2 px-3">競馬予想AI<br/>ベーシック ★</th>
+                    <th className="text-center text-yellow-400 font-black pb-2 px-3">競馬予想AI<br/>ベーシック </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/10">
@@ -1134,9 +1134,9 @@ export default function Home() {
           </div>
           <div className="grid sm:grid-cols-3 gap-4 mb-6">
             {[
-              { icon: "💡", title: "2〜5倍ゾーンを狙う理由", desc: "¥1,000投資で¥2,000〜¥5,000返ってくる。3回に1回当たれば十分なレベル。的中率30〜45%ならこのゾーンが最も期待値プラスに近い。" },
-              { icon: "📊", title: "控除率を知る", desc: "競馬の控除率は約20〜25%。全レースランダムに購入すると長期で75〜80%しか返ってこない。AIで期待値の高いレースに絞ることで控除率の壁を超えることを目指す。" },
-              { icon: "🛡️", title: "損切りのルール", desc: "AIが「スキップ推奨」を出したレースは必ず従う。月の損失が予算の50%を超えたら残りの週は休む。感情的な追い購いが最大の敵。" },
+              { icon: "ヒント", title: "2〜5倍ゾーンを狙う理由", desc: "¥1,000投資で¥2,000〜¥5,000返ってくる。3回に1回当たれば十分なレベル。的中率30〜45%ならこのゾーンが最も期待値プラスに近い。" },
+              { icon: "データ", title: "控除率を知る", desc: "競馬の控除率は約20〜25%。全レースランダムに購入すると長期で75〜80%しか返ってこない。AIで期待値の高いレースに絞ることで控除率の壁を超えることを目指す。" },
+              { icon: "️", title: "損切りのルール", desc: "AIが「スキップ推奨」を出したレースは必ず従う。月の損失が予算の50%を超えたら残りの週は休む。感情的な追い購いが最大の敵。" },
             ].map((item, i) => (
               <div key={i} className="bg-white border border-green-200 rounded-xl p-4">
                 <div className="text-2xl mb-2">{item.icon}</div>
@@ -1224,7 +1224,7 @@ export default function Home() {
       {/* Final CTA */}
       <section className="py-16 px-4 bg-green-900 text-white text-center overflow-x-hidden">
         <div className="inline-flex items-center gap-2 bg-yellow-400/20 border border-yellow-400/50 rounded-full px-4 py-1.5 mb-4">
-          <span className="text-yellow-300 text-xs font-bold">🛡️ 30日間返金保証付き</span>
+          <span className="text-yellow-300 text-xs font-bold">️ 30日間返金保証付き</span>
         </div>
         <h2 className="text-xl md:text-2xl font-bold mb-3">今週のG1、AIと一緒に本命を絞ろう</h2>
         <p className="text-green-200 text-sm mb-1">登録不要・カード不要で今すぐ無料体験できます。</p>
@@ -1234,7 +1234,7 @@ export default function Home() {
           <button onClick={() => startCheckout("pro")}
             aria-label="プロプランで始める（月額2,980円）"
             className="w-full sm:w-auto bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-4 px-8 md:px-12 rounded-full text-base md:text-lg transition-colors">
-            🏆 プロプランで始める（¥2,980/月）
+            TOP プロプランで始める（¥2,980/月）
           </button>
           <Link href="/predict"
             className="w-full sm:w-auto text-center border-2 border-white/50 hover:border-white text-white font-bold py-4 px-8 md:px-10 rounded-full text-base transition-colors">
@@ -1243,16 +1243,16 @@ export default function Home() {
         </div>
         <div className="flex items-center justify-center gap-6 mt-6 flex-wrap">
           <div className="flex items-center gap-1.5 text-xs text-green-300">
-            <span>🔒</span><span>SSL暗号化決済</span>
+            <span></span><span>SSL暗号化決済</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-green-300">
-            <span>✅</span><span>いつでも解約OK</span>
+            <span>OK</span><span>いつでも解約OK</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-yellow-300 font-bold">
-            <span>🛡️</span><span>30日返金保証</span>
+            <span>️</span><span>30日返金保証</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-green-300">
-            <span>💴</span><span>業界最安¥980/月〜</span>
+            <span></span><span>業界最安¥980/月〜</span>
           </div>
         </div>
       </section>
@@ -1282,8 +1282,8 @@ export default function Home() {
                 </div>
                 <div className="text-sm font-bold text-gray-900 mb-1 group-hover:text-green-700">{race.name}</div>
                 <div className="text-xs text-gray-500 space-y-0.5">
-                  <div>📅 {race.date}</div>
-                  <div>📍 {race.venue}</div>
+                  <div> {race.date}</div>
+                  <div> {race.venue}</div>
                 </div>
                 <div className="mt-2 text-xs font-bold text-green-600">AI攻略ガイドを見る →</div>
               </Link>
@@ -1294,12 +1294,12 @@ export default function Home() {
 
       {/* もっと楽しむ3選 */}
       <section className="py-8 px-4 max-w-lg mx-auto">
-        <h2 className="text-center text-base font-bold text-green-800 mb-4">🏇 競馬AIをもっと楽しむ3選</h2>
+        <h2 className="text-center text-base font-bold text-green-800 mb-4"> 競馬AIをもっと楽しむ3選</h2>
         <ol className="space-y-3">
           {[
-            { icon: "📊", title: "バックテスト全記録を分析", desc: "的中・外れ全記録が公開中。AIの判断パターンを学んで自分の予想力を高めよう。" },
-            { icon: "🏆", title: "G1レース制覇チャレンジ", desc: "2026年全G1レースをAI予想でカバー。有馬記念・日本ダービーを制して達成感を味わおう。" },
-            { icon: "📣", title: "予想結果をXでシェア", desc: "当たった予想をXに投稿して仲間と盛り上がろう。的中報告は最高の喜び！" },
+            { icon: "データ", title: "バックテスト全記録を分析", desc: "的中・外れ全記録が公開中。AIの判断パターンを学んで自分の予想力を高めよう。" },
+            { icon: "TOP", title: "G1レース制覇チャレンジ", desc: "2026年全G1レースをAI予想でカバー。有馬記念・日本ダービーを制して達成感を味わおう。" },
+            { icon: "", title: "予想結果をXでシェア", desc: "当たった予想をXに投稿して仲間と盛り上がろう。的中報告は最高の喜び！" },
           ].map((item, i) => (
             <li key={i} className="flex items-start gap-3 rounded-xl p-3"
               style={{ background: "rgba(22,101,52,0.06)", border: "1px solid rgba(22,101,52,0.15)" }}>
@@ -1315,7 +1315,7 @@ export default function Home() {
 
       {/* おすすめ競馬サイト（アフィリエイト） */}
       <section className="py-8 px-4 max-w-lg mx-auto">
-        <h2 className="text-center text-base font-bold text-green-800 mb-4">🏇 おすすめ競馬サイト</h2>
+        <h2 className="text-center text-base font-bold text-green-800 mb-4"> おすすめ競馬サイト</h2>
         <p className="text-center text-xs text-gray-500 mb-4">AI予想と合わせて使うと的中率がさらにアップ <span className="text-gray-400">PR</span></p>
         <div className="space-y-3">
           <a
@@ -1324,7 +1324,7 @@ export default function Home() {
             rel="noopener noreferrer"
             className="flex items-center gap-3 p-3 rounded-xl border border-green-200 bg-green-50 hover:bg-green-100 transition-colors"
           >
-            <span className="text-2xl">🐎</span>
+            <span className="text-2xl"></span>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-bold text-green-900">楽天競馬</div>
               <div className="text-xs text-green-700">楽天ポイントが貯まる・使える公式馬券購入サイト</div>
@@ -1337,7 +1337,7 @@ export default function Home() {
             rel="noopener noreferrer"
             className="flex items-center gap-3 p-3 rounded-xl border border-green-200 bg-green-50 hover:bg-green-100 transition-colors"
           >
-            <span className="text-2xl">📊</span>
+            <span className="text-2xl">データ</span>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-bold text-green-900">オッズパーク</div>
               <div className="text-xs text-green-700">地方競馬・ばんえい競馬もカバー。AI予想との相性◎</div>
@@ -1351,7 +1351,7 @@ export default function Home() {
       <section className="py-6 px-6 text-center">
         <div className="inline-flex flex-col sm:flex-row gap-2">
           <a
-            href={"https://twitter.com/intent/tweet?text=" + encodeURIComponent("競馬予想AI — 出馬表をAIが自動分析・本命馬と買い目を30秒で提案🐎 AIの予想参考情報！無料で試せます → https://keiba-yoso-ai.vercel.app #競馬 #競馬予想 #AI")}
+            href={"https://twitter.com/intent/tweet?text=" + encodeURIComponent("競馬予想AI — 出馬表をAIが自動分析・本命馬と買い目を30秒で提案 AIの予想参考情報！無料で試せます → https://keiba-yoso-ai.vercel.app #競馬 #競馬予想 #AI")}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="競馬予想AIをXでシェアする"
@@ -1363,7 +1363,7 @@ export default function Home() {
             Xでシェアする
           </a>
           <a
-            href={"https://line.me/R/msg/text/?" + encodeURIComponent("競馬予想AI🐎 出馬表をAIが自動分析・本命馬と買い目を30秒で提案！AIの予想参考情報サービス！無料で試せます → https://keiba-yoso-ai.vercel.app")}
+            href={"https://line.me/R/msg/text/?" + encodeURIComponent("競馬予想AI 出馬表をAIが自動分析・本命馬と買い目を30秒で提案！AIの予想参考情報サービス！無料で試せます → https://keiba-yoso-ai.vercel.app")}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="競馬予想AIをLINEで送る"
@@ -1379,7 +1379,7 @@ export default function Home() {
       </section>
       <div className="fixed bottom-0 left-0 right-0 bg-green-900 border-t border-green-700 px-4 py-3 z-40 sm:hidden shadow-lg">
         <a href="/predict" className="block w-full bg-yellow-400 hover:bg-yellow-300 text-green-900 font-black text-center py-3.5 rounded-xl text-sm">
-          🏇 無料でAI予想を見る →
+           無料でAI予想を見る →
         </a>
       </div>
 
@@ -1388,7 +1388,7 @@ export default function Home() {
           ※本サービスはエンターテインメント目的の予想サービスです。馬券の的中・収益を保証するものではありません。
         </p>
         <p className="text-yellow-600 text-xs mb-4 font-semibold">
-          ⚠️ 本サービスは18歳以上の方を対象としています。競馬は公営競技です。馬券購入は各自の判断と責任で行ってください。ギャンブル依存症でお悩みの方は
+          ️ 本サービスは18歳以上の方を対象としています。競馬は公営競技です。馬券購入は各自の判断と責任で行ってください。ギャンブル依存症でお悩みの方は
           <a href="https://www.ncasa-japan.jp/" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-400">こちら</a>
           にご相談ください。
         </p>

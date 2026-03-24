@@ -306,7 +306,7 @@ function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: 
   void accent;
 
   return (
-    <div className={`mt-8 rounded-2xl border ${isFukusho ? "border-amber-200" : "border-green-200"} overflow-hidden`}>
+    <div className={`mt-8 rounded-2xl overflow-hidden`} style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: isFukusho ? '1px solid rgba(251,191,36,0.3)' : '1px solid rgba(34,197,94,0.3)', borderRadius: '16px' }}>
       {showHitModal && (
         <HitModal raceInfo={raceInfo} sections={sections} isFukusho={isFukusho} onClose={() => setShowHitModal(false)} />
       )}
