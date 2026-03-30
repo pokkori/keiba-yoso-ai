@@ -6,7 +6,7 @@ import KomojuButton from "@/components/KomojuButton";
 import { track } from '@vercel/analytics';
 import { updateStreak, loadStreak, type StreakData } from "@/lib/streak";
 
-const FREE_LIMIT = 2;
+const FREE_LIMIT = 3;
 const STORAGE_KEY = "keiba_predict_count";
 const FAVORITES_KEY = "keiba_favorites";
 const MAX_FAVORITES = 10;

@@ -5,6 +5,7 @@ import Link from "next/link";
 import KomojuButton from "@/components/KomojuButton";
 import { StreakBanner } from "@/components/StreakBanner";
 import { UsageCounter } from "@/components/UsageCounter";
+import { CrossSell } from "@/components/CrossSell";
 
 const PAYJP_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYJP_PUBLIC_KEY ?? "";
 
@@ -358,8 +359,9 @@ export default function Home() {
           <Link href="/predict"
             className="inline-block font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 hover:scale-105"
             style={{ background: 'linear-gradient(135deg, #FACC15 0%, #F59E0B 100%)', color: '#14532d', boxShadow: '0 0 25px rgba(250, 204, 21, 0.4), 0 4px 15px rgba(0,0,0,0.3)' }}>
-            無料で予想を見る →
+            今日の予想を無料でチェック →
           </Link>
+          <p className="text-xs opacity-60 mt-2">※AI分析・登録不要</p>
           <button onClick={() => startCheckout("pro")}
             aria-label="プロプランを始める（月額2,980円）"
             className="inline-block border-2 border-white/50 hover:border-white text-white font-bold py-4 px-8 rounded-full text-base transition-colors">
@@ -1389,6 +1391,8 @@ export default function Home() {
            無料でAI予想を見る →
         </a>
       </div>
+
+      <CrossSell currentService="競馬予想AI" />
 
       <footer className="text-center py-8 pb-24 sm:pb-8 text-sm text-gray-400 border-t">
         <p className="text-gray-500 text-xs mb-3">
