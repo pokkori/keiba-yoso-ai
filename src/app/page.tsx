@@ -6,6 +6,7 @@ import KomojuButton from "@/components/KomojuButton";
 import { StreakBanner } from "@/components/StreakBanner";
 import { UsageCounter } from "@/components/UsageCounter";
 import { CrossSell } from "@/components/CrossSell";
+import { TrustBadge } from "@/components/TrustBadge";
 
 const PAYJP_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYJP_PUBLIC_KEY ?? "";
 
@@ -354,6 +355,7 @@ export default function Home() {
           <p className="text-yellow-300 text-xs mt-2 text-center"><span className="px-1.5 py-0.5 rounded text-xs font-bold bg-gradient-to-r from-yellow-400 to-amber-500 text-green-900 mr-1">PRO</span> Pro（¥2,980/月）で無制限 + バックテスト機能</p>
         </div>
         <div className="max-w-xs mx-auto mb-4"><UsageCounter /></div>
+        <div className="mb-4"><TrustBadge /></div>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
           <Link href="/predict"
