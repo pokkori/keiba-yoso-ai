@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import KomojuButton from "@/components/KomojuButton";
+import { StreakBanner } from "@/components/StreakBanner";
+import { UsageCounter } from "@/components/UsageCounter";
 
 const PAYJP_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYJP_PUBLIC_KEY ?? "";
 
@@ -238,6 +240,8 @@ export default function Home() {
         </div>
       </nav>
 
+      <StreakBanner />
+
       {/* 今日開催バナー / G1シーズン開幕バナー */}
       {(() => {
         const { isRaceDay, dayLabel } = isTodayRaceDay();
@@ -348,6 +352,8 @@ export default function Home() {
           </ul>
           <p className="text-yellow-300 text-xs mt-2 text-center"><span className="px-1.5 py-0.5 rounded text-xs font-bold bg-gradient-to-r from-yellow-400 to-amber-500 text-green-900 mr-1">PRO</span> Pro（¥2,980/月）で無制限 + バックテスト機能</p>
         </div>
+        <div className="max-w-xs mx-auto mb-4"><UsageCounter /></div>
+
         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
           <Link href="/predict"
             className="inline-block font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 hover:scale-105"
