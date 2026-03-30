@@ -286,7 +286,7 @@ export default function TrackerPage() {
         {/* 免責 */}
         <div className="mt-8 bg-white border border-gray-200 rounded-xl p-4 text-xs text-gray-500">
           <p className="font-bold mb-1">⚠️ 重要な免責事項</p>
-          <p>記録データはこのデバイスのブラウザ（localStorage）にのみ保存されます。回収率の結果は過去の参考情報であり、将来の的中・収益を保証するものではありません。競馬は公営競技です。18歳未満の方のご利用はできません。馬券購入は余裕資金でご自身の判断と責任で行ってください。</p>
+          <p>記録データはこのデバイスのブラウザ（localStorage）にのみ保存されます。回収率の結果は過去の参考情報であり、将来の的中・収益を保証するものではありません。競馬は公営競技です。20歳未満の方のご利用はできません。馬券購入は余裕資金でご自身の判断と責任で行ってください。</p>
         </div>
       </div>
     </div>

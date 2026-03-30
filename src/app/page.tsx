@@ -1389,7 +1389,7 @@ export default function Home() {
           ※本サービスはエンターテインメント目的の予想サービスです。馬券の的中・収益を保証するものではありません。
         </p>
         <p className="text-yellow-600 text-xs mb-4 font-semibold">
-          ️ 本サービスは18歳以上の方を対象としています。競馬は公営競技です。馬券購入は各自の判断と責任で行ってください。ギャンブル依存症でお悩みの方は
+          ️ 本サービスは20歳以上の方を対象としています。競馬は公営競技です。馬券購入は各自の判断と責任で行ってください。ギャンブル依存症でお悩みの方は
           <a href="https://www.ncasa-japan.jp/" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-400">こちら</a>
           にご相談ください。
         </p>
