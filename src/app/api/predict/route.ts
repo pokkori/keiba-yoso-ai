@@ -797,7 +797,7 @@ ${!isGradeRace ? "⚠️ このレースは一般クラス戦の可能性があ�
           controller.enqueue(encoder.encode(`\nDONE:${JSON.stringify({ count: newCount, mode, raceInfo: raceInfoStr })}`));
           controller.close();
         } catch (err) {
-          console.error("Stream error:", err instanceof Error ? `${err.message} ${JSON.stringify((err as Record<string, unknown>).status || "")}` : err);
+          console.error("Stream error:", err instanceof Error ? err.message : String(err));
           controller.error(err);
         }
       },
