@@ -17,6 +17,7 @@ export default function PrivacyPage() {
             <li>決済時にPAY.JP（PAY.JP株式会社）が収集する支払情報（当社はカード番号を保持しません）</li>
             <li>ブラウザのCookieおよびlocalStorage（利用回数の管理）</li>
             <li>アクセスログ（IPアドレス・ブラウザ種別・閲覧ページ）</li>
+            <li>競馬予想のためにユーザーが入力したレース情報・条件等</li>
           </ul>
         </section>
 
@@ -37,6 +38,7 @@ export default function PrivacyPage() {
             <li>ご本人の同意がある場合</li>
             <li>法令に基づき開示が必要な場合</li>
             <li>決済処理のためPAY.JP（PAY.JP株式会社）に提供する場合（PAY.JP（https://pay.jp）のプライバシーポリシーに従います）</li>
+            <li>AI予想生成のためAnthropic社のClaude APIに送信する場合（後述「外部AIサービスの利用」をご確認ください）</li>
           </ul>
         </section>
 
@@ -46,12 +48,22 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="font-bold text-base mb-2">5. 安全管理</h2>
+          <h2 className="font-bold text-base mb-2">5. 外部AIサービスの利用</h2>
+          <p>本サービスでは、競馬予想の生成にAnthropic社のClaude APIを利用しています。</p>
+          <ul className="list-disc list-inside mt-2 space-y-1 text-gray-600">
+            <li>ユーザーが入力したレース情報・条件等はAnthropic社のClaude APIを通じて処理されます</li>
+            <li>送信されたデータはAnthropic社のプライバシーポリシー（<a href="https://www.anthropic.com/privacy" className="text-green-700 underline" target="_blank" rel="noopener noreferrer">https://www.anthropic.com/privacy</a>）に従って取り扱われます</li>
+            <li>当社はAPI経由で送信するデータを予想生成に必要な最小限の情報に限定しています</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="font-bold text-base mb-2">6. 安全管理</h2>
           <p>個人情報への不正アクセス・紛失・漏洩等を防止するため、適切なセキュリティ対策を講じています。</p>
         </section>
 
         <section>
-          <h2 className="font-bold text-base mb-2">6. お問い合わせ</h2>
+          <h2 className="font-bold text-base mb-2">7. お問い合わせ</h2>
           <p>個人情報の取扱いに関するお問い合わせは X(Twitter) @levona_design へのDM までご連絡ください。</p>
         </section>
 

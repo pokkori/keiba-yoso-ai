@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
+import { Noto_Sans_JP } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
 import "./globals.css";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
+import FeedbackButton from "@/components/FeedbackButton";
+
+const notoSansJP = Noto_Sans_JP({ subsets: ["latin"], weight: ["400", "700"], display: "swap" });
 
 const SITE_URL = "https://keiba-yoso-ai.vercel.app";
 const TITLE = "競馬予想AI｜複勝回収率193%・AIが30秒分析・本命◎対抗○単穴▲を即提案";
@@ -33,6 +37,7 @@ export const metadata: Metadata = {
     images: [`${SITE_URL}/og.png`],
   },
   metadataBase: new URL(SITE_URL),
+  other: { "theme-color": "#0F0F1A" },
 };
 
 const breadcrumbLd = {
@@ -79,9 +84,12 @@ export default function RootLayout({
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </head>
-      <body className="antialiased">
+      <body className={`${notoSansJP.className} bg-[#0F0F1A] text-slate-100 antialiased`}>
         {children}
         <PWAInstallBanner />
+        <footer className="flex justify-center py-2">
+          <FeedbackButton serviceName="競馬予想AI" />
+        </footer>
         <Analytics />
         <SpeedInsights />
         {/* Microsoft Clarity — pokkoriがhttps://clarity.microsoft.com/でプロジェクト登録後にIDを設定 */}

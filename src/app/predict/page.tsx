@@ -36,9 +36,9 @@ function parsePredict(text: string): PredictionSection[] {
     { key: "本命", icon: "◎", label: "本命（◎）" },
     { key: "対抗", icon: "○", label: "対抗（○）" },
     { key: "単穴", icon: "▲", label: "単穴（▲）" },
-    { key: "買い目", icon: "🎯", label: "推奨買い目" },
-    { key: "展開", icon: "📊", label: "レース展開予想" },
-    { key: "総評", icon: "💡", label: "総評" },
+    { key: "買い目", icon: "\u25CE", label: "推奨買い目" },
+    { key: "展開", icon: "\u2261", label: "レース展開予想" },
+    { key: "総評", icon: "\u2605", label: "総評" },
   ];
 
   const sections: PredictionSection[] = [];
@@ -53,18 +53,18 @@ function parsePredict(text: string): PredictionSection[] {
     }
   }
   if (sections.length < 2) {
-    return [{ title: "AI予想結果", icon: "🏇", content: text }];
+    return [{ title: "AI予想結果", icon: "\u25C6", content: text }];
   }
   return sections;
 }
 
 function parseFukusho(text: string): PredictionSection[] {
   const defs = [
-    { key: "複勝推奨", icon: "🎯", label: "複勝推奨馬" },
-    { key: "レース安定度", icon: "⭐", label: "レース安定度" },
-    { key: "複勝オッズ想定", icon: "💴", label: "複勝オッズ想定" },
-    { key: "リスク要因", icon: "⚠️", label: "リスク要因" },
-    { key: "買い方提案", icon: "💡", label: "買い方提案" },
+    { key: "複勝推奨", icon: "\u25CE", label: "複勝推奨馬" },
+    { key: "レース安定度", icon: "\u2605", label: "レース安定度" },
+    { key: "複勝オッズ想定", icon: "\u00A5", label: "複勝オッズ想定" },
+    { key: "リスク要因", icon: "\u26A0", label: "リスク要因" },
+    { key: "買い方提案", icon: "\u2605", label: "買い方提案" },
   ];
 
   const sections: PredictionSection[] = [];
@@ -79,7 +79,7 @@ function parseFukusho(text: string): PredictionSection[] {
     }
   }
   if (sections.length < 2) {
-    return [{ title: "複勝予想結果", icon: "🎯", content: text }];
+    return [{ title: "複勝予想結果", icon: "\u25CE", content: text }];
   }
   return sections;
 }
@@ -107,7 +107,7 @@ function HitModal({ raceInfo, sections, isFukusho, onClose }: { raceInfo: string
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
       <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
-        <div className="text-6xl mb-2 animate-bounce">🎊</div>
+        <div className="text-6xl mb-2 animate-bounce"><svg viewBox="0 0 40 40" className="w-16 h-16 mx-auto" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="%2322c55e" opacity="0.15"/><path d="M13 20l5 5 9-10" stroke="%2322c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
         <div className="inline-block bg-green-600 text-white text-sm font-black px-4 py-1.5 rounded-full mb-3">
           AI的中！
         </div>
@@ -148,8 +148,8 @@ function ConfidenceBadge({ sections }: { sections: PredictionSection[] }) {
                 score >= 65 ? "bg-yellow-100 text-yellow-800 border-yellow-300" :
                 "bg-gray-100 text-gray-700 border-gray-300";
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border ${color}`}>
-      🎯 信頼度 {score}%
+    <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border ${color}`} style={{ fontVariantNumeric: "tabular-nums", fontWeight: 900 }}>
+      信頼度 {score}%
     </span>
   );
 }
@@ -171,50 +171,50 @@ function FourAxisScorePanel({ sections, isFukusho }: { sections: PredictionSecti
     {
       label: "安定度",
       score: extractAxisScore(["安定", "堅実", "コンスタント", "複数回"], ["1番人気", "断然"], ["荒れ", "波乱", "展開次第"]),
-      icon: "🛡️",
+      icon: "25A0",
       desc: "レースの安定性評価",
     },
     {
       label: "複勝オッズ期待値",
       score: extractAxisScore(["オッズ", "1.", "2.", "3.", "倍"], ["期待値", "割安"], ["10倍超", "大穴", "荒れ"]),
-      icon: "💴",
+      icon: "00A5",
       desc: "複勝オッズ帯の期待値",
     },
     {
       label: "コース適性",
       score: extractAxisScore(["コース", "適性", "実績", "経験"], ["得意", "好走歴", "相性"], ["初経験", "苦手"]),
-      icon: "🏇",
+      icon: "25C6",
       desc: "コース・距離の適性",
     },
     {
       label: "リスク低さ",
       score: extractAxisScore(["リスク低", "安全", "安定", "確実"], ["固い", "本命"], ["リスク高", "波乱", "危険"]),
-      icon: "⚠️",
+      icon: "26A0",
       desc: "荒れリスクの低さ",
     },
   ] : [
     {
       label: "過去成績",
       score: extractAxisScore(["直近", "成績", "前走", "着順", "実績"], ["連勝", "好調", "5走"], ["大敗", "着外", "不振"]),
-      icon: "📈",
+      icon: "25B2",
       desc: "直近5走の着順・タイム",
     },
     {
       label: "コース適性",
       score: extractAxisScore(["コース", "適性", "距離", "実績"], ["得意", "好走歴", "相性"], ["初距離", "苦手", "初コース"]),
-      icon: "🏇",
+      icon: "25C6",
       desc: "コース・距離の相性",
     },
     {
       label: "騎手相性",
       score: extractAxisScore(["騎手", "ジョッキー", "乗り替わり", "継続"], ["名手", "リーディング", "好相性"], ["初騎乗", "乗り替わり"]),
-      icon: "👤",
+      icon: "25CF",
       desc: "騎手との組み合わせ",
     },
     {
       label: "当日馬場",
       score: extractAxisScore(["馬場", "脚質", "差し", "先行", "逃げ"], ["良馬場", "適性◎"], ["重馬場", "苦手馬場"]),
-      icon: "🌿",
+      icon: "25CB",
       desc: "馬場状態との適合度",
     },
   ];
@@ -228,7 +228,7 @@ function FourAxisScorePanel({ sections, isFukusho }: { sections: PredictionSecti
 
   return (
     <div className={`rounded-2xl border p-4 mb-4 ${bgColor}`}>
-      <p className={`text-xs font-bold mb-3 ${titleColor}`}>📊 AI予想根拠スコア（4軸分析）</p>
+      <p className={`text-xs font-bold mb-3 ${titleColor}`}>AI予想根拠スコア（4軸分析）</p>
       <div className="space-y-2.5">
         {axes.map((axis) => (
           <div key={axis.label}>
@@ -238,7 +238,7 @@ function FourAxisScorePanel({ sections, isFukusho }: { sections: PredictionSecti
                 <span>{axis.label}</span>
               </span>
               <div className="flex items-center gap-1.5">
-                <span className={`text-xs font-black ${axis.score >= 75 ? "text-yellow-300" : axis.score >= 55 ? "text-white/70" : "text-red-300"}`}>
+                <span className={`text-xs ${axis.score >= 75 ? "text-yellow-300" : axis.score >= 55 ? "text-white/70" : "text-red-300"}`} style={{ fontVariantNumeric: "tabular-nums", fontWeight: 900 }}>
                   {axis.score}
                 </span>
                 <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
@@ -301,12 +301,12 @@ function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: 
   const tabActive = isFukusho ? "border-amber-600 text-amber-800 bg-white" : "border-green-700 text-green-800 bg-white";
   const titleColor = isFukusho ? "text-amber-800" : "text-green-800";
   const copyBg = isFukusho ? "bg-amber-50 hover:bg-amber-100 text-amber-700" : "bg-green-50 hover:bg-green-100 text-green-700";
-  const headerIcon = isFukusho ? "🎯" : "🏆";
+  const headerIcon = isFukusho ? "25CE" : "25C6";
   const headerLabel = isFukusho ? "複勝予想結果" : "AI予想結果";
   void accent;
 
   return (
-    <div className={`mt-8 rounded-2xl overflow-hidden`} style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: isFukusho ? '1px solid rgba(251,191,36,0.3)' : '1px solid rgba(34,197,94,0.3)', borderRadius: '16px' }}>
+    <div className={`mt-8 rounded-2xl overflow-hidden`} style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: isFukusho ? '1px solid rgba(251,191,36,0.3)' : '1px solid rgba(34,197,94,0.3)', borderRadius: '16px', borderLeft: isFukusho ? '4px solid #f59e0b' : '4px solid #16a34a' }}>
       {showHitModal && (
         <HitModal raceInfo={raceInfo} sections={sections} isFukusho={isFukusho} onClose={() => setShowHitModal(false)} />
       )}
@@ -317,7 +317,7 @@ function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: 
           <a href={xShareUrl} target="_blank" rel="noopener noreferrer"
             aria-label="このレースのAI予想をXでシェアする"
             className="text-xs bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap">
-            🐦 Xでシェア
+            Xでシェア
           </a>
           <button onClick={() => handleCopy(rawText, true)}
             aria-label="AI予想の全文をクリップボードにコピーする"
@@ -366,7 +366,7 @@ function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: 
               aria-label="的中報告モーダルを開いてXでシェアする"
               className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-4 py-2 rounded-xl text-sm transition-colors"
             >
-              <span aria-hidden="true">🎊</span> 当たった！的中報告
+               当たった！的中報告
             </button>
           </div>
         )}
@@ -553,12 +553,12 @@ export default function PredictPage() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 25%, #f5f3ff 50%, #fef3c7 75%, #f0fdf4 100%)" }}>
       {showPaywall && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full text-center relative">
             <button onClick={() => setShowPaywall(false)} aria-label="アップグレード案内を閉じる" className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold leading-none">×</button>
-            <div className="text-4xl mb-3">🏇</div>
+            <div className="mb-3"><svg viewBox="0 0 48 48" fill="none" className="w-12 h-12 mx-auto" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#16a34a" opacity="0.12"/><path d="M14 30c2-8 6-14 10-14s8 6 10 14" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"/><circle cx="18" cy="34" r="4" stroke="#16a34a" strokeWidth="2" fill="none"/><circle cx="30" cy="34" r="4" stroke="#16a34a" strokeWidth="2" fill="none"/></svg></div>
             <h2 className="text-xl font-bold text-gray-800 mb-2">このまま終わらせますか？</h2>
             <p className="text-gray-500 text-sm mb-1">
               まだレースは続いています。全レース無制限でAIが予想します。
@@ -582,15 +582,15 @@ export default function PredictPage() {
             {/* 安心保証バッジ */}
             <div className="flex items-center justify-center gap-4 mt-3">
               <div className="flex items-center gap-1 text-xs text-slate-400">
-                <span>🔒</span>
+                <svg viewBox="0 0 16 16" className="w-4 h-4" aria-hidden="true"><rect x="3" y="7" width="10" height="8" rx="1.5" fill="%2394a3b8"/><path d="M5 7V5a3 3 0 016 0v2" stroke="%2394a3b8" strokeWidth="1.5" fill="none"/></svg>
                 <span>SSL暗号化決済</span>
               </div>
               <div className="flex items-center gap-1 text-xs text-slate-400">
-                <span>✅</span>
+                <svg viewBox="0 0 16 16" className="w-4 h-4" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="%2322c55e"/><path d="M5 8l2 2 4-4.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
                 <span>いつでもキャンセル可能</span>
               </div>
               <div className="flex items-center gap-1 text-xs text-slate-400">
-                <span>💳</span>
+                <svg viewBox="0 0 16 16" className="w-4 h-4" aria-hidden="true"><rect x="1" y="3.5" width="14" height="9" rx="1.5" fill="%2394a3b8"/><rect x="1" y="6" width="14" height="2.5" fill="%2364748b"/></svg>
                 <span>KOMOJU安全決済</span>
               </div>
             </div>
@@ -602,11 +602,11 @@ export default function PredictPage() {
       )}
 
       <nav aria-label="メインナビゲーション" className="flex items-center justify-between px-6 py-4 border-b border-green-200 bg-green-900">
-        <Link href="/" className="text-xl font-bold text-white">🏇 競馬予想AI</Link>
+        <Link href="/" className="text-xl font-bold text-white">競馬予想AI</Link>
         <div className="flex items-center gap-4">
           {streakData && streakData.count >= 1 && (
             <span aria-label={`${streakData.count}日連続利用中`} className="flex items-center gap-1 text-xs bg-yellow-400 text-green-900 font-bold px-2.5 py-1 rounded-full">
-              <span aria-hidden="true">🔥</span>{streakData.count}日連続
+              <span aria-hidden="true" className="text-orange-500 font-black">FIRE</span>{streakData.count}日連続
             </span>
           )}
           <Link href="/tracker" className="text-sm text-green-300 hover:text-white">回収率管理</Link>
@@ -621,7 +621,7 @@ export default function PredictPage() {
 
       <div className="max-w-2xl mx-auto py-10 px-6">
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/20 p-6 shadow-sm">
-          <h1 className="text-xl font-bold text-gray-900 mb-6">🏇 レース予想</h1>
+          <h1 className="text-xl font-bold text-gray-900 mb-6">レース予想</h1>
 
           {/* 日付選択 */}
           <div className="mb-5">
@@ -700,7 +700,7 @@ export default function PredictPage() {
                 aria-label="スタンダードモードを選択（本命・対抗・単穴と買い目を予想）"
                 aria-pressed={mode === "standard"}
                 className={`py-2.5 rounded-xl text-sm font-bold border-2 transition-colors ${mode === "standard" ? "bg-green-700 text-white border-green-700" : "bg-white text-gray-500 border-gray-200 hover:border-green-300"}`}>
-                <span aria-hidden="true">🏇</span> スタンダード
+                 スタンダード
                 <span className="block text-xs font-normal mt-0.5">{mode === "standard" ? "◎○▲ + 買い目" : "◎○▲ + 買い目"}</span>
               </button>
               <button
@@ -708,13 +708,13 @@ export default function PredictPage() {
                 aria-label="複勝モードを選択（堅実戦略・的中重視の複勝予想）"
                 aria-pressed={mode === "fukusho"}
                 className={`py-2.5 rounded-xl text-sm font-bold border-2 transition-colors ${mode === "fukusho" ? "bg-amber-500 text-white border-amber-500" : "bg-white text-gray-500 border-gray-200 hover:border-amber-300"}`}>
-                <span aria-hidden="true">🎯</span> 複勝モード
+                 複勝モード
                 <span className="block text-xs font-normal mt-0.5">堅実戦略・的中重視</span>
               </button>
             </div>
             {mode === "fukusho" && (
               <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mt-2">
-                💡 複勝は3着以内で的中。AIが安定レースを厳選してオッズ1.2〜1.6倍の堅実な複勝を推奨します。
+                複勝は3着以内で的中。AIが安定レースを厳選してオッズ1.2〜1.6倍の堅実な複勝を推奨します。
               </p>
             )}
           </div>
@@ -742,7 +742,7 @@ export default function PredictPage() {
               aria-expanded={showFavPanel}
               className="flex items-center gap-1.5 text-sm font-medium text-green-700 hover:text-green-900 transition-colors"
             >
-              <span aria-hidden="true">⭐</span>
+              <svg viewBox="0 0 16 16" className="w-4 h-4 inline" aria-hidden="true"><path d="M8 1l2.2 4.5 5 .7-3.6 3.5.9 5L8 12.5 3.5 14.7l.9-5L.8 6.2l5-.7L8 1z" fill="%23eab308"/></svg>
               <span>お気に入り馬</span>
               <span className="text-xs text-gray-400 ml-1">({favorites.length}/{MAX_FAVORITES})</span>
               <span aria-hidden="true" className="text-xs text-gray-400">{showFavPanel ? "▲" : "▼"}</span>
@@ -750,7 +750,7 @@ export default function PredictPage() {
             {showFavPanel && (
               <div className="mt-2 bg-green-50/80 backdrop-blur-sm border border-green-200/60 rounded-xl p-4">
                 {/* 人気馬プリセット */}
-                <p className="text-xs font-bold text-green-700 mb-2">🏆 人気馬を追加</p>
+                <p className="text-xs font-bold text-green-700 mb-2">人気馬を追加</p>
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {POPULAR_HORSES.map((horse) => (
                     <button
@@ -789,7 +789,7 @@ export default function PredictPage() {
                 {/* 登録済みお気に入り一覧 */}
                 {favorites.length > 0 ? (
                   <>
-                    <p className="text-xs font-bold text-green-700 mb-1.5">⭐ 登録済み馬</p>
+                    <p className="text-xs font-bold text-green-700 mb-1.5">登録済み馬</p>
                     <div className="flex flex-wrap gap-1.5">
                       {favorites.map((horse) => (
                         <span key={horse} className="flex items-center gap-1 bg-green-700 text-white text-xs px-2.5 py-1 rounded-lg font-medium">
@@ -823,13 +823,14 @@ export default function PredictPage() {
           <button onClick={handlePredict}
             aria-label={mode === "fukusho" ? "選択したレースの複勝推奨馬をAI分析する" : "選択したレースをAIで予想する"}
             disabled={loading || racePast || (!selectedRaceId && !racesLoading)}
-            className={`w-full disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-base transition-colors ${mode === "fukusho" ? "bg-amber-500 hover:bg-amber-600" : "bg-green-700 hover:bg-green-800"}`}>
+            className="w-full disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-base transition-all min-h-[48px]"
+            style={loading || racePast ? {} : mode === "fukusho" ? { background: "linear-gradient(135deg, #f59e0b, #d97706)", boxShadow: "0 4px 14px rgba(245,158,11,0.4)" } : { background: "linear-gradient(135deg, #16a34a, #15803d)", boxShadow: "0 4px 14px rgba(22,163,74,0.4)" }}>
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="animate-spin">⟳</span>
                 出走馬データ取得 & AI分析中...（20〜40秒）
               </span>
-            ) : mode === "fukusho" ? "🎯 複勝推奨馬を分析する" : "🏇 このレースを予想する"}
+            ) : mode === "fukusho" ? "複勝推奨馬を分析する" : "このレースを予想する"}
           </button>
 
           {!isPremium && (
@@ -844,7 +845,7 @@ export default function PredictPage() {
           <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center mt-4">
             <div className="inline-block w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin mb-3"></div>
             <p className="text-green-800 font-medium text-sm mb-1">AIが予想を生成中...</p>
-            <p className="text-xs text-green-600">🏇 出走馬データ取得 → 📊 コース・馬場分析 → 🎯 本命馬選定 → 💡 買い目提案</p>
+            <p className="text-xs text-green-600">出走馬データ取得 → コース・馬場分析 → 本命馬選定 → 買い目提案</p>
             <p className="text-xs text-gray-400 mt-1">通常20〜40秒かかります</p>
           </div>
         )}
@@ -853,7 +854,7 @@ export default function PredictPage() {
         {!racesLoading && races.length === 0 && !loading && (
           <div className="mt-6 space-y-4">
             <div className="bg-green-900 text-white rounded-2xl p-5">
-              <p className="text-yellow-300 text-xs font-bold mb-2">🏆 次のG1まで準備しよう</p>
+              <p className="text-yellow-300 text-xs font-bold mb-2">次のG1まで準備しよう</p>
               <p className="text-white font-bold text-base mb-1">高松宮記念（G1）3/29（日）中京1200m芝</p>
               <p className="text-green-200 text-sm mb-3">今春最初のスプリントG1。AIが分析する「勝ち馬の条件」を確認しておこう。</p>
               <div className="grid grid-cols-2 gap-2 mb-4">
@@ -871,7 +872,7 @@ export default function PredictPage() {
               </a>
             </div>
             <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/20 p-4">
-              <p className="text-sm font-bold text-gray-700 mb-3">📊 AIバックテスト実績（G1・重賞）</p>
+              <p className="text-sm font-bold text-gray-700 mb-3">AIバックテスト実績（G1・重賞）</p>
               <div className="grid grid-cols-3 gap-3">
                 {[
                   { label: "G1・重賞的中率", value: "67%", sub: "2/3レース" },
@@ -936,12 +937,12 @@ export default function PredictPage() {
                   </div>
                   {/* 次のアクション3選 */}
                   <div className="mt-4 bg-green-50/80 backdrop-blur-sm border border-green-200/60 rounded-xl p-4">
-                    <p className="text-sm font-bold text-green-800 mb-3">📋 次にやるべきこと3選</p>
+                    <p className="text-sm font-bold text-green-800 mb-3">次にやるべきこと3選</p>
                     <ol className="space-y-2">
                       {[
-                        { icon: "🏇", text: "netkeiba・JRA公式で本命◎の馬番を確認して馬券購入する" },
-                        { icon: "💰", text: "下の軍資金入力で具体的な購入金額・買い目を確認する" },
-                        { icon: "📊", text: "レース後に回収率トラッカーで結果を記録する" },
+                        { icon: "25C6", text: "netkeiba・JRA公式で本命◎の馬番を確認して馬券購入する" },
+                        { icon: "00A5", text: "下の軍資金入力で具体的な購入金額・買い目を確認する" },
+                        { icon: "2261", text: "レース後に回収率トラッカーで結果を記録する" },
                       ].map((item, i) => (
                         <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
                           <span className="text-lg leading-none">{item.icon}</span>
@@ -952,7 +953,7 @@ export default function PredictPage() {
                   </div>
                   {/* 購入サイトリンク（A8.net申請後URLを差し替え） */}
                   <div className="mt-4 bg-green-900 rounded-xl p-4">
-                    <p className="text-xs font-bold text-green-200 mb-3">🏇 馬券購入はこちらから（公式サイト）</p>
+                    <p className="text-xs font-bold text-green-200 mb-3">馬券購入はこちらから（公式サイト）</p>
                     <div className="grid grid-cols-3 gap-2">
                       {/* TODO: Replace href with A8.net affiliate URL after approval (netkeiba案件) */}
                       <a href="https://regist.netkeiba.com/" target="_blank" rel="noopener noreferrer sponsored"
@@ -993,19 +994,19 @@ export default function PredictPage() {
                       {/* 安心保証バッジ */}
                       <div className="flex items-center justify-center gap-4 mt-3">
                         <div className="flex items-center gap-1 text-xs text-green-300/70">
-                          <span>🔒</span>
+                          <svg viewBox="0 0 16 16" className="w-4 h-4" aria-hidden="true"><rect x="3" y="7" width="10" height="8" rx="1.5" fill="%2394a3b8"/><path d="M5 7V5a3 3 0 016 0v2" stroke="%2394a3b8" strokeWidth="1.5" fill="none"/></svg>
                           <span>SSL暗号化決済</span>
                         </div>
                         <div className="flex items-center gap-1 text-xs text-green-300/70">
-                          <span>✅</span>
+                          <svg viewBox="0 0 16 16" className="w-4 h-4" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="%2322c55e"/><path d="M5 8l2 2 4-4.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
                           <span>いつでもキャンセル可能</span>
                         </div>
                         <div className="flex items-center gap-1 text-xs text-green-300/70">
-                          <span>💳</span>
+                          <svg viewBox="0 0 16 16" className="w-4 h-4" aria-hidden="true"><rect x="1" y="3.5" width="14" height="9" rx="1.5" fill="%2394a3b8"/><rect x="1" y="6" width="14" height="2.5" fill="%2364748b"/></svg>
                           <span>KOMOJU安全決済</span>
                         </div>
                         <div className="flex items-center gap-1 text-xs text-yellow-300 font-bold">
-                          <span>🛡️</span>
+                          <svg viewBox="0 0 16 16" className="w-4 h-4" aria-hidden="true"><path d="M8 1L2 4v4c0 4 2.5 7 6 8 3.5-1 6-4 6-8V4L8 1z" fill="%2316a34a"/><path d="M6 8l1.5 1.5L10 7" stroke="white" strokeWidth="1.2" strokeLinecap="round"/></svg>
                           <span>30日返金保証</span>
                         </div>
                       </div>
@@ -1027,7 +1028,7 @@ export default function PredictPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl relative">
             <button onClick={() => setShowPayjp(false)} aria-label="プレミアムプラン申込みモーダルを閉じる" className="absolute top-3 right-3 text-gray-400 text-xl">✕</button>
-            <div aria-hidden="true" className="text-3xl mb-3 text-center">🏇</div>
+            <div aria-hidden="true" className="mb-3 text-center"><svg viewBox="0 0 40 40" className="w-10 h-10 mx-auto" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="%2316a34a" opacity="0.15"/><path d="M10 26c2-7 5-12 10-12s8 5 10 12" stroke="%2316a34a" strokeWidth="2" strokeLinecap="round"/><circle cx="14" cy="30" r="3" stroke="%2316a34a" strokeWidth="1.5" fill="none"/><circle cx="26" cy="30" r="3" stroke="%2316a34a" strokeWidth="1.5" fill="none"/></svg></div>
             <h2 className="text-lg font-bold mb-2 text-center">競馬予想AIプレミアム</h2>
             <KomojuButton
               planId={checkoutPlan}
