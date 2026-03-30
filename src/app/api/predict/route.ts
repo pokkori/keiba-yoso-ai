@@ -779,6 +779,21 @@ ${!isGradeRace ? "⚠️ このレースは一般クラス戦の可能性があ�
     const model = "claude-sonnet-4-20250514";
     const newCount = cookieCount + 1;
     const raceInfoStr = raceData.info.trim();
+
+    // Pre-flight: test Anthropic API connection with a tiny request
+    try {
+      const testResp = await getClient().messages.create({
+        model,
+        max_tokens: 5,
+        messages: [{ role: "user", content: "OK" }],
+      });
+      console.log("Anthropic preflight OK:", testResp.id);
+    } catch (preflightErr) {
+      const msg = preflightErr instanceof Error ? preflightErr.message : String(preflightErr);
+      console.error("Anthropic preflight FAILED:", msg);
+      return NextResponse.json({ error: `AI_PREFLIGHT_FAILED: ${msg.slice(0, 200)}` }, { status: 502 });
+    }
+
     const stream = getClient().messages.stream({
       model,
       max_tokens: 4000,
