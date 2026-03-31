@@ -1,7 +1,28 @@
 import { MetadataRoute } from "next";
 
+const keywordSlugs = [
+  "keiba-yoso-ai-muryou",
+  "keiba-fukusho-yoso-houhou",
+  "uma-win5-yoso-strategy",
+  "keiba-tanshuku-yoso",
+  "keiba-g1-yoso-2026",
+  "keiba-odds-bunseki",
+  "keiba-kikou-track-bunseki",
+  "keiba-tenkai-yoso-katsuritu",
+  "keiba-blood-pedigree-analysis",
+  "keiba-tokubetsu-kyuusou",
+];
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://keiba-yoso-ai.vercel.app";
+
+  const keywordPages: MetadataRoute.Sitemap = keywordSlugs.map((slug) => ({
+    url: `${base}/keywords/${slug}`,
+    lastModified: new Date("2026-03-31"),
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
   return [
     { url: base, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
     { url: `${base}/predict`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
@@ -20,5 +41,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/legal`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
     { url: `${base}/terms`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
     { url: `${base}/privacy`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
+    ...keywordPages,
   ];
 }
