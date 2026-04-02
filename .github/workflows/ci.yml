@@ -4,6 +4,8 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  issue_comment:
+    types: [created]
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -39,3 +41,39 @@ jobs:
       - name: llms.txt check
         run: |
           [ -f "public/llms.txt" ] && echo "PASS: llms.txt exists" || echo "WARNING: public/llms.txt missing"
+
+  semgrep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Semgrep SAST
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: >-
+            p/nextjs
+            p/owasp-top-ten
+            p/secrets
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+  claude-review:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Claude PR Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          direct_prompt: |
+            このPRを日本語でレビューしてください。
+            以下の観点で確認し、問題点があればコメントしてください:
+            1. TypeScriptの型安全性
+            2. セキュリティ（XSS・認証・入力バリデーション）
+            3. パフォーマンス（不要なre-render・大きなbundle）
+            4. Next.js 15/16のベストプラクティス準拠
+            問題なければ「LGTM」とコメントしてください。
+          claude_args: "--max-turns 5 --model claude-haiku-4-5-20251001"
