@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { savePrediction } from "@/lib/backtest";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 55; // Vercel hobby max 60s
@@ -63,6 +64,7 @@ interface HorseBasic {
   weight?: string;    // 斤量
   horseId?: string;   // netkeiba horse ID (10-12 digits)
   tanshOdds?: string; // 単勝オッズ (from result or odds API)
+  fukushoOdds?: string; // 複勝オッズ (e.g. "1.5〜2.3倍")
   popularity?: string;// 人気順位
 }
 
@@ -278,6 +280,8 @@ function parseHorsePastResults(html: string): { rows: PastRaceRow[]; summary: st
     const course = cells[14];
     const time = cells[15];
     const margin = cells[16];
+    const corner = cells[18];   // コーナー通過順
+    const agari3f = cells[20];  // 上がり3F
     const horseWeight = cells[21];
 
     if (!date || !raceName || !position || position === "着順") continue;
@@ -287,8 +291,10 @@ function parseHorsePastResults(html: string): { rows: PastRaceRow[]; summary: st
     const marginStr = margin && margin !== "0.0" && margin !== "" ? `(${margin})` : "";
     const weightStr = horseWeight ? ` 馬体重${horseWeight}` : "";
     const popularStr = popular && odds ? ` [${popular}番人気 ${odds}倍]` : popular ? ` [${popular}番人気]` : "";
+    const agariStr = agari3f && agari3f.match(/\d+\.\d+/) ? ` 上がり3F:${agari3f}秒` : "";
+    const cornerStr = corner && corner.trim() ? ` コーナー:${corner.trim()}` : "";
     rows.push({
-      line: `${date} ${raceName} [${course}] ${posStr}${marginStr}${popularStr} ${time} 騎手:${jockey}${weightStr}`,
+      line: `${date} ${raceName} [${course}] ${posStr}${marginStr}${popularStr} ${time} 騎手:${jockey}${weightStr}${agariStr}${cornerStr}`,
       pos: posNum,
     });
     dataRows++;
@@ -311,6 +317,7 @@ function formatBasic(h: HorseBasic): string {
   let s = `${h.num}番 ${h.name}`;
   if (h.popularity) s += `  【${h.popularity}番人気】`;
   if (h.tanshOdds) s += `  単勝${h.tanshOdds}倍`;
+  if (h.fukushoOdds) s += `  複勝${h.fukushoOdds}`;
   if (h.jockey) s += `  騎手:${h.jockey}`;
   if (h.weight) s += `  斤量:${h.weight}`;
   return s;
@@ -343,6 +350,7 @@ async function fetchHorseDetail(horse: HorseBasic): Promise<string> {
     let info = `${horse.num}番 ${horse.name}`;
     if (horse.popularity) info += `  【${horse.popularity}番人気】`;
     if (horse.tanshOdds) info += `  単勝${horse.tanshOdds}倍`;
+    if (horse.fukushoOdds) info += `  複勝${horse.fukushoOdds}`;
     if (ageSex) info += `  ${ageSex}`;
     if (horse.jockey) info += `  騎手:${horse.jockey}`;
     if (horse.weight) info += `  斤量:${horse.weight}`;
@@ -447,6 +455,35 @@ async function fetchRaceData(raceId: string, isBacktest = false): Promise<FetchR
     log.push(`json_odds error: ${e instanceof Error ? e.message.slice(0, 60) : "unknown"}`);
   }
 
+  // ── 複勝オッズ取得（type=b3） ──
+  // 複勝オッズをベースの馬リストにマージする
+  const fukushoOddsMap = new Map<string, string>(); // 馬番 -> "低〜高倍"
+  try {
+    const fukushoUrl = `https://race.netkeiba.com/api/api_get_jra_odds.html?type=b3&race_id=${raceId}&json=1`;
+    const res = await fetch(fukushoUrl, { headers: JSON_HEADERS, signal: AbortSignal.timeout(5000) });
+    log.push(`fukusho_odds: HTTP ${res.status}`);
+    if (res.ok) {
+      const json = JSON.parse(await res.text());
+      const oddsInfo = json?.data?.OddsInfo;
+      if (Array.isArray(oddsInfo) && oddsInfo.length > 0) {
+        for (const item of oddsInfo as string[][]) {
+          const num = String(item[0]);
+          // 複勝オッズは低〜高の範囲で返ることがある: item[1]=低, item[2]=高
+          const low = item[1] && /^\d+\.\d+$/.test(String(item[1])) ? String(item[1]) : null;
+          const high = item[2] && /^\d+\.\d+$/.test(String(item[2])) ? String(item[2]) : null;
+          if (low && high && low !== high) {
+            fukushoOddsMap.set(num, `${low}〜${high}倍`);
+          } else if (low) {
+            fukushoOddsMap.set(num, `${low}倍`);
+          }
+        }
+        log.push(`fukusho_odds: ${fukushoOddsMap.size} horses with odds`);
+      }
+    }
+  } catch (e) {
+    log.push(`fukusho_odds error: ${e instanceof Error ? e.message.slice(0, 60) : "unknown"}`);
+  }
+
   // ── Fetch shutuba HTML to get horse IDs (always needed for detail fetch) ──
   const shutubaResult = await fetchShutuba(raceId, log, isBacktest);
   const shutubaHorses = shutubaResult?.horses ?? null;
@@ -476,6 +513,15 @@ async function fetchRaceData(raceId: string, isBacktest = false): Promise<FetchR
     }
   } else {
     horses = baseHorses!;
+  }
+
+  // ── 複勝オッズをマージ ──
+  if (fukushoOddsMap.size > 0) {
+    for (const h of horses) {
+      const f = fukushoOddsMap.get(h.num);
+      if (f) h.fukushoOdds = f;
+    }
+    log.push(`fukusho_odds: merged to ${horses.filter(h => h.fukushoOdds).length} horses`);
   }
 
   // ── Fetch per-horse past results from db.netkeiba.com ──
@@ -770,16 +816,48 @@ ${!isGradeRace ? "⚠️ このレースは一般クラス戦の可能性があ�
   }
 
   try {
+    const fewShotExamples = `
+
+## 予測例（Few-Shot）
+
+### 正解例1: スキップ（正解）
+レース: 2024年大阪杯 阪神芝2000m
+人気馬: 1番人気 オルフェーヴル産駒 単勝2.3倍
+分析: 前走大敗・斤量増・コース不適
+判定: **スキップ推奨** → 実際: 6着（スキップ正解）
+
+### 正解例2: 買い（正解）
+レース: 2024年天皇賞秋 東京芝2000m
+人気馬: 3番人気 単勝5.8倍 複勝2.1倍
+分析: 前走G1連対・距離◎・状態良好・EV=1.3
+判定: **複勝買い推奨** → 実際: 2着・複勝280円（EV正例）
+
+### 正解例3: スキップ（正解）
+レース: 2024年有馬記念
+人気馬: 2番人気 単勝3.5倍
+分析: 中山苦手・前走距離短縮・輸送あり
+判定: **スキップ推奨** → 実際: 5着（スキップ正解）`;
+
     const systemPrompt = mode === "fukusho"
       ? isBacktest
-        ? "あなたはプロの競馬アナリストで複勝一点買いの専門家です。長期回収率120%以上を目標とします。【絶対ルール】(1)情報不足でも追加要求・謝罪禁止。(2)バックテストモード:人気データなくても馬名・騎手・斤量・過去成績から定性的に判断。数値スコアリングやEV計算は行わないこと。(3)一般クラス戦（未勝利・1勝・2勝・新馬）即スキップ。(4)重賞・特別以外即スキップ。(5)15頭以上即スキップ。(6)馬場「重」「不良」即スキップ。(7)9頭以下の重賞は能力差が出やすく積極推奨。(8)全応答「【推奨判定】」で開始。(9)推奨馬は実力上位（1-3番人気相当）から選ぶ。競走成績・騎手・コース適性で総合判断。(10)フォーマット外の文禁止。(11)スキップ率目標50-60%:迷ったらスキップ。(12)前走6着以下の馬は推奨しない。【出力フォーマット厳守】スキップ時→「【推奨判定】スキップ」+「【複勝推奨】スキップ — 理由(...)」のみ。推奨時→「【推奨判定】買い推奨」「【複勝推奨】X番 馬名 — 推奨理由（定性的な根拠を3点以上）」「【リスク要因】...」。馬番は半角数字。"
-        : "あなたはプロの競馬予想家で複勝一点買いの専門家です。長期回収率120%以上を目標とします。【絶対ルール】(1)推奨馬は必ず1〜3番人気から選ぶ。(2)出走頭数15頭以上はスキップ。(3)複勝オッズ1.3倍未満はスキップ。(4)推奨馬の前走着順が6着以下ならスキップ。(5)未勝利・1勝クラスはスキップ。(6)馬場「重」「不良」はスキップ。(7)迷ったら必ずスキップ—スキップはゼロ損失、外れは確実マイナス。(8)スキップ率目標50-60%。(9)数値によるEV計算は行わない。馬の実力・コース適性・騎手・近走の状態を定性的に判断すること。謝罪や情報不足の言及は一切しない。"
-      : "あなたはプロの競馬予想家です。【絶対ルール】(1)一般クラス戦（未勝利・1勝・2勝クラス・新馬）またはレース名に「賞」「カップ」「ステークス」「記念」「特別」「オープン」「G1/G2/G3」「OP」が含まれない場合は即スキップ: 「【推奨判定】スキップ」「【本命（◎）】スキップ — 理由(一般クラス戦のため)」の2行のみ出力し、他は一切書かない。(2)スキップ以外の場合は【推奨判定】買い推奨を最初に出力し、全予想項目（本命・対抗・単穴・買い目・展開・総評）を必ず出力する。(3)本命◎・対抗○は必ず1〜3番人気から選ぶ。(4)データが不完全な馬は騎手や斤量から推測で補う。(5)情報不足の謝罪や追加データの要求は絶対にしない。";
+        ? `あなたはプロの競馬アナリストで複勝一点買いの専門家です。長期回収率120%以上を目標とします。【絶対ルール】(1)情報不足でも追加要求・謝罪禁止。(2)バックテストモード:人気データなくても馬名・騎手・斤量・過去成績から定性的に判断。数値スコアリングやEV計算は行わないこと。(3)一般クラス戦（未勝利・1勝・2勝・新馬）即スキップ。(4)重賞・特別以外即スキップ。(5)15頭以上即スキップ。(6)馬場「重」「不良」即スキップ。(7)9頭以下の重賞は能力差が出やすく積極推奨。(8)全応答「【推奨判定】」で開始。(9)推奨馬は実力上位（1-3番人気相当）から選ぶ。競走成績・騎手・コース適性で総合判断。(10)フォーマット外の文禁止。(11)スキップ率目標50-60%:迷ったらスキップ。(12)前走6着以下の馬は推奨しない。(13)上がり3F・コーナー通過順が記載されている場合は末脚タイプ/先行タイプの判断に活用すること。【出力フォーマット厳守】スキップ時→「【推奨判定】スキップ」+「【複勝推奨】スキップ — 理由(...)」のみ。推奨時→「【推奨判定】買い推奨」「【複勝推奨】X番 馬名 — 推奨理由（定性的な根拠を3点以上）」「【リスク要因】...」。馬番は半角数字。${fewShotExamples}`
+        : `あなたはプロの競馬予想家で複勝一点買いの専門家です。長期回収率120%以上を目標とします。【絶対ルール】(1)推奨馬は必ず1〜3番人気から選ぶ。(2)出走頭数15頭以上はスキップ。(3)複勝オッズ1.3倍未満はスキップ。(4)推奨馬の前走着順が6着以下ならスキップ。(5)未勝利・1勝クラスはスキップ。(6)馬場「重」「不良」はスキップ。(7)迷ったら必ずスキップ—スキップはゼロ損失、外れは確実マイナス。(8)スキップ率目標50-60%。(9)数値によるEV計算は行わない。馬の実力・コース適性・騎手・近走の状態を定性的に判断すること。(10)複勝オッズが記載されている場合は「複勝オッズX.X〜Y.Y倍」として活用すること。(11)上がり3F・コーナー通過順が記載されている場合は末脚/先行の傾向判断に使うこと。謝罪や情報不足の言及は一切しない。${fewShotExamples}`
+      : `あなたはプロの競馬予想家です。【絶対ルール】(1)一般クラス戦（未勝利・1勝・2勝クラス・新馬）またはレース名に「賞」「カップ」「ステークス」「記念」「特別」「オープン」「G1/G2/G3」「OP」が含まれない場合は即スキップ: 「【推奨判定】スキップ」「【本命（◎）】スキップ — 理由(一般クラス戦のため)」の2行のみ出力し、他は一切書かない。(2)スキップ以外の場合は【推奨判定】買い推奨を最初に出力し、全予想項目（本命・対抗・単穴・買い目・展開・総評）を必ず出力する。(3)本命◎・対抗○は必ず1〜3番人気から選ぶ。(4)データが不完全な馬は騎手や斤量から推測で補う。(5)情報不足の謝罪や追加データの要求は絶対にしない。(6)複勝オッズ・上がり3F・コーナー通過順が記載されている場合は積極的に分析に活用すること。${fewShotExamples}`;
 
     // 全モードSonnet 4.6（分析品質最優先・競馬知識・血統・騎手の判断力が段違い）
     const model = "claude-sonnet-4-20250514";
     const newCount = cookieCount + 1;
     const raceInfoStr = raceData.info.trim();
+
+    // レースIDからレース日を推定（YYYYMMDD → YYYY-MM-DD）
+    const raceDateRaw = body.raceId.substring(0, 4) + "-" + body.raceId.substring(4, 6) + "-" + body.raceId.substring(6, 8);
+    // 1番人気馬の単勝オッズ・馬番を取得（バックテストDB用）
+    const primaryHorse = raceData ? (() => {
+      // 複勝オッズがあれば最初のもの（1番人気）を取得
+      // horseDetails から 1番人気の情報を探す
+      return null; // ストリーム完了後にAI出力からパース
+    })() : null;
+    void primaryHorse; // suppress unused warning
 
     const stream = getClient().messages.stream({
       model,
@@ -790,14 +868,59 @@ ${!isGradeRace ? "⚠️ このレースは一般クラス戦の可能性があ�
     const encoder = new TextEncoder();
     const readable = new ReadableStream({
       async start(controller) {
+        let fullText = "";
         try {
           for await (const chunk of stream) {
             if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
               controller.enqueue(encoder.encode(chunk.delta.text));
+              fullText += chunk.delta.text;
             }
           }
           controller.enqueue(encoder.encode(`\nDONE:${JSON.stringify({ count: newCount, mode, raceInfo: raceInfoStr })}`));
           controller.close();
+
+          // ─── バックテストDB保存（fire and forget） ───
+          try {
+            const judgement = fullText.match(/【推奨判定】([^\n]*)/)?.[1] ?? "";
+            const isSkip = judgement.includes("スキップ") || judgement.includes("skip");
+            const recommendation = isSkip ? "skip" : "buy";
+
+            let horseNum: number | null = null;
+            let horseName: string | null = null;
+            let odds: number | null = null;
+
+            if (!isSkip && mode === "fukusho") {
+              // 【複勝推奨】X番 馬名 から抽出
+              const pickSection = fullText.match(/【複勝推奨】([\s\S]*?)(?=【|$)/)?.[1] ?? "";
+              const numNormalized = pickSection.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+              const numM = numNormalized.match(/^[\s*]*(\d{1,2})番/);
+              if (numM) horseNum = parseInt(numM[1]);
+              const nameM = numNormalized.match(/\d{1,2}番[\s　]*([\u30A0-\u30FF\u4E00-\u9FFF\u3040-\u309F]{2,15})/);
+              if (nameM) horseName = nameM[1];
+              // 単勝オッズ（【期待値(EV)】複勝オッズX.X倍 から抽出）
+              const oddsM = fullText.match(/複勝オッズ(\d+\.\d+)倍/);
+              if (oddsM) odds = parseFloat(oddsM[1]);
+            } else if (!isSkip && mode === "standard") {
+              // 【本命（◎）】馬番 馬名 から抽出
+              const honM = fullText.match(/【本命[（(◎)）】][^】]*】([\s\S]*?)(?=【|$)/)?.[1] ?? "";
+              const normHon = honM.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+              const honNumM = normHon.match(/(\d{1,2})番/);
+              if (honNumM) horseNum = parseInt(honNumM[1]);
+            }
+
+            await savePrediction({
+              raceId: body.raceId!,
+              raceName: raceInfoStr,
+              raceDate: raceDateRaw,
+              recommendation,
+              horseNum,
+              horseName,
+              ev: null,
+              odds,
+            });
+          } catch (saveErr) {
+            console.error("backtest save error:", saveErr);
+          }
         } catch (err) {
           console.error("Stream error:", err instanceof Error ? err.message : String(err));
           controller.error(err);
