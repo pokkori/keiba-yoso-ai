@@ -16,27 +16,37 @@ const ITEMS = [
 
 export default function LegalPage() {
   return (
-    <div className="min-h-screen bg-white">
-      <nav className="bg-green-900 px-6 py-4">
-        <Link href="/" className="text-white font-bold flex items-center gap-2">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-          競馬予想AI
+    <div className="min-h-screen relative" style={{ background: "linear-gradient(135deg, #0a1a0e 0%, #0f1f15 25%, #0a1a0e 50%, #0d2010 75%, #0a1a0e 100%)" }}>
+      <div className="fixed inset-0 pointer-events-none" aria-hidden="true">
+        <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full opacity-[0.08]" style={{ background: "radial-gradient(circle, #16a34a, transparent 70%)" }} />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full opacity-[0.05]" style={{ background: "radial-gradient(circle, #22c55e, transparent 70%)" }} />
+      </div>
+
+      <div className="relative z-10 max-w-2xl mx-auto px-6 py-12">
+        <Link href="/" className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 text-sm mb-8 transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          ホームに戻る
         </Link>
-      </nav>
-      <div className="max-w-2xl mx-auto px-6 py-12">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">特定商取引法に基づく表記</h1>
+
+        <h1 className="text-2xl font-bold mb-2 bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">特定商取引法に基づく表記</h1>
         <p className="text-gray-500 text-sm mb-8">Act on Specified Commercial Transactions</p>
-        <dl className="space-y-4">
-          {ITEMS.map((item) => (
-            <div key={item.label} className="border-b border-gray-100 pb-4">
-              <dt className="text-sm font-semibold text-gray-500 mb-1">{item.label}</dt>
-              <dd className="text-gray-800 text-sm leading-relaxed">{item.value}</dd>
-            </div>
-          ))}
-        </dl>
-        <p className="text-xs text-gray-400 mt-8">
-          ※ 本サービスはエンターテインメント目的の予想サービスです。馬券の的中を保証するものではありません。
-        </p>
+
+        <div className="rounded-2xl p-6" style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <dl className="space-y-4">
+            {ITEMS.map((item) => (
+              <div key={item.label} className="border-b border-white/10 pb-4">
+                <dt className="text-xs font-semibold text-emerald-400 mb-1">{item.label}</dt>
+                <dd className="text-gray-300 text-sm leading-relaxed">{item.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        <div className="mt-6 rounded-xl p-4" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)" }}>
+          <p className="text-yellow-300 text-xs leading-relaxed">
+            ※ 本サービスはエンターテインメント目的の予想サービスです。馬券の的中を保証するものではありません。ギャンブル等依存でお困りの方は公益財団法人 日本依存症対策協会（0570-064-556）にご相談ください。
+          </p>
+        </div>
       </div>
     </div>
   );
