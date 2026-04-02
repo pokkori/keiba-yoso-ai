@@ -299,6 +299,9 @@ export default function Home() {
         <p className="text-base md:text-lg text-green-200 mb-4 max-w-xl mx-auto">
           バックテスト全記録公開中 — 的中も外れも隠しません。AIが毎週レースを分析して予想を更新
         </p>
+        <p className="text-xs text-green-300/80 mb-4 max-w-xl mx-auto border border-green-600/40 bg-green-900/40 rounded-lg px-4 py-2">
+          AIによる参考予想です。馬券の購入はご自身の判断で行ってください。的中・回収を保証するものではありません。現在バックテスト実施中。的中率・回収率データは検証完了後に公開予定です。
+        </p>
 
         {/* AIバックテスト実績バッジ */}
         <div className="bg-yellow-400/20 border-2 border-yellow-400 rounded-2xl p-4 mb-6 max-w-md mx-auto">
@@ -349,7 +352,7 @@ export default function Home() {
           <p className="text-yellow-300 text-xs font-bold mb-2 text-center"><span className="px-1.5 py-0.5 rounded text-xs font-bold bg-yellow-400/20 text-yellow-300 mr-1">FREE</span> 無料プランでもこれだけ使える</p>
           <ul className="text-green-100 text-sm space-y-1">
             <li><svg className="inline w-4 h-4 text-green-400 mr-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd"/></svg> AI予想（本命・対抗・単穴・買い目）2レース</li>
-            <li><svg className="inline w-4 h-4 text-green-400 mr-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd"/></svg> 複勝モード（高的中率）2レース</li>
+            <li><svg className="inline w-4 h-4 text-green-400 mr-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd"/></svg> 複勝モード（的中率はバックテストで検証中）2レース</li>
             <li><svg className="inline w-4 h-4 text-green-400 mr-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd"/></svg> G1・重賞レース完全対応</li>
           </ul>
           <p className="text-yellow-300 text-xs mt-2 text-center"><span className="px-1.5 py-0.5 rounded text-xs font-bold bg-gradient-to-r from-yellow-400 to-amber-500 text-green-900 mr-1">PRO</span> Pro（¥2,980/月）で無制限 + バックテスト機能</p>
@@ -889,7 +892,7 @@ export default function Home() {
             <span className="text-xs text-green-300">3/29（日） 中京競馬場</span>
           </div>
           <h2 className="text-xl font-bold text-white mb-1">高松宮記念（G1） AI予想解説 — 中京1200m芝スプリント完全攻略</h2>
-          <p className="text-sm text-green-300 mb-4">今春最初のスプリントG1。過去10年のAIデータ分析で「勝ち馬の傾向」を徹底解説。馬券購入前に必ずチェック。</p>
+          <p className="text-sm text-green-300 mb-4">今春最初のスプリントG1。過去10年のAIデータ分析で「勝ち馬の傾向」を徹底解説。馬券購入前の参考情報としてご活用ください。</p>
 
           {/* AI分析ポイント詳細（SEOコンテンツ） */}
           <div className="grid sm:grid-cols-3 gap-4 mb-4">
@@ -1127,7 +1130,7 @@ export default function Home() {
               </thead>
               <tbody className="divide-y divide-green-100 bg-white">
                 {[
-                  { odds: "1.0〜1.5倍", ev: "マイナス", badge: "スキップ推奨", badgeColor: "bg-red-100 text-red-600", desc: "返金がわずか。1回外れると複数レース分の損失。長期では必ずマイナスになるゾーン。" },
+                  { odds: "1.0〜1.5倍", ev: "マイナス", badge: "スキップ推奨", badgeColor: "bg-red-100 text-red-600", desc: "返金がわずか。1回外れると複数レース分の損失。長期でマイナスになりやすいゾーン。" },
                   { odds: "1.5〜2.0倍", ev: "やや低め", badge: "条件次第", badgeColor: "bg-yellow-100 text-yellow-700", desc: "AIスコア80点超かつリスク低のみ検討。安定感はあるが旨みが薄く、長期収支改善は難しい。" },
                   { odds: "2.0〜5.0倍", ev: "◎ ベスト", badge: "積極推奨", badgeColor: "bg-green-100 text-green-700", desc: "的中率と配当のバランスが最良。複数回の外れをカバーできる。AIが最も重視するゾーン。" },
                   { odds: "5.0〜10.0倍", ev: "高リターン", badge: "少額勝負", badgeColor: "bg-blue-100 text-blue-700", desc: "高配当だが的中率低下。AIの「穴推奨」が出たときのみ少額で。資金の10%以内を厳守。" },
@@ -1147,7 +1150,7 @@ export default function Home() {
             {[
               { icon: "", title: "2〜5倍ゾーンを狙う理由", desc: "¥1,000投資で¥2,000〜¥5,000返ってくる。3回に1回当たれば十分なレベル。的中率30〜45%ならこのゾーンが最も期待値プラスに近い。" },
               { icon: "", title: "控除率を知る", desc: "競馬の控除率は約20〜25%。全レースランダムに購入すると長期で75〜80%しか返ってこない。AIで期待値の高いレースに絞ることで控除率の壁を超えることを目指す。" },
-              { icon: "", title: "損切りのルール", desc: "AIが「スキップ推奨」を出したレースは必ず従う。月の損失が予算の50%を超えたら残りの週は休む。感情的な追い購いが最大の敵。" },
+              { icon: "", title: "損切りのルール", desc: "AIが「スキップ推奨」を出したレースはご自身の判断で参考にしてください。月の損失が予算の50%を超えたら残りの週は休む。感情的な追い購いが最大の敵。" },
             ].map((item, i) => (
               <div key={i} className="bg-white border border-green-200 rounded-xl p-4">
                 <div className="text-2xl mb-2">{item.icon}</div>
@@ -1327,7 +1330,7 @@ export default function Home() {
       {/* おすすめ競馬サイト（アフィリエイト） */}
       <section className="py-8 px-4 max-w-lg mx-auto">
         <h2 className="text-center text-base font-bold text-green-800 mb-4"> おすすめ競馬サイト</h2>
-        <p className="text-center text-xs text-gray-500 mb-4">AI予想と合わせて使うと的中率がさらにアップ <span className="text-gray-400">PR</span></p>
+        <p className="text-center text-xs text-gray-500 mb-4">AI予想と合わせてご活用ください <span className="text-gray-400">PR</span></p>
         <div className="space-y-3">
           <a
             href="https://keiba.rakuten.co.jp/"
