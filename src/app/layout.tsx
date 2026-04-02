@@ -107,6 +107,32 @@ export default function RootLayout({
         <AgeGate>
         {children}
         <PWAInstallBanner />
+        {/* 関連AIサービス */}
+        <section className="mt-8 pt-6 border-t border-white/10 px-4 max-w-2xl mx-auto">
+          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+            関連サービス
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <a
+              href="https://keirin-yoso-ai.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block p-3 bg-white/5 rounded-lg hover:bg-white/10 transition text-sm"
+            >
+              <span className="block font-medium text-gray-200">競輪予想AI</span>
+              <span className="block text-xs text-gray-400 mt-0.5">AIが競輪の買い目を即提案</span>
+            </a>
+            <a
+              href="https://boat-yoso-ai.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block p-3 bg-white/5 rounded-lg hover:bg-white/10 transition text-sm"
+            >
+              <span className="block font-medium text-gray-200">ボートレース予想AI</span>
+              <span className="block text-xs text-gray-400 mt-0.5">ボートレース予想をAI分析</span>
+            </a>
+          </div>
+        </section>
         <footer className="flex justify-center py-2">
           <FeedbackButton serviceName="競馬予想AI" />
         </footer>
