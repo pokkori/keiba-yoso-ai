@@ -89,6 +89,61 @@ const jsonLd = {
         { "@type": "Question", "name": "回収率トラッキング機能とは何ですか？", "acceptedAnswer": { "@type": "Answer", "text": "実際に購入した馬券の結果を入力することで、ご自身の累計投資額・払戻額・回収率を自動集計する機能です。「どの予想パターンが自分に合っているか」を可視化し、馬券戦略の改善に役立てていただけます。" } },
       ],
     },
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "競馬予想AIの使い方",
+      "description": "AIがレース情報を分析して本命◎対抗○単穴▲と推奨買い目を30秒で提案する手順（20歳以上限定）",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": 1,
+          "name": "レース情報を選択する",
+          "text": "開催場・レース番号・出走馬情報を選択または入力します。netkeiba出走馬データをAIが自動取得し、分析対象レースをセットします。"
+        },
+        {
+          "@type": "HowToStep",
+          "position": 2,
+          "name": "AIが予想を生成する",
+          "text": "直近5走成績・騎手情報・斤量・馬場状態などをAIが総合分析し、本命◎対抗○単穴▲と推奨買い目・軍資金別配分を30秒で生成します。"
+        },
+        {
+          "@type": "HowToStep",
+          "position": 3,
+          "name": "バックテスト実績を確認する",
+          "text": "予想結果を参考にする前に、サービス内「バックテスト結果」ページで過去の的中率・回収率実績をご確認ください。本サービスの予想は参考情報であり、馬券の的中を保証するものではありません。"
+        }
+      ]
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "name": "競馬予想AI",
+      "description": "AIが競馬レース情報を自動分析し本命◎対抗○単穴▲と推奨買い目を提案する競馬予想支援サービス。20歳以上限定。バックテスト実績公開済み。",
+      "provider": {
+        "@type": "Organization",
+        "name": "競馬予想AI運営事務局",
+        "url": SITE_URL
+      },
+      "serviceType": "AI Software",
+      "areaServed": "JP",
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "20歳以上の競馬ファン"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "5000",
+        "priceCurrency": "JPY",
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": "5000",
+          "priceCurrency": "JPY",
+          "unitText": "月額〜"
+        },
+        "description": "無料1レースから・ベーシックプラン¥5,000/月〜"
+      }
+    },
   ],
 };
 
