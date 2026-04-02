@@ -211,8 +211,49 @@ export default function Home() {
     ? "3競技セットプラン ¥6,980/月（22%OFF）"
     : "ベーシックプラン ¥980/月";
 
+  const faqs = [
+    { q: '競馬予想AIはどんなサービスですか？', a: '出馬表をAIが自動分析し、本命馬と買い目を30秒で提案するエンターテインメント目的の予想サービスです。登録不要で無料からご利用いただけます。' },
+    { q: '無料で使えますか？', a: 'AI予想の閲覧は月3回まで無料です。それ以上ご利用の場合は月額¥980のベーシックプランへのアップグレードをご検討ください。' },
+    { q: '予想の的中・収益は保証されますか？', a: '本サービスはエンターテインメント目的の参考情報サービスです。馬券の的中・収益を保証するものではありません。馬券購入は各自の判断と責任で行ってください。' },
+    { q: 'スマートフォンでも使えますか？', a: 'はい、PCでもスマートフォンでもご利用いただけます。アプリのインストール不要で、ブラウザからそのまま利用できます。' },
+    { q: '3競技セットプランとは何ですか？', a: '競馬・競輪・ボートレースの3競技予想AIをセットで利用できるプランです。月額¥6,980（単体合計から22%OFF）でご利用いただけます。' },
+  ];
+
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: faqs.map(faq => ({
+              '@type': 'Question',
+              name: faq.q,
+              acceptedAnswer: { '@type': 'Answer', text: faq.a },
+            })),
+          }).replace(/</g, '\\u003c'),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            name: '競馬予想AI',
+            applicationCategory: 'EntertainmentApplication',
+            operatingSystem: 'Web',
+            offers: {
+              '@type': 'Offer',
+              price: '0',
+              priceCurrency: 'JPY',
+              description: '月3回まで無料',
+            },
+          }).replace(/</g, '\\u003c'),
+        }}
+      />
+      <div className="min-h-screen bg-white">
       {showPayjp && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl relative">
@@ -1406,6 +1447,19 @@ export default function Home() {
 
       <CrossSell currentService="競馬予想AI" />
 
+      {/* FAQセクション */}
+      <section aria-label="よくある質問" className="py-12 px-4 max-w-2xl mx-auto">
+        <h2 className="text-2xl font-bold mb-8 text-center">よくある質問</h2>
+        <div className="space-y-4">
+          {faqs.map((faq, i) => (
+            <details key={i} className="border border-gray-200 rounded-lg p-4 cursor-pointer">
+              <summary className="font-semibold text-gray-800">{faq.q}</summary>
+              <p className="mt-3 text-gray-600">{faq.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
       <footer className="text-center py-8 pb-24 sm:pb-8 text-sm text-gray-400 border-t">
         <p className="text-gray-500 text-xs mb-3">
           ※本サービスはエンターテインメント目的の予想サービスです。馬券の的中・収益を保証するものではありません。
@@ -1433,5 +1487,6 @@ export default function Home() {
         </div>
       </footer>
     </div>
+    </>
   );
 }
