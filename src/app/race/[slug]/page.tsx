@@ -357,7 +357,7 @@ export default async function RacePage({ params }: Props) {
         <div className="max-w-3xl mx-auto flex items-center justify-between flex-wrap gap-4">
           <div>
             <p className="font-bold text-yellow-800 text-sm">📊 競馬予想AIのG1実績（バックテスト）</p>
-            <p className="text-yellow-700 text-xs mt-1">重賞・G1クラス的中率 67%（2/3レース）| 回収率 193%（n=3 参考値）</p>
+            <p className="text-yellow-700 text-xs mt-1">重賞・G1バックテスト実施中（n=3）。実績値は<a href="/backtest/results" className="underline">バックテストページ</a>で全記録公開中。※参考情報のため投資判断に使用しないでください。</p>
           </div>
           <Link href="/backtest/results"
             className="text-xs bg-green-700 text-white font-bold px-4 py-2 rounded-full hover:bg-green-800 transition-colors">

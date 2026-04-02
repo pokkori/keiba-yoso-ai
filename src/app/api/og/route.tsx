@@ -405,7 +405,7 @@ export async function GET(req: Request) {
           }}
         >
           <span>🏇</span>
-          <span>回収率193% AIの予想</span>
+          <span>データ分析型AI予想（参考情報）</span>
         </div>
       </div>
     ),

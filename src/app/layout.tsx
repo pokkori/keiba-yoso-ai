@@ -11,7 +11,7 @@ import { AgeGate } from "@/components/AgeGate";
 const notoSansJP = Noto_Sans_JP({ subsets: ["latin"], weight: ["400", "700"], display: "swap" });
 
 const SITE_URL = "https://keiba-yoso-ai.vercel.app";
-const TITLE = "競馬予想AI｜複勝回収率193%・AIが30秒分析・本命◎対抗○単穴▲を即提案";
+const TITLE = "競馬予想AI｜AIが30秒分析・本命◎対抗○単穴▲を即提案（参考情報）";
 const DESC = "netkeiba出走馬データをAIが自動取得・分析。本命◎対抗○単穴▲と推奨買い目を30秒で提案。軍資金別配分・回収率トラッキング付き。無料1レースから。";
 
 export const metadata: Metadata = {
@@ -54,13 +54,21 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "WebApplication",
+      "@type": "SoftwareApplication",
       "name": "競馬予想AI",
       "url": SITE_URL,
       "applicationCategory": "SportApplication",
       "operatingSystem": "Web",
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY", "description": "無料1レースから" },
       "description": DESC,
+      "inLanguage": "ja",
+      "featureList": [
+        "AIによる本命◎対抗○単穴▲の自動提案",
+        "出走馬リアルタイムデータ取得",
+        "軍資金別配分シミュレーション",
+        "回収率トラッキング",
+        "JRA全開催対応"
+      ]
     },
     {
       "@type": "FAQPage",
@@ -69,6 +77,16 @@ const jsonLd = {
         { "@type": "Question", "name": "必ず当たりますか？", "acceptedAnswer": { "@type": "Answer", "text": "AIも100%の的中を保証することはできません。競馬の楽しみ方として活用いただき、余裕資金でお楽しみください。" } },
         { "@type": "Question", "name": "どのくらいのデータを使いますか？", "acceptedAnswer": { "@type": "Answer", "text": "出走馬の直近5走の成績、騎手情報、斤量、調教師などをリアルタイムで取得して分析します。" } },
         { "@type": "Question", "name": "いつでも解約できますか？", "acceptedAnswer": { "@type": "Answer", "text": "マイページから次回更新日前にいつでも解約できます。" } },
+        { "@type": "Question", "name": "バックテストの的中率はどうやって計算していますか？", "acceptedAnswer": { "@type": "Answer", "text": "過去レースデータを用いて、本AIの予想ロジックを適用した場合の的中率・回収率を算出しています。単勝・複勝・馬連・ワイドの券種別に集計し、サービス内の「バックテスト結果」ページで公開しています。なお、過去の的中率は将来を保証するものではありません。" } },
+        { "@type": "Question", "name": "G1レース以外にも対応していますか？", "acceptedAnswer": { "@type": "Answer", "text": "はい。G1・G2・G3・リステッド・オープン・3勝クラス以下の条件戦まで、JRAの全レース種別に対応しています。ベーシックプラン以上で土日開催の全レースを無制限でご利用いただけます。" } },
+        { "@type": "Question", "name": "地方競馬にも対応していますか？", "acceptedAnswer": { "@type": "Answer", "text": "現時点ではJRA（中央競馬）のみ対応しています。地方競馬（NAR：大井・川崎・船橋・浦和等）への対応は今後のアップデートで予定しています。" } },
+        { "@type": "Question", "name": "予想が外れても返金はありますか？", "acceptedAnswer": { "@type": "Answer", "text": "予想の的中・不的中に関わらず返金はできません。本サービスは競馬の予想参考情報を提供するサービスであり、馬券の的中を保証するものではありません。余裕資金の範囲内でお楽しみください。" } },
+        { "@type": "Question", "name": "どのデータを使って予想を生成していますか？", "acceptedAnswer": { "@type": "Answer", "text": "出走馬の直近5走成績・騎手情報・斤量・調教師・馬体重・コース適性・天候・馬場状態などを総合的に分析します。データはレース当日の公開情報をリアルタイムで取得・処理しています。" } },
+        { "@type": "Question", "name": "本サービスの予想は投資の根拠になりますか？", "acceptedAnswer": { "@type": "Answer", "text": "なりません。本サービスの予想は参考情報であり、馬券購入の投資判断根拠として使用することは推奨していません。公営競技（競馬）は射幸性を伴うため、余裕資金の範囲内で楽しむことを強くお勧めします。ギャンブル依存でお困りの方は「公益財団法人 日本依存症対策協会（0570-064-556）」にご相談ください。" } },
+        { "@type": "Question", "name": "騎手・調教師の得意コース傾向は分析していますか？", "acceptedAnswer": { "@type": "Answer", "text": "はい。AIは騎手の騎乗コース別勝率・調教師のトラック別成績・厩舎の仕上がり傾向を分析データに組み込んでいます。「この騎手はこのコースで強い」といった傾向を統計的に反映した予想を生成します。" } },
+        { "@type": "Question", "name": "複勝・ワイド・馬連など買い目の種類は選べますか？", "acceptedAnswer": { "@type": "Answer", "text": "はい。単勝・複勝・ワイド・馬連・馬単・三連複・三連単の7券種に対応しています。軍資金に応じた推奨配分額も自動計算し、期待値が高い買い目を優先的に表示します。" } },
+        { "@type": "Question", "name": "スマートフォンでも使えますか？", "acceptedAnswer": { "@type": "Answer", "text": "はい。スマートフォン・タブレット・PCすべてに対応したレスポンシブデザインです。PWA（プログレッシブウェブアプリ）対応のため、ホーム画面に追加するとアプリのように快適に利用できます。" } },
+        { "@type": "Question", "name": "回収率トラッキング機能とは何ですか？", "acceptedAnswer": { "@type": "Answer", "text": "実際に購入した馬券の結果を入力することで、ご自身の累計投資額・払戻額・回収率を自動集計する機能です。「どの予想パターンが自分に合っているか」を可視化し、馬券戦略の改善に役立てていただけます。" } },
       ],
     },
   ],
@@ -95,16 +113,14 @@ export default function RootLayout({
         </AgeGate>
         <Analytics />
         <SpeedInsights />
-        {/* Microsoft Clarity — pokkoriがhttps://clarity.microsoft.com/でプロジェクト登録後にIDを設定 */}
-        <Script id="clarity-script" strategy="afterInteractive">
-          {`
-            (function(c,l,a,r,i,t,y){
-                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-            })(window, document, "clarity", "script", "CLARITY_PROJECT_ID_HERE");
-          `}
-        </Script>
+        {process.env.NEXT_PUBLIC_CLARITY_ID && process.env.NODE_ENV === 'production' && (
+          <Script
+            id="clarity-init"
+            strategy="afterInteractive"
+          >
+            {`(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${process.env.NEXT_PUBLIC_CLARITY_ID}");`}
+          </Script>
+        )}
       </body>
     </html>
   );

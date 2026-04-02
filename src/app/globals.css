@@ -47,3 +47,109 @@ body {
 }
 
 .tabular-nums { font-variant-numeric: tabular-nums; }
+
+/* ============================================================
+   Design System 2026 -- globals.css 追記
+   ============================================================ */
+
+/* ---- Scrollbar (dark theme) ---- */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+/* ---- Selection ---- */
+::selection { background: rgba(168,85,247,0.3); color: #fff; }
+
+/* ---- Dark theme select fix ---- */
+select option { background: #1a1a2e; color: #fff; }
+
+/* ---- Animations ---- */
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.animate-fade-in-scale {
+  animation: fadeInScale 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-glow-pulse {
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background-size: 200% auto;
+  animation: shimmer 3s linear infinite;
+}
+
+/* ---- Stagger delays ---- */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+.stagger-6 { animation-delay: 0.6s; }
+.stagger-7 { animation-delay: 0.7s; }
+.stagger-8 { animation-delay: 0.8s; }
+
+/* ---- Utility: hide scrollbar but allow scroll ---- */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ---- OrbFloat keyframe ---- */
+@keyframes orbFloat {
+  0%   { transform: scale(1); opacity: 0.55; }
+  25%  { transform: translate(16px, -22px) scale(1.07); opacity: 0.85; }
+  50%  { transform: translate(-10px, -36px) scale(0.93); opacity: 0.65; }
+  75%  { transform: translate(20px, -14px) scale(1.03); opacity: 0.80; }
+  100% { transform: scale(1); opacity: 0.55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* ============================================================
+   Ambient Mesh Gradient 2026
+   ============================================================ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(120, 40, 200, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(0, 180, 255, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse at 60% 80%, rgba(255, 60, 130, 0.10) 0%, transparent 60%);
+}
+
+/* ---- Glassmorphism Cards ---- */
+.glass-card {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.glow-violet { box-shadow: 0 0 20px rgba(124, 58, 237, 0.4); }
+.glow-cyan   { box-shadow: 0 0 20px rgba(0, 212, 255, 0.4); }
+
+/* ---- Button Spring Animation ---- */
+.btn-spring {
+  transition: transform 84ms linear, box-shadow 200ms ease;
+}
+.btn-spring:hover {
+  transform: scale(1.04);
+  transition: transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.btn-spring:active {
+  transform: scale(0.96);
+  transition: transform 100ms cubic-bezier(0.4, 0, 1, 1);
+}

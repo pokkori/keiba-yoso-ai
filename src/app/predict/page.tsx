@@ -503,7 +503,7 @@ export default function PredictPage() {
       const isSkip = /【推奨判定】スキップ/.test(accumulated);
       if (isSkip) {
         setIsSkipMsg(true);
-        setError("このレースはスキップ推奨です。一般クラス戦は的中率9%で収支マイナスのため対象外。重賞・特別レースを選んでください。");
+        setError("このレースはスキップ推奨です。一般クラス戦はバックテスト上の参考的中率が低い傾向があるため対象外。重賞・特別レースを選んでください。※参考情報のみ。");
         setLoading(false);
         return;
       }
@@ -875,8 +875,8 @@ export default function PredictPage() {
               <p className="text-sm font-bold text-gray-700 mb-3">AIバックテスト実績（G1・重賞）</p>
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: "G1・重賞的中率", value: "67%", sub: "2/3レース" },
-                  { label: "参考回収率", value: "193%", sub: "初期バックテスト" },
+                  { label: "G1・重賞的中率", value: "検証中", sub: "バックテスト実施中（n=3）" },
+                  { label: "参考回収率", value: "検証中", sub: "バックテストページで公開中" },
                   { label: "対象レース", value: "G1/重賞", sub: "一般戦は除外" },
                 ].map((s) => (
                   <div key={s.label} className="text-center bg-green-50 rounded-lg p-2">
