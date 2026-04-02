@@ -253,19 +253,19 @@ export default function Home() {
           }).replace(/</g, '\\u003c'),
         }}
       />
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 20% 20%, rgba(16,185,129,0.18) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(5,150,105,0.12) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(250,204,21,0.06) 0%, transparent 60%), #0F0F1A' }}>
       {showPayjp && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl relative">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="rounded-2xl p-6 max-w-sm w-full shadow-2xl relative border border-white/10" style={{ background: 'rgba(15,20,30,0.95)', backdropFilter: 'blur(20px)' }}>
             <button onClick={() => setShowPayjp(false)} aria-label="決済モーダルを閉じる" className="absolute top-3 right-3 text-gray-400 text-xl"></button>
             <div className="flex justify-center mb-3" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-8 h-8 text-green-700"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
-            <h2 className="text-lg font-bold mb-2 text-center">競馬予想AIプレミアム</h2>
+            <h2 className="text-lg font-bold mb-2 text-center text-white">競馬予想AIプレミアム</h2>
             <KomojuButton
               planId={payjpPlan}
               planLabel={planLabel}
-              className="w-full bg-green-700 text-white font-bold py-3 rounded-xl hover:bg-green-800 disabled:opacity-50"
+              className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-500 disabled:opacity-50 shadow-[0_0_15px_rgba(16,185,129,0.4)]"
             />
-            <button onClick={() => setShowPayjp(false)} aria-label="決済モーダルを閉じる" className="text-xs text-gray-400 mt-2 block w-full text-center">閉じる</button>
+            <button onClick={() => setShowPayjp(false)} aria-label="決済モーダルを閉じる" className="text-xs text-green-400/70 mt-2 block w-full text-center hover:text-green-300">閉じる</button>
           </div>
         </div>
       )}
@@ -449,47 +449,47 @@ export default function Home() {
 
       {/* AIの予想実績 — バックテスト表示UI */}
       <section className="max-w-2xl mx-auto px-4 py-8" aria-label="バックテスト実績">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">AIの予想実績</h2>
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-gray-200 bg-green-50">
-          <p className="text-yellow-700 text-sm mb-3">
+        <h2 className="text-xl font-bold text-white mb-4">AIの予想実績</h2>
+        <div className="rounded-xl p-6 border border-emerald-500/20" style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(16px)' }}>
+          <p className="text-yellow-400/80 text-sm mb-3">
             ※ 実績は参考値です。投資・賭博を推奨するものではありません。
           </p>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-3xl font-bold text-gray-900">--</p>
-              <p className="text-gray-600 text-sm">的中率</p>
+              <p className="text-3xl font-bold text-white">--</p>
+              <p className="text-green-300 text-sm">的中率</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-gray-900">--</p>
-              <p className="text-gray-600 text-sm">回収率</p>
+              <p className="text-3xl font-bold text-white">--</p>
+              <p className="text-green-300 text-sm">回収率</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-gray-900">--</p>
-              <p className="text-gray-600 text-sm">分析レース数</p>
+              <p className="text-3xl font-bold text-white">--</p>
+              <p className="text-green-300 text-sm">分析レース数</p>
             </div>
           </div>
-          <p className="text-gray-500 text-xs mt-4 text-center">
+          <p className="text-green-400/60 text-xs mt-4 text-center">
             ※ バックテストデータは順次更新予定
           </p>
         </div>
       </section>
 
       {/* バックテスト実績 */}
-      <section className="py-12 px-6 bg-white border-b border-gray-100">
+      <section className="py-12 px-6 border-b border-white/5">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-6">
             <span className="inline-block bg-yellow-400 text-green-900 text-xs font-black px-3 py-1 rounded-full mb-3">バックテスト実施中</span>
-            <h2 className="text-xl font-bold text-gray-900">AI予想バックテスト</h2>
-            <p className="text-gray-500 text-xs mt-1">的中も外れも全記録公開中。データが蓄積され次第、実績値を公開します。</p>
+            <h2 className="text-xl font-bold text-white">AI予想バックテスト</h2>
+            <p className="text-green-300/70 text-xs mt-1">的中も外れも全記録公開中。データが蓄積され次第、実績値を公開します。</p>
           </div>
-          <div className="bg-green-50 border border-green-200 rounded-xl px-6 py-8 text-center">
-            <p className="text-green-700 font-bold text-sm mb-2">バックテストページで実際のバックテストが確認できます</p>
-            <p className="text-green-600 text-xs mb-4">的中も外れも隠さず全件記録。現在データ蓄積中です。</p>
-            <Link href="/backtest/results" className="inline-block bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-6 rounded-full text-sm transition-colors">
+          <div className="border border-emerald-500/30 rounded-xl px-6 py-8 text-center" style={{ background: 'rgba(16,185,129,0.08)', backdropFilter: 'blur(12px)' }}>
+            <p className="text-emerald-400 font-bold text-sm mb-2">バックテストページで実際のバックテストが確認できます</p>
+            <p className="text-green-300/80 text-xs mb-4">的中も外れも隠さず全件記録。現在データ蓄積中です。</p>
+            <Link href="/backtest/results" className="inline-block bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-6 rounded-full text-sm transition-colors shadow-[0_0_15px_rgba(16,185,129,0.3)]">
               バックテスト全記録を確認する →
             </Link>
           </div>
-          <p className="text-xs text-gray-400 text-center mt-3">※的中・収益を保証するものではありません。少サンプルのためデータの解釈にはご注意ください。</p>
+          <p className="text-xs text-green-400/50 text-center mt-3">※的中・収益を保証するものではありません。少サンプルのためデータの解釈にはご注意ください。</p>
 
           {/* 的中実績ランキング */}
           {(() => {
@@ -497,23 +497,23 @@ export default function Home() {
             if (!filtered.length) return null;
             return (
               <div className="mt-8">
-                <h3 className="text-lg font-bold text-gray-900 text-center mb-4"><span className="px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-amber-500 text-green-900 mr-1">RANK</span> 的中実績ランキング</h3>
+                <h3 className="text-lg font-bold text-white text-center mb-4"><span className="px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-amber-500 text-green-900 mr-1">RANK</span> 的中実績ランキング</h3>
                 <div className="space-y-3">
                   {filtered.map((h, i) => (
-                    <div key={i} className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                    <div key={i} className="flex items-center gap-3 border border-white/10 rounded-xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(8px)' }}>
                       <span className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-xs font-black ${h.badge}`}>
                         {h.rank}
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-bold text-gray-900 text-sm">{h.race}</span>
-                          <span className="text-xs text-gray-500">{h.date}</span>
+                          <span className="font-bold text-white text-sm">{h.race}</span>
+                          <span className="text-xs text-green-300/60">{h.date}</span>
                         </div>
-                        <div className="text-xs text-gray-600 mt-0.5">
+                        <div className="text-xs text-green-300/80 mt-0.5">
                           {h.bet} | {h.horse} | {h.odds}
                         </div>
                       </div>
-                      <span className={`flex-shrink-0 font-black text-sm ${h.profit.startsWith("+") ? "text-green-500" : "text-gray-500"}`}>
+                      <span className={`flex-shrink-0 font-black text-sm ${h.profit.startsWith("+") ? "text-emerald-400" : "text-red-400/80"}`}>
                         {h.profit}
                       </span>
                     </div>
@@ -547,13 +547,13 @@ export default function Home() {
       </section>
 
       {/* 月次回収率推移グラフ + バックテスト連動说明 */}
-      <section className="py-10 px-6 bg-white border-b border-gray-100">
+      <section className="py-10 px-6 border-b border-white/5">
         <div className="max-w-2xl mx-auto">
           {/* バックテスト連動 説明バナー */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 mb-5 flex items-center justify-between flex-wrap gap-2">
+          <div className="border border-yellow-400/30 rounded-xl px-4 py-3 mb-5 flex items-center justify-between flex-wrap gap-2" style={{ background: 'rgba(250,204,21,0.08)' }}>
             <div>
-              <p className="text-xs font-bold text-yellow-800"> バックテスト実施中 — 全記録をリアルタイム公開</p>
-              <p className="text-xs text-yellow-700">的中も外れも隠さず記録。現在n=3（統計的有意性確保には20〜30レース必要）</p>
+              <p className="text-xs font-bold text-yellow-300">バックテスト実施中 — 全記録をリアルタイム公開</p>
+              <p className="text-xs text-yellow-200/70">的中も外れも隠さず記録。現在n=3（統計的有意性確保には20〜30レース必要）</p>
             </div>
             <Link href="/backtest/results" className="text-xs bg-green-700 text-white font-bold px-3 py-1.5 rounded-lg hover:bg-green-800 transition-colors whitespace-nowrap">
               全記録を見る →
@@ -606,21 +606,21 @@ export default function Home() {
       </section>
 
       {/* Backtest Results — 透明性で差別化 */}
-      <section className="py-14 px-6 bg-white border-b border-gray-100">
+      <section className="py-14 px-6 border-b border-white/5">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <p className="text-xs font-bold text-green-600 tracking-widest uppercase mb-2">公開バックテスト実績</p>
-            <h2 className="text-2xl font-bold text-gray-900">AIの予想結果を、すべて公開します</h2>
-            <p className="text-gray-500 text-sm mt-2">的中も外れも隠しません。データで判断してください。</p>
+            <p className="text-xs font-bold text-emerald-400 tracking-widest uppercase mb-2">公開バックテスト実績</p>
+            <h2 className="text-2xl font-bold text-white">AIの予想結果を、すべて公開します</h2>
+            <p className="text-green-300/70 text-sm mt-2">的中も外れも隠しません。データで判断してください。</p>
           </div>
           {/* サマリー */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-8 text-sm text-yellow-800">
-            ️ バックテストはn=3レースのみです。統計的に有意な数値を出すには最低20〜30レースが必要です。現在継続中のため、数値の解釈にはご注意ください。
+          <div className="border border-yellow-400/30 rounded-xl p-4 mb-8 text-sm text-yellow-300" style={{ background: 'rgba(250,204,21,0.08)' }}>
+            バックテストはn=3レースのみです。統計的に有意な数値を出すには最低20〜30レースが必要です。現在継続中のため、数値の解釈にはご注意ください。
           </div>
           {/* 実績テーブル */}
-          <div className="overflow-x-auto rounded-2xl border border-gray-100">
+          <div className="overflow-x-auto rounded-2xl border border-white/10">
             <table className="w-full text-sm">
-              <thead className="bg-green-800 text-white">
+              <thead className="bg-emerald-900/80 text-white">
                 <tr>
                   <th className="px-4 py-3 text-left font-bold">レース</th>
                   <th className="px-4 py-3 text-left font-bold">推奨馬</th>
@@ -628,43 +628,43 @@ export default function Home() {
                   <th className="px-4 py-3 text-right font-bold">収支</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                <tr className="bg-green-50">
-                  <td className="px-4 py-3"><span className="font-bold">弥生賞 (G2)</span><br /><span className="text-xs text-gray-500">中山・9頭立て</span></td>
-                  <td className="px-4 py-3">4番 ライヒスアドラー</td>
-                  <td className="px-4 py-3 text-center"><span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full">2着 </span></td>
-                  <td className="px-4 py-3 text-right font-bold text-green-600">+¥100</td>
+              <tbody className="divide-y divide-white/5">
+                <tr style={{ background: 'rgba(16,185,129,0.08)' }}>
+                  <td className="px-4 py-3"><span className="font-bold text-white">弥生賞 (G2)</span><br /><span className="text-xs text-green-300/60">中山・9頭立て</span></td>
+                  <td className="px-4 py-3 text-green-200">4番 ライヒスアドラー</td>
+                  <td className="px-4 py-3 text-center"><span className="bg-emerald-600 text-white text-xs font-bold px-2 py-1 rounded-full">2着</span></td>
+                  <td className="px-4 py-3 text-right font-bold text-emerald-400">+¥100</td>
                 </tr>
-                <tr className="bg-green-50">
-                  <td className="px-4 py-3"><span className="font-bold">小倉大賞典 (G3)</span><br /><span className="text-xs text-gray-500">小倉</span></td>
-                  <td className="px-4 py-3">4番 ショウナンアデイブ</td>
-                  <td className="px-4 py-3 text-center"><span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full">3着 </span></td>
-                  <td className="px-4 py-3 text-right font-bold text-green-600">+¥3,700</td>
+                <tr style={{ background: 'rgba(16,185,129,0.08)' }}>
+                  <td className="px-4 py-3"><span className="font-bold text-white">小倉大賞典 (G3)</span><br /><span className="text-xs text-green-300/60">小倉</span></td>
+                  <td className="px-4 py-3 text-green-200">4番 ショウナンアデイブ</td>
+                  <td className="px-4 py-3 text-center"><span className="bg-emerald-600 text-white text-xs font-bold px-2 py-1 rounded-full">3着</span></td>
+                  <td className="px-4 py-3 text-right font-bold text-emerald-400">+¥3,700</td>
                 </tr>
-                <tr className="bg-red-50">
-                  <td className="px-4 py-3"><span className="font-bold">中山記念 (G2)</span><br /><span className="text-xs text-gray-500">中山</span></td>
-                  <td className="px-4 py-3">8番 ショウナンマグマ</td>
-                  <td className="px-4 py-3 text-center"><span className="bg-red-400 text-white text-xs font-bold px-2 py-1 rounded-full">圏外 </span></td>
-                  <td className="px-4 py-3 text-right font-bold text-red-500">-¥1,000</td>
+                <tr style={{ background: 'rgba(239,68,68,0.08)' }}>
+                  <td className="px-4 py-3"><span className="font-bold text-white">中山記念 (G2)</span><br /><span className="text-xs text-green-300/60">中山</span></td>
+                  <td className="px-4 py-3 text-green-200">8番 ショウナンマグマ</td>
+                  <td className="px-4 py-3 text-center"><span className="bg-red-500/80 text-white text-xs font-bold px-2 py-1 rounded-full">圏外</span></td>
+                  <td className="px-4 py-3 text-right font-bold text-red-400">-¥1,000</td>
                 </tr>
-                <tr className="bg-gray-50">
-                  <td className="px-4 py-3"><span className="font-bold">金鯱賞 (G2)</span><br /><span className="text-xs text-gray-500">中京・3/15</span></td>
-                  <td className="px-4 py-3">1着: シェイクユアハート（単勝1,350円）</td>
-                  <td className="px-4 py-3 text-center"><span className="bg-gray-400 text-white text-xs font-bold px-2 py-1 rounded-full">予想記録なし</span></td>
-                  <td className="px-4 py-3 text-right font-bold text-gray-500">—</td>
+                <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
+                  <td className="px-4 py-3"><span className="font-bold text-white">金鯱賞 (G2)</span><br /><span className="text-xs text-green-300/60">中京・3/15</span></td>
+                  <td className="px-4 py-3 text-green-200/80">1着: シェイクユアハート（単勝1,350円）</td>
+                  <td className="px-4 py-3 text-center"><span className="bg-gray-600/80 text-white text-xs font-bold px-2 py-1 rounded-full">予想記録なし</span></td>
+                  <td className="px-4 py-3 text-right font-bold text-gray-400">—</td>
                 </tr>
-                <tr className="bg-gray-50">
-                  <td className="px-4 py-3"><span className="font-bold">スプリングS (G2)</span><br /><span className="text-xs text-gray-500">中山・3/15</span></td>
-                  <td className="px-4 py-3">1着: アウダーシア（8番人気・単勝1,940円）</td>
-                  <td className="px-4 py-3 text-center"><span className="bg-gray-400 text-white text-xs font-bold px-2 py-1 rounded-full">予想記録なし</span></td>
-                  <td className="px-4 py-3 text-right font-bold text-gray-500">—</td>
+                <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
+                  <td className="px-4 py-3"><span className="font-bold text-white">スプリングS (G2)</span><br /><span className="text-xs text-green-300/60">中山・3/15</span></td>
+                  <td className="px-4 py-3 text-green-200/80">1着: アウダーシア（8番人気・単勝1,940円）</td>
+                  <td className="px-4 py-3 text-center"><span className="bg-gray-600/80 text-white text-xs font-bold px-2 py-1 rounded-full">予想記録なし</span></td>
+                  <td className="px-4 py-3 text-right font-bold text-gray-400">—</td>
                 </tr>
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-gray-400 text-center mt-3">※各レース¥1,000投資・複勝買いの場合。少サンプルのため参考値です。全記録は<Link href="/backtest/results" className="text-green-600 underline">バックテストページ</Link>で公開中。</p>
+          <p className="text-xs text-green-400/50 text-center mt-3">※各レース¥1,000投資・複勝買いの場合。少サンプルのため参考値です。全記録は<Link href="/backtest/results" className="text-emerald-400 underline">バックテストページ</Link>で公開中。</p>
           <div className="text-center mt-6">
-            <Link href="/backtest/results" className="inline-block bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-8 rounded-full text-sm transition-colors">
+            <Link href="/backtest/results" className="inline-block bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-full text-sm transition-colors shadow-[0_0_15px_rgba(16,185,129,0.3)]">
               全バックテスト記録を見る →
             </Link>
           </div>
@@ -672,7 +672,7 @@ export default function Home() {
       </section>
 
       {/* AI予想根拠の可視化 */}
-      <section className="py-14 px-6 bg-green-900 text-white">
+      <section className="py-14 px-6 text-white" style={{ background: 'rgba(5,46,22,0.6)', backdropFilter: 'blur(8px)' }}>
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <span className="inline-block bg-yellow-400 text-green-900 text-xs font-black px-3 py-1 rounded-full mb-3">透明性の可視化</span>
@@ -797,74 +797,74 @@ export default function Home() {
 
       {/* Features */}
       <section className="py-16 px-6 max-w-5xl mx-auto">
-        <h2 className="text-2xl font-bold text-center text-gray-900 mb-3">なぜ競馬予想AIが選ばれるのか</h2>
-        <p className="text-center text-gray-500 text-sm mb-12">自分で予想する手間なし。データ収集もAI分析も全自動。</p>
+        <h2 className="text-2xl font-bold text-center text-white mb-3">なぜ競馬予想AIが選ばれるのか</h2>
+        <p className="text-center text-green-300/70 text-sm mb-12">自分で予想する手間なし。データ収集もAI分析も全自動。</p>
         <div className="grid md:grid-cols-2 gap-6">
           {FEATURES.map((f) => (
-            <div key={f.title} className="p-6 rounded-2xl transition-colors" style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
-              <div className="text-green-700 mb-3">{FEATURE_ICONS[f.iconKey]}</div>
-              <h3 className="text-base font-bold text-gray-900 mb-2">{f.title}</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">{f.desc}</p>
+            <div key={f.title} className="p-6 rounded-2xl transition-all hover:scale-[1.01]" style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.3), 0 0 1px rgba(16,185,129,0.1)' }}>
+              <div className="text-emerald-400 mb-3">{FEATURE_ICONS[f.iconKey]}</div>
+              <h3 className="text-base font-bold text-white mb-2">{f.title}</h3>
+              <p className="text-green-300/80 text-sm leading-relaxed">{f.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* 無料 vs プレミアム 差別化セクション */}
-      <section className="py-14 px-6 bg-gradient-to-b from-white to-green-50 border-b border-green-100">
+      <section className="py-14 px-6 border-b border-white/5">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <p className="text-xs font-bold text-green-600 tracking-widest uppercase mb-2">無料 vs プレミアム</p>
-            <h2 className="text-2xl font-bold text-gray-900">プレミアムにしかできないこと</h2>
-            <p className="text-gray-500 text-sm mt-2">無料で体験して、その価値を感じたらアップグレード</p>
+            <p className="text-xs font-bold text-emerald-400 tracking-widest uppercase mb-2">無料 vs プレミアム</p>
+            <h2 className="text-2xl font-bold text-white">プレミアムにしかできないこと</h2>
+            <p className="text-green-300/70 text-sm mt-2">無料で体験して、その価値を感じたらアップグレード</p>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             {/* 無料 */}
-            <div className="bg-gray-50 border-2 border-gray-200 rounded-2xl p-6">
-              <h3 className="font-bold text-gray-600 mb-4 flex items-center gap-2">
-                <span className="text-lg"></span> 無料プラン
+            <div className="border border-white/10 rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)' }}>
+              <h3 className="font-bold text-white/60 mb-4 flex items-center gap-2">
+                <span className="text-lg">FREE</span> 無料プラン
               </h3>
-              <ul className="space-y-3 text-sm text-gray-600">
-                <li className="flex items-center gap-2"><span className="text-green-500 font-bold"></span> AI予想 2レース（本命・対抗・単穴）</li>
-                <li className="flex items-center gap-2"><span className="text-green-500 font-bold"></span> 複勝モード 2レース</li>
-                <li className="flex items-center gap-2"><span className="text-green-500 font-bold"></span> G1・重賞対応</li>
-                <li className="flex items-center gap-2"><span className="text-red-400 font-bold"></span> <span className="text-gray-400">週20〜30レース全予想</span></li>
-                <li className="flex items-center gap-2"><span className="text-red-400 font-bold"></span> <span className="text-gray-400">EV（期待値）計算付き分析</span></li>
-                <li className="flex items-center gap-2"><span className="text-red-400 font-bold"></span> <span className="text-gray-400">G1前日特別レポート</span></li>
-                <li className="flex items-center gap-2"><span className="text-red-400 font-bold"></span> <span className="text-gray-400">回収率トラッキング（無制限）</span></li>
+              <ul className="space-y-3 text-sm text-green-300/80">
+                <li className="flex items-center gap-2"><span className="text-emerald-400 font-bold">OK</span> AI予想 2レース（本命・対抗・単穴）</li>
+                <li className="flex items-center gap-2"><span className="text-emerald-400 font-bold">OK</span> 複勝モード 2レース</li>
+                <li className="flex items-center gap-2"><span className="text-emerald-400 font-bold">OK</span> G1・重賞対応</li>
+                <li className="flex items-center gap-2"><span className="text-red-400/80 font-bold">--</span> <span className="text-white/30">週20〜30レース全予想</span></li>
+                <li className="flex items-center gap-2"><span className="text-red-400/80 font-bold">--</span> <span className="text-white/30">EV（期待値）計算付き分析</span></li>
+                <li className="flex items-center gap-2"><span className="text-red-400/80 font-bold">--</span> <span className="text-white/30">G1前日特別レポート</span></li>
+                <li className="flex items-center gap-2"><span className="text-red-400/80 font-bold">--</span> <span className="text-white/30">回収率トラッキング（無制限）</span></li>
               </ul>
             </div>
             {/* プレミアム */}
-            <div className="bg-green-900 border-2 border-yellow-400 rounded-2xl p-6 relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-green-900 text-xs font-black px-4 py-1 rounded-full"><span className="px-1.5 py-0.5 rounded text-xs font-bold bg-gradient-to-r from-yellow-400 to-amber-500 text-green-900 mr-1">PRO</span> おすすめ</div>
+            <div className="border-2 border-yellow-400/60 rounded-2xl p-6 relative" style={{ background: 'rgba(5,46,22,0.7)', backdropFilter: 'blur(16px)', boxShadow: '0 0 30px rgba(16,185,129,0.15), inset 0 0 30px rgba(16,185,129,0.05)' }}>
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-green-900 text-xs font-black px-4 py-1 rounded-full">PRO おすすめ</div>
               <h3 className="font-bold text-yellow-400 mb-4 flex items-center gap-2">
                 <span className="text-lg">PRO</span> プロプラン ¥2,980/月
               </h3>
               <ul className="space-y-3 text-sm text-green-100">
-                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold"></span> AI予想 <strong className="text-white">毎週全レース無制限</strong></li>
-                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold"></span> <strong className="text-white">EV（期待値）計算付き</strong>詳細分析</li>
-                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold"></span> G1・重賞の<strong className="text-white">展開・ペース深掘り分析</strong></li>
-                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold"></span> <strong className="text-white">過去5走の詳細成績</strong>全馬分析</li>
-                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold"></span> 回収率トラッキング<strong className="text-white">無制限記録</strong></li>
-                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold"></span> <strong className="text-white">「スキップ推奨」</strong>判定（損切りサポート）</li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">OK</span> AI予想 <strong className="text-white">毎週全レース無制限</strong></li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">OK</span> <strong className="text-white">EV（期待値）計算付き</strong>詳細分析</li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">OK</span> G1・重賞の<strong className="text-white">展開・ペース深掘り分析</strong></li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">OK</span> <strong className="text-white">過去5走の詳細成績</strong>全馬分析</li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">OK</span> 回収率トラッキング<strong className="text-white">無制限記録</strong></li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400 font-bold">OK</span> <strong className="text-white">「スキップ推奨」</strong>判定（損切りサポート）</li>
               </ul>
               <button
                 onClick={() => startCheckout("pro")}
                 aria-label="今すぐプロプランで始める"
-                className="w-full mt-5 bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-3 rounded-xl text-sm transition-colors"
+                className="w-full mt-5 bg-yellow-400 hover:bg-yellow-300 text-green-900 font-bold py-3 rounded-xl text-sm transition-colors shadow-[0_0_20px_rgba(250,204,21,0.4)]"
               >
                 今すぐプロプランで始める →
               </button>
             </div>
           </div>
-          <p className="text-center text-xs text-gray-400 mt-4">※ PAY.JPによる安全な決済。いつでも解約可能。</p>
+          <p className="text-center text-xs text-green-400/50 mt-4">※ KOMOJUによる安全な決済。いつでも解約可能。</p>
         </div>
       </section>
 
       {/* How it works */}
-      <section className="py-16 px-6 bg-green-50">
+      <section className="py-16 px-6" style={{ background: 'rgba(5,46,22,0.3)' }}>
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-12">使い方は3ステップ</h2>
+          <h2 className="text-2xl font-bold text-center text-white mb-12">使い方は3ステップ</h2>
           <div className="space-y-6">
             {[
               { step: "1", title: "開催日・レースを選ぶ", desc: "今日の日付を選ぶと開催レースが自動表示。気になるレースをクリック。" },
@@ -872,17 +872,17 @@ export default function Home() {
               { step: "3", title: "買い目を確認・投票", desc: "本命・対抗・単穴と推奨買い目が一覧表示。JRA公式サイトで馬券購入へ。" },
             ].map((s) => (
               <div key={s.step} className="flex gap-4 items-start">
-                <div className="w-10 h-10 bg-green-700 text-white rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0">{s.step}</div>
+                <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.5)]">{s.step}</div>
                 <div>
-                  <h3 className="font-bold text-gray-900">{s.title}</h3>
-                  <p className="text-gray-600 text-sm mt-0.5">{s.desc}</p>
+                  <h3 className="font-bold text-white">{s.title}</h3>
+                  <p className="text-green-300/80 text-sm mt-0.5">{s.desc}</p>
                 </div>
               </div>
             ))}
           </div>
           <div className="text-center mt-10">
             <Link href="/predict"
-              className="inline-block bg-green-700 hover:bg-green-800 text-white font-bold py-4 px-10 rounded-full text-base transition-colors">
+              className="inline-block bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 px-10 rounded-full text-base transition-colors shadow-[0_0_20px_rgba(16,185,129,0.4)]">
               今すぐ無料で試す →
             </Link>
           </div>
@@ -895,31 +895,31 @@ export default function Home() {
         if (!next.length) return null;
         const today = new Date(); today.setHours(0, 0, 0, 0);
         return (
-          <section className="py-12 px-6 bg-yellow-50 border-y border-yellow-200">
+          <section className="py-12 px-6 border-y border-white/10">
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center justify-between mb-2">
-                <h2 className="text-lg font-bold text-gray-900"><span className="px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-red-500 to-orange-500 text-white mr-1">G1</span> 春G1シーズン --- 直近レース</h2>
-                <Link href="/calendar" className="text-sm text-green-700 hover:text-green-800 font-medium">
+                <h2 className="text-lg font-bold text-white"><span className="px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-red-500 to-orange-500 text-white mr-1">G1</span> 春G1シーズン --- 直近レース</h2>
+                <Link href="/calendar" className="text-sm text-emerald-400 hover:text-emerald-300 font-medium">
                   全日程を見る →
                 </Link>
               </div>
-              <p className="text-xs text-gray-500 mb-6">今がG1シーズン最高潮。AIで今すぐ予想を確認しよう。</p>
+              <p className="text-xs text-green-300/60 mb-6">今がG1シーズン最高潮。AIで今すぐ予想を確認しよう。</p>
               <div className="grid sm:grid-cols-3 gap-4">
                 {next.map((race) => {
                   const days = Math.ceil((new Date(race.date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
                   return (
                     <Link key={race.name} href="/predict"
-                      className="rounded-xl p-4 hover:shadow-md transition-all group block" style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px' }}>
+                      className="rounded-xl p-4 hover:scale-[1.02] transition-all group block border border-emerald-500/20" style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-yellow-600 font-bold">G1</span>
+                        <span className="text-xs text-yellow-400 font-bold">G1</span>
                         <span className="bg-red-600 text-white text-xs font-black px-2 py-0.5 rounded-full">あと{days}日</span>
                       </div>
-                      <div className="text-base font-bold text-gray-900 mb-2 group-hover:text-green-700">{race.name}</div>
-                      <div className="text-xs text-gray-500 space-y-0.5">
-                        <div> {race.displayDate}</div>
-                        <div> {race.venue}　{race.distance}</div>
+                      <div className="text-base font-bold text-white mb-2 group-hover:text-emerald-400">{race.name}</div>
+                      <div className="text-xs text-green-300/70 space-y-0.5">
+                        <div>{race.displayDate}</div>
+                        <div>{race.venue}　{race.distance}</div>
                       </div>
-                      <div className="mt-3 text-xs font-bold text-green-600">AIで予想する →</div>
+                      <div className="mt-3 text-xs font-bold text-emerald-400">AIで予想する →</div>
                     </Link>
                   );
                 })}
@@ -1000,64 +1000,65 @@ export default function Home() {
 
       {/* Voices */}
       <section className="py-16 px-6 max-w-5xl mx-auto">
-        <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">ユーザーの声</h2>
-        <p className="text-center text-xs text-gray-400 mb-10">※ユーザーからの声（個人の感想です）</p>
+        <h2 className="text-2xl font-bold text-center text-white mb-2">ユーザーの声</h2>
+        <p className="text-center text-xs text-green-400/60 mb-10">※ユーザーからの声（個人の感想です）</p>
         <div className="grid md:grid-cols-3 gap-6">
           {VOICES.map((v, i) => (
-            <div key={i} className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px' }}>
-              <p className="text-gray-700 text-sm leading-relaxed mb-4">「{v.text}」</p>
-              <p className="text-xs text-gray-500 font-medium">— {v.name}</p>
+            <div key={i} className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: '16px' }}>
+              <p className="text-green-200/90 text-sm leading-relaxed mb-4">「{v.text}」</p>
+              <p className="text-xs text-emerald-400/70 font-medium">— {v.name}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Pricing */}
-      <section className="py-16 px-6 bg-green-50" id="pricing">
+      <section className="py-16 px-6" id="pricing" style={{ background: 'rgba(5,46,22,0.2)' }}>
         <div className="max-w-md mx-auto mb-8">
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
-            <p className="font-bold text-green-800"><span className="px-1.5 py-0.5 rounded text-xs font-bold bg-green-600 text-white mr-1">DATA</span> バックテスト全記録公開中</p>
-            <p className="text-green-700 text-sm mt-1">的中も外れも隠さず公開。同じAIが今週末のレースも分析します。</p>
+          <div className="border border-emerald-500/30 rounded-xl p-4 mb-4" style={{ background: 'rgba(16,185,129,0.08)' }}>
+            <p className="font-bold text-emerald-300"><span className="px-1.5 py-0.5 rounded text-xs font-bold bg-emerald-600 text-white mr-1">DATA</span> バックテスト全記録公開中</p>
+            <p className="text-green-300/80 text-sm mt-1">的中も外れも隠さず公開。同じAIが今週末のレースも分析します。</p>
           </div>
         </div>
-        <h2 className="text-2xl font-bold text-center text-gray-900 mb-3">料金プラン</h2>
-        <p className="text-center text-gray-500 text-sm mb-12">いつでも解約OK・次回更新前に停止可能</p>
+        <h2 className="text-2xl font-bold text-center text-white mb-3">料金プラン</h2>
+        <p className="text-center text-green-300/70 text-sm mb-12">いつでも解約OK・次回更新前に停止可能</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 max-w-5xl mx-auto">
           {PLANS.map((plan) => (
             <div key={plan.name}
-              className={`rounded-2xl p-6 border-2 bg-white ${plan.highlight ? "border-green-500 shadow-xl" : "border-green-200"}`}>
+              className={`rounded-2xl p-6 border-2 ${plan.highlight ? "border-yellow-400/60" : "border-white/10"}`}
+              style={{ background: plan.highlight ? 'rgba(5,46,22,0.7)' : 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', boxShadow: plan.highlight ? '0 0 25px rgba(16,185,129,0.15)' : 'none' }}>
               {plan.highlight && (
-                <span className="block text-center text-xs font-bold text-white bg-green-600 rounded-full px-3 py-1 mb-3">
+                <span className="block text-center text-xs font-bold text-green-900 bg-yellow-400 rounded-full px-3 py-1 mb-3">
                   おすすめ
                 </span>
               )}
               {"badge" in plan && plan.badge && (
-                <span className={`block text-center text-xs font-bold rounded-full px-3 py-1 mb-3 ${"badgeGreen" in plan && plan.badgeGreen ? "text-white bg-green-500" : "text-yellow-700 bg-yellow-100"}`}>
+                <span className={`block text-center text-xs font-bold rounded-full px-3 py-1 mb-3 ${"badgeGreen" in plan && plan.badgeGreen ? "text-white bg-emerald-600" : "text-yellow-300 bg-yellow-400/20"}`}>
                   {plan.badge}
                 </span>
               )}
-              <h3 className="text-lg font-bold text-gray-900 mb-1">{plan.name}</h3>
+              <h3 className="text-lg font-bold text-white mb-1">{plan.name}</h3>
               <div className="mb-4">
-                <span className="text-3xl font-bold text-green-600">¥{plan.price}</span>
-                <span className="text-gray-500 text-sm">{plan.unit}</span>
+                <span className="text-3xl font-bold text-emerald-400">¥{plan.price}</span>
+                <span className="text-green-300/60 text-sm">{plan.unit}</span>
               </div>
-              <ul className="text-sm text-gray-600 space-y-2 mb-6">
+              <ul className="text-sm text-green-300/80 space-y-2 mb-6">
                 {plan.features.map((feat) => (
                   <li key={feat} className="flex items-start gap-2">
-                    <span className="text-green-500 mt-0.5"></span>{feat}
+                    <span className="text-emerald-400 mt-0.5">OK</span>{feat}
                   </li>
                 ))}
               </ul>
               {plan.stripeKey ? (
                 <button onClick={() => startCheckout(plan.stripeKey!)}
                   aria-label={`${plan.name}プランを申し込む`}
-                  className={`w-full py-2.5 rounded-full text-sm font-bold transition-colors ${plan.highlight ? "bg-green-600 hover:bg-green-700 text-white" : "border border-green-300 text-green-700 hover:bg-green-50"}`}>
+                  className={`w-full py-2.5 rounded-full text-sm font-bold transition-colors ${plan.highlight ? "bg-yellow-400 hover:bg-yellow-300 text-green-900 shadow-[0_0_15px_rgba(250,204,21,0.3)]" : "border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"}`}>
                   {plan.cta}
                 </button>
               ) : (
                 <Link href={plan.href!}
                   aria-label={`${plan.name}プランで競馬予想AIを試す`}
-                  className="block text-center py-2.5 rounded-full text-sm font-bold border border-green-300 text-green-700 hover:bg-green-50 transition-colors">
+                  className="block text-center py-2.5 rounded-full text-sm font-bold border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 transition-colors">
                   {plan.cta}
                 </Link>
               )}
@@ -1071,22 +1072,21 @@ export default function Home() {
 
       {/* 感情フック */}
       <section className="py-12 px-6 max-w-3xl mx-auto">
-        <h2 className="text-xl font-bold text-center text-gray-800 mb-6">こんな経験ありませんか？</h2>
+        <h2 className="text-xl font-bold text-center text-white mb-6">こんな経験ありませんか？</h2>
         <div className="space-y-4">
           {[
-            { icon: "", text: "出馬表を調べるのに時間がかかりすぎて、肝心の分析が疎かに..." },
-            { icon: "", text: "過去データを調べても、どの馬に注目すべきかわからない..." },
-            { icon: "", text: "感覚で買い続けて、なかなかプラス収支にならない..." },
+            { text: "出馬表を調べるのに時間がかかりすぎて、肝心の分析が疎かに..." },
+            { text: "過去データを調べても、どの馬に注目すべきかわからない..." },
+            { text: "感覚で買い続けて、なかなかプラス収支にならない..." },
           ].map((item, i) => (
-            <div key={i} className="flex items-center gap-4 bg-red-50 border border-red-200 rounded-xl p-4">
-              <span className="text-2xl">{item.icon}</span>
-              <p className="text-gray-700 text-sm font-medium">{item.text}</p>
+            <div key={i} className="flex items-center gap-4 border border-red-500/20 rounded-xl p-4" style={{ background: 'rgba(239,68,68,0.08)' }}>
+              <p className="text-red-200/90 text-sm font-medium">{item.text}</p>
             </div>
           ))}
         </div>
-        <div className="mt-6 bg-green-700 text-white rounded-2xl p-5 text-center">
-          <p className="font-bold text-base mb-1">競馬予想AIがその悩みを解決します</p>
-          <p className="text-green-100 text-sm">最新データ×AIで本命を瞬時に絞り込み。迷わず買い目を決められます。</p>
+        <div className="mt-6 border border-emerald-500/30 rounded-2xl p-5 text-center" style={{ background: 'rgba(5,46,22,0.6)', backdropFilter: 'blur(12px)', boxShadow: '0 0 20px rgba(16,185,129,0.1)' }}>
+          <p className="font-bold text-white text-base mb-1">競馬予想AIがその悩みを解決します</p>
+          <p className="text-green-300/80 text-sm">最新データ×AIで本命を瞬時に絞り込み。迷わず買い目を決められます。</p>
         </div>
       </section>
       {/* ユーザー的中報告 — ソーシャルプルーフ強化 */}
@@ -1159,16 +1159,16 @@ export default function Home() {
       </section>
 
       {/* オッズ別期待値解説コンテンツ（SEOコンテンツ） */}
-      <section className="py-14 px-6 bg-green-50 border-y border-green-200">
+      <section className="py-14 px-6 border-y border-white/5">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <span className="inline-block bg-yellow-400 text-green-900 text-xs font-black px-3 py-1 rounded-full mb-3">期待値ガイド</span>
-            <h2 className="text-2xl font-bold text-gray-900">複勝オッズ別・回収率の目安と買い方</h2>
-            <p className="text-gray-500 text-sm mt-2">「どのオッズ帯で買うか」が回収率を大きく左右します</p>
+            <h2 className="text-2xl font-bold text-white">複勝オッズ別・回収率の目安と買い方</h2>
+            <p className="text-green-300/70 text-sm mt-2">「どのオッズ帯で買うか」が回収率を大きく左右します</p>
           </div>
-          <div className="overflow-x-auto rounded-xl border border-green-200 mb-6">
+          <div className="overflow-x-auto rounded-xl border border-white/10 mb-6">
             <table className="w-full text-sm">
-              <thead className="bg-green-800 text-white">
+              <thead className="bg-emerald-900/80 text-white">
                 <tr>
                   <th className="px-4 py-3 text-left font-bold">複勝オッズ帯</th>
                   <th className="px-4 py-3 text-center font-bold">期待値目安</th>
@@ -1176,19 +1176,19 @@ export default function Home() {
                   <th className="px-4 py-3 text-left font-bold">理由・解説</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-green-100 bg-white">
+              <tbody className="divide-y divide-white/5">
                 {[
-                  { odds: "1.0〜1.5倍", ev: "マイナス", badge: "スキップ推奨", badgeColor: "bg-red-100 text-red-600", desc: "返金がわずか。1回外れると複数レース分の損失。長期でマイナスになりやすいゾーン。" },
-                  { odds: "1.5〜2.0倍", ev: "やや低め", badge: "条件次第", badgeColor: "bg-yellow-100 text-yellow-700", desc: "AIスコア80点超かつリスク低のみ検討。安定感はあるが旨みが薄く、長期収支改善は難しい。" },
-                  { odds: "2.0〜5.0倍", ev: "◎ ベスト", badge: "積極推奨", badgeColor: "bg-green-100 text-green-700", desc: "的中率と配当のバランスが最良。複数回の外れをカバーできる。AIが最も重視するゾーン。" },
-                  { odds: "5.0〜10.0倍", ev: "高リターン", badge: "少額勝負", badgeColor: "bg-blue-100 text-blue-700", desc: "高配当だが的中率低下。AIの「穴推奨」が出たときのみ少額で。資金の10%以内を厳守。" },
-                  { odds: "10倍超", ev: "ギャンブル", badge: "基本スキップ", badgeColor: "bg-gray-100 text-gray-500", desc: "的中率が非常に低く、システム的にプラスにするのは困難。AIは基本的に推奨しない。" },
+                  { odds: "1.0〜1.5倍", ev: "マイナス", badge: "スキップ推奨", badgeColor: "bg-red-500/20 text-red-300", desc: "返金がわずか。1回外れると複数レース分の損失。長期でマイナスになりやすいゾーン。" },
+                  { odds: "1.5〜2.0倍", ev: "やや低め", badge: "条件次第", badgeColor: "bg-yellow-400/20 text-yellow-300", desc: "AIスコア80点超かつリスク低のみ検討。安定感はあるが旨みが薄く、長期収支改善は難しい。" },
+                  { odds: "2.0〜5.0倍", ev: "◎ ベスト", badge: "積極推奨", badgeColor: "bg-emerald-500/20 text-emerald-300", desc: "的中率と配当のバランスが最良。複数回の外れをカバーできる。AIが最も重視するゾーン。" },
+                  { odds: "5.0〜10.0倍", ev: "高リターン", badge: "少額勝負", badgeColor: "bg-blue-500/20 text-blue-300", desc: "高配当だが的中率低下。AIの「穴推奨」が出たときのみ少額で。資金の10%以内を厳守。" },
+                  { odds: "10倍超", ev: "ギャンブル", badge: "基本スキップ", badgeColor: "bg-gray-500/20 text-gray-400", desc: "的中率が非常に低く、システム的にプラスにするのは困難。AIは基本的に推奨しない。" },
                 ].map((row, i) => (
-                  <tr key={i} className={i === 2 ? "bg-green-50" : ""}>
-                    <td className="px-4 py-3 font-bold text-gray-900">{row.odds}</td>
-                    <td className="px-4 py-3 text-center font-bold text-gray-700">{row.ev}</td>
+                  <tr key={i} style={{ background: i === 2 ? 'rgba(16,185,129,0.08)' : 'rgba(255,255,255,0.02)' }}>
+                    <td className="px-4 py-3 font-bold text-white">{row.odds}</td>
+                    <td className="px-4 py-3 text-center font-bold text-green-200">{row.ev}</td>
                     <td className="px-4 py-3 text-center"><span className={`text-xs font-bold px-2 py-1 rounded-full ${row.badgeColor}`}>{row.badge}</span></td>
-                    <td className="px-4 py-3 text-xs text-gray-600 leading-relaxed">{row.desc}</td>
+                    <td className="px-4 py-3 text-xs text-green-300/80 leading-relaxed">{row.desc}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1196,22 +1196,21 @@ export default function Home() {
           </div>
           <div className="grid sm:grid-cols-3 gap-4 mb-6">
             {[
-              { icon: "", title: "2〜5倍ゾーンを狙う理由", desc: "¥1,000投資で¥2,000〜¥5,000返ってくる。3回に1回当たれば十分なレベル。的中率30〜45%ならこのゾーンが最も期待値プラスに近い。" },
-              { icon: "", title: "控除率を知る", desc: "競馬の控除率は約20〜25%。全レースランダムに購入すると長期で75〜80%しか返ってこない。AIで期待値の高いレースに絞ることで控除率の壁を超えることを目指す。" },
-              { icon: "", title: "損切りのルール", desc: "AIが「スキップ推奨」を出したレースはご自身の判断で参考にしてください。月の損失が予算の50%を超えたら残りの週は休む。感情的な追い購いが最大の敵。" },
+              { title: "2〜5倍ゾーンを狙う理由", desc: "¥1,000投資で¥2,000〜¥5,000返ってくる。3回に1回当たれば十分なレベル。的中率30〜45%ならこのゾーンが最も期待値プラスに近い。" },
+              { title: "控除率を知る", desc: "競馬の控除率は約20〜25%。全レースランダムに購入すると長期で75〜80%しか返ってこない。AIで期待値の高いレースに絞ることで控除率の壁を超えることを目指す。" },
+              { title: "損切りのルール", desc: "AIが「スキップ推奨」を出したレースはご自身の判断で参考にしてください。月の損失が予算の50%を超えたら残りの週は休む。感情的な追い購いが最大の敵。" },
             ].map((item, i) => (
-              <div key={i} className="bg-white border border-green-200 rounded-xl p-4">
-                <div className="text-2xl mb-2">{item.icon}</div>
-                <p className="font-bold text-gray-900 text-sm mb-1">{item.title}</p>
-                <p className="text-gray-600 text-xs leading-relaxed">{item.desc}</p>
+              <div key={i} className="border border-white/10 rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(8px)' }}>
+                <p className="font-bold text-white text-sm mb-1">{item.title}</p>
+                <p className="text-green-300/80 text-xs leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
           <div className="text-center">
-            <Link href="/how-to" className="inline-block bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-8 rounded-full text-sm transition-colors mr-3">
+            <Link href="/how-to" className="inline-block bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-8 rounded-full text-sm transition-colors mr-3 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
               AI予想の正しい使い方ガイドを読む →
             </Link>
-            <Link href="/predict" className="inline-block border border-green-600 text-green-700 hover:bg-green-50 font-bold py-3 px-8 rounded-full text-sm transition-colors">
+            <Link href="/predict" className="inline-block border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 font-bold py-3 px-8 rounded-full text-sm transition-colors">
               実際に予想を試す（無料）
             </Link>
           </div>
@@ -1220,16 +1219,16 @@ export default function Home() {
 
       {/* FAQ */}
       <section className="py-16 px-6 max-w-3xl mx-auto">
-        <h2 className="text-2xl font-bold text-center text-gray-900 mb-10">よくある質問</h2>
+        <h2 className="text-2xl font-bold text-center text-white mb-10">よくある質問</h2>
         <div className="space-y-4">
           {FAQS.map((faq) => (
-            <div key={faq.q} className="border border-gray-200 rounded-xl p-5">
-              <h3 className="font-bold text-gray-900 mb-2 text-sm">Q. {faq.q}</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">A. {faq.a}</p>
+            <div key={faq.q} className="border border-white/10 rounded-xl p-5" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(8px)' }}>
+              <h3 className="font-bold text-white mb-2 text-sm">Q. {faq.q}</h3>
+              <p className="text-green-300/80 text-sm leading-relaxed">A. {faq.a}</p>
             </div>
           ))}
         </div>
-        <p className="text-xs text-gray-400 text-center mt-8">※バックテストはn=3レースの初期データです。少サンプルのため統計的信頼性はありません。全記録はバックテストページで公開中。競馬は公営競技です。馬券購入は各自の判断と責任で行ってください。</p>
+        <p className="text-xs text-green-400/50 text-center mt-8">※バックテストはn=3レースの初期データです。少サンプルのため統計的信頼性はありません。全記録はバックテストページで公開中。競馬は公営競技です。馬券購入は各自の判断と責任で行ってください。</p>
       </section>
 
       {/* FAQ JSON-LD 構造化データ */}
@@ -1320,12 +1319,12 @@ export default function Home() {
       </section>
 
       {/* G1レース個別予想ガイド */}
-      <section className="py-12 px-4 bg-yellow-50 border-y border-yellow-200">
+      <section className="py-12 px-4 border-y border-white/5">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-6">
-            <p className="text-xs font-bold text-yellow-700 tracking-widest uppercase mb-2">G1レース完全攻略ガイド</p>
-            <h2 className="text-xl font-bold text-gray-900">AIが分析する春G1攻略法</h2>
-            <p className="text-gray-500 text-sm mt-1">レースごとのコース特性・過去傾向・AIの重視ポイントを徹底解説</p>
+            <p className="text-xs font-bold text-yellow-400 tracking-widest uppercase mb-2">G1レース完全攻略ガイド</p>
+            <h2 className="text-xl font-bold text-white">AIが分析する春G1攻略法</h2>
+            <p className="text-green-300/70 text-sm mt-1">レースごとのコース特性・過去傾向・AIの重視ポイントを徹底解説</p>
           </div>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
             {[
@@ -1337,17 +1336,17 @@ export default function Home() {
               { slug: "arima-kinen", name: "有馬記念", date: "12/27（日）", venue: "中山 2500m芝", badge: "グランプリ" },
             ].map((race) => (
               <Link key={race.slug} href={`/race/${race.slug}`}
-                className="bg-white rounded-xl border border-yellow-200 p-4 hover:border-green-400 hover:shadow-md transition-all group">
+                className="rounded-xl border border-white/10 p-4 hover:border-emerald-500/40 hover:scale-[1.02] transition-all group block" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(8px)' }}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs bg-yellow-400 text-green-900 font-black px-2 py-0.5 rounded-full">G1</span>
-                  <span className="text-xs bg-green-100 text-green-700 font-medium px-2 py-0.5 rounded-full">{race.badge}</span>
+                  <span className="text-xs bg-emerald-500/20 text-emerald-300 font-medium px-2 py-0.5 rounded-full">{race.badge}</span>
                 </div>
-                <div className="text-sm font-bold text-gray-900 mb-1 group-hover:text-green-700">{race.name}</div>
-                <div className="text-xs text-gray-500 space-y-0.5">
-                  <div> {race.date}</div>
-                  <div> {race.venue}</div>
+                <div className="text-sm font-bold text-white mb-1 group-hover:text-emerald-400">{race.name}</div>
+                <div className="text-xs text-green-300/70 space-y-0.5">
+                  <div>{race.date}</div>
+                  <div>{race.venue}</div>
                 </div>
-                <div className="mt-2 text-xs font-bold text-green-600">AI攻略ガイドを見る →</div>
+                <div className="mt-2 text-xs font-bold text-emerald-400">AI攻略ガイドを見る →</div>
               </Link>
             ))}
           </div>
@@ -1356,19 +1355,17 @@ export default function Home() {
 
       {/* もっと楽しむ3選 */}
       <section className="py-8 px-4 max-w-lg mx-auto">
-        <h2 className="text-center text-base font-bold text-green-800 mb-4"> 競馬AIをもっと楽しむ3選</h2>
+        <h2 className="text-center text-base font-bold text-white mb-4">競馬AIをもっと楽しむ3選</h2>
         <ol className="space-y-3">
           {[
-            { icon: "", title: "バックテスト全記録を分析", desc: "的中・外れ全記録が公開中。AIの判断パターンを学んで自分の予想力を高めよう。" },
-            { icon: "", title: "G1レース制覇チャレンジ", desc: "2026年全G1レースをAI予想でカバー。有馬記念・日本ダービーを制して達成感を味わおう。" },
-            { icon: "", title: "予想結果をXでシェア", desc: "当たった予想をXに投稿して仲間と盛り上がろう。的中報告は最高の喜び！" },
+            { title: "バックテスト全記録を分析", desc: "的中・外れ全記録が公開中。AIの判断パターンを学んで自分の予想力を高めよう。" },
+            { title: "G1レース制覇チャレンジ", desc: "2026年全G1レースをAI予想でカバー。有馬記念・日本ダービーを制して達成感を味わおう。" },
+            { title: "予想結果をXでシェア", desc: "当たった予想をXに投稿して仲間と盛り上がろう。的中報告は最高の喜び！" },
           ].map((item, i) => (
-            <li key={i} className="flex items-start gap-3 rounded-xl p-3"
-              style={{ background: "rgba(22,101,52,0.06)", border: "1px solid rgba(22,101,52,0.15)" }}>
-              <span style={{ fontSize: "22px", lineHeight: "1" }}>{item.icon}</span>
+            <li key={i} className="flex items-start gap-3 rounded-xl p-3 border border-emerald-500/15" style={{ background: 'rgba(16,185,129,0.06)' }}>
               <div>
-                <div className="text-green-900 font-bold text-sm">{i + 1}. {item.title}</div>
-                <div className="text-green-700 text-xs mt-0.5 opacity-80">{item.desc}</div>
+                <div className="text-white font-bold text-sm">{i + 1}. {item.title}</div>
+                <div className="text-green-300/70 text-xs mt-0.5">{item.desc}</div>
               </div>
             </li>
           ))}
@@ -1377,34 +1374,32 @@ export default function Home() {
 
       {/* おすすめ競馬サイト（アフィリエイト） */}
       <section className="py-8 px-4 max-w-lg mx-auto">
-        <h2 className="text-center text-base font-bold text-green-800 mb-4"> おすすめ競馬サイト</h2>
-        <p className="text-center text-xs text-gray-500 mb-4">AI予想と合わせてご活用ください <span className="text-gray-400">PR</span></p>
+        <h2 className="text-center text-base font-bold text-white mb-4">おすすめ競馬サイト</h2>
+        <p className="text-center text-xs text-green-400/60 mb-4">AI予想と合わせてご活用ください <span className="text-green-400/40">PR</span></p>
         <div className="space-y-3">
           <a
             href="https://keiba.rakuten.co.jp/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 p-3 rounded-xl border border-green-200 bg-green-50 hover:bg-green-100 transition-colors"
+            className="flex items-center gap-3 p-3 rounded-xl border border-emerald-500/20 hover:border-emerald-500/40 transition-colors" style={{ background: 'rgba(16,185,129,0.06)' }}
           >
-            <span className="text-2xl"></span>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-bold text-green-900">楽天競馬</div>
-              <div className="text-xs text-green-700">楽天ポイントが貯まる・使える公式馬券購入サイト</div>
+              <div className="text-sm font-bold text-white">楽天競馬</div>
+              <div className="text-xs text-green-300/80">楽天ポイントが貯まる・使える公式馬券購入サイト</div>
             </div>
-            <span className="text-xs text-green-600 font-bold shrink-0">無料登録 →</span>
+            <span className="text-xs text-emerald-400 font-bold shrink-0">無料登録 →</span>
           </a>
           <a
             href="https://www.oddspark.com/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 p-3 rounded-xl border border-green-200 bg-green-50 hover:bg-green-100 transition-colors"
+            className="flex items-center gap-3 p-3 rounded-xl border border-emerald-500/20 hover:border-emerald-500/40 transition-colors" style={{ background: 'rgba(16,185,129,0.06)' }}
           >
-            <span className="text-2xl">データ</span>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-bold text-green-900">オッズパーク</div>
-              <div className="text-xs text-green-700">地方競馬・ばんえい競馬もカバー。AI予想との相性◎</div>
+              <div className="text-sm font-bold text-white">オッズパーク</div>
+              <div className="text-xs text-green-300/80">地方競馬・ばんえい競馬もカバー。AI予想との相性◎</div>
             </div>
-            <span className="text-xs text-green-600 font-bold shrink-0">無料登録 →</span>
+            <span className="text-xs text-emerald-400 font-bold shrink-0">無料登録 →</span>
           </a>
         </div>
       </section>
@@ -1449,40 +1444,40 @@ export default function Home() {
 
       {/* FAQセクション */}
       <section aria-label="よくある質問" className="py-12 px-4 max-w-2xl mx-auto">
-        <h2 className="text-2xl font-bold mb-8 text-center">よくある質問</h2>
+        <h2 className="text-2xl font-bold mb-8 text-center text-white">よくある質問</h2>
         <div className="space-y-4">
           {faqs.map((faq, i) => (
-            <details key={i} className="border border-gray-200 rounded-lg p-4 cursor-pointer">
-              <summary className="font-semibold text-gray-800">{faq.q}</summary>
-              <p className="mt-3 text-gray-600">{faq.a}</p>
+            <details key={i} className="border border-white/10 rounded-lg p-4 cursor-pointer" style={{ background: 'rgba(255,255,255,0.04)' }}>
+              <summary className="font-semibold text-white">{faq.q}</summary>
+              <p className="mt-3 text-green-300/80">{faq.a}</p>
             </details>
           ))}
         </div>
       </section>
 
-      <footer className="text-center py-8 pb-24 sm:pb-8 text-sm text-gray-400 border-t">
-        <p className="text-gray-500 text-xs mb-3">
+      <footer className="text-center py-8 pb-24 sm:pb-8 text-sm border-t border-white/10" style={{ background: 'rgba(0,0,0,0.3)' }}>
+        <p className="text-green-400/60 text-xs mb-3">
           ※本サービスはエンターテインメント目的の予想サービスです。馬券の的中・収益を保証するものではありません。
         </p>
-        <p className="text-yellow-600 text-xs mb-4 font-semibold">
-          ️ 本サービスは20歳以上の方を対象としています。競馬は公営競技です。馬券購入は各自の判断と責任で行ってください。ギャンブル依存症でお悩みの方は
-          <a href="https://www.ncasa-japan.jp/" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-400">こちら</a>
+        <p className="text-yellow-400/80 text-xs mb-4 font-semibold">
+          本サービスは20歳以上の方を対象としています。競馬は公営競技です。馬券購入は各自の判断と責任で行ってください。ギャンブル依存症でお悩みの方は
+          <a href="https://www.ncasa-japan.jp/" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-300">こちら</a>
           にご相談ください。
         </p>
-        <div className="space-x-4 mb-3">
-          <a href="/legal" className="hover:text-gray-600">特定商取引法に基づく表記</a>
-          <a href="/terms" className="hover:text-gray-600">利用規約</a>
-          <a href="/privacy" className="hover:text-gray-600">プライバシーポリシー</a>
-          <span>© 2026 競馬予想AI</span>
+        <div className="space-x-4 mb-3 text-green-400/70">
+          <a href="/legal" className="hover:text-green-300">特定商取引法に基づく表記</a>
+          <a href="/terms" className="hover:text-green-300">利用規約</a>
+          <a href="/privacy" className="hover:text-green-300">プライバシーポリシー</a>
+          <span className="text-green-400/40">© 2026 競馬予想AI</span>
         </div>
-        <div className="border-t border-green-900 pt-3 text-xs text-green-800">
+        <div className="border-t border-white/5 pt-3 text-xs text-green-400/40">
           <p className="mb-1">ポッコリラボの他のサービス</p>
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
-            <a href="https://keirin-yoso-ai.vercel.app" className="hover:text-green-600">競輪予想AI</a>
-            <a href="https://claim-ai-beryl.vercel.app" className="hover:text-green-600">クレームAI</a>
-            <a href="https://hojyokin-ai-delta.vercel.app" className="hover:text-green-600">補助金AI</a>
-            <a href="https://rougo-sim-ai.vercel.app" className="hover:text-green-600">老後シミュレーターAI</a>
-            <a href="https://keiyakusho-ai.vercel.app" className="hover:text-green-600">契約書AIレビュー</a>
+            <a href="https://keirin-yoso-ai.vercel.app" className="hover:text-emerald-400">競輪予想AI</a>
+            <a href="https://claim-ai-beryl.vercel.app" className="hover:text-emerald-400">クレームAI</a>
+            <a href="https://hojyokin-ai-delta.vercel.app" className="hover:text-emerald-400">補助金AI</a>
+            <a href="https://rougo-sim-ai.vercel.app" className="hover:text-emerald-400">老後シミュレーターAI</a>
+            <a href="https://keiyakusho-ai.vercel.app" className="hover:text-emerald-400">契約書AIレビュー</a>
           </div>
         </div>
       </footer>
