@@ -7,6 +7,7 @@ import { StreakBanner } from "@/components/StreakBanner";
 import { UsageCounter } from "@/components/UsageCounter";
 import { CrossSell } from "@/components/CrossSell";
 import { TrustBadge } from "@/components/TrustBadge";
+import { SetPlanBanner } from "@/components/SetPlanBanner";
 
 const PAYJP_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYJP_PUBLIC_KEY ?? "";
 
@@ -168,18 +169,19 @@ const PLANS = [
     cta: "今すぐ始める",
     stripeKey: "pro",
     href: null,
-    highlight: true,
+    highlight: false,
   },
   {
     name: "年間プロ",
     price: "19,800",
     unit: "/年",
-    badge: "月払い比44%OFF",
-    features: ["プロ全機能", "月あたり¥1,650（月払い¥2,980比44%OFF）", "優先サポート"],
+    badge: "2ヶ月分無料",
+    badgeGreen: true,
+    features: ["プロ全機能", "月換算 ¥1,650/月（44%OFF）", "優先サポート"],
     cta: "年間プランで申し込む（44%OFF）",
     stripeKey: "annual",
     href: null,
-    highlight: false,
+    highlight: true,
   },
 ];
 
@@ -205,6 +207,8 @@ export default function Home() {
     ? "年間プロプラン ¥19,800/年"
     : payjpPlan === "pro"
     ? "プロプラン ¥2,980/月"
+    : payjpPlan === (process.env.NEXT_PUBLIC_KOMOJU_SET_PLAN_ID ?? "set-plan")
+    ? "3競技セットプラン ¥6,980/月（22%OFF）"
     : "ベーシックプラン ¥980/月";
 
   return (
@@ -987,7 +991,7 @@ export default function Home() {
                 </span>
               )}
               {"badge" in plan && plan.badge && (
-                <span className="block text-center text-xs font-bold text-yellow-700 bg-yellow-100 rounded-full px-3 py-1 mb-3">
+                <span className={`block text-center text-xs font-bold rounded-full px-3 py-1 mb-3 ${"badgeGreen" in plan && plan.badgeGreen ? "text-white bg-green-500" : "text-yellow-700 bg-yellow-100"}`}>
                   {plan.badge}
                 </span>
               )}
@@ -1020,6 +1024,9 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* 3競技セットプランバナー */}
+      <SetPlanBanner onStartCheckout={startCheckout} />
 
       {/* 感情フック */}
       <section className="py-12 px-6 max-w-3xl mx-auto">
