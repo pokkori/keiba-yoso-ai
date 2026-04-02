@@ -7,6 +7,7 @@ import "./globals.css";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
 import FeedbackButton from "@/components/FeedbackButton";
 import { AgeGate } from "@/components/AgeGate";
+import CookieBanner from "@/components/CookieBanner";
 
 const notoSansJP = Noto_Sans_JP({ subsets: ["latin"], weight: ["400", "700"], display: "swap" });
 
@@ -202,6 +203,7 @@ export default function RootLayout({
             {`(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${process.env.NEXT_PUBLIC_CLARITY_ID}");`}
           </Script>
         )}
+        <CookieBanner />
       </body>
     </html>
   );
