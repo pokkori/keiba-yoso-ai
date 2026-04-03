@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("Authorization");
   const cronSecret = process.env.CRON_SECRET;
+  // CRON_SECRETが設定されている場合のみ認証チェック
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

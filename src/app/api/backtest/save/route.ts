@@ -4,7 +4,8 @@ import { savePrediction } from "@/lib/backtest";
 export const dynamic = "force-dynamic";
 
 // POST /api/backtest/save
-// body: { raceId, raceName, raceDate, recommendation, horseNum, horseName, ev, odds }
+// body: { raceId, raceName, raceDate, recommendation, horseNum, horseName, ev, odds,
+//         actualPos?, hit?, returnAmount? }
 // 認証不要（サーバーサイドから内部的に呼び出す想定）
 export async function POST(req: NextRequest) {
   let body: {
@@ -16,6 +17,10 @@ export async function POST(req: NextRequest) {
     horseName?: string | null;
     ev?: number | null;
     odds?: number | null;
+    // バックテスト用: 予想と結果を同時保存
+    actualPos?: number | null;
+    hit?: boolean | null;
+    returnAmount?: number | null;
   };
   try {
     body = await req.json();
@@ -39,6 +44,9 @@ export async function POST(req: NextRequest) {
     horseName: body.horseName ?? null,
     ev: body.ev ?? null,
     odds: body.odds ?? null,
+    actualPos: body.actualPos ?? null,
+    hit: body.hit ?? null,
+    returnAmount: body.returnAmount ?? null,
   });
 
   return NextResponse.json({ id });

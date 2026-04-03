@@ -46,10 +46,11 @@ function wilsonInterval(hits: number, total: number): { low: number; high: numbe
 }
 
 export async function savePrediction(
-  log: Omit<
-    PredictionLog,
-    "id" | "createdAt" | "actualPos" | "hit" | "returnAmount" | "updatedAt"
-  >
+  log: Omit<PredictionLog, "id" | "createdAt" | "updatedAt" | "actualPos" | "hit" | "returnAmount"> & {
+    actualPos?: number | null;
+    hit?: boolean | null;
+    returnAmount?: number | null;
+  }
 ): Promise<string> {
   try {
     const supabase = getSupabaseAdmin();
@@ -64,6 +65,10 @@ export async function savePrediction(
         horse_name: log.horseName,
         ev: log.ev,
         odds: log.odds,
+        actual_pos: log.actualPos ?? null,
+        hit: log.hit ?? null,
+        return_amount: log.returnAmount ?? null,
+        updated_at: log.actualPos != null ? new Date().toISOString() : null,
       })
       .select("id")
       .single();
