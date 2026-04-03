@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 const SITE_URL = "https://keiba-yoso-ai.vercel.app";
 
 type Props = {
