@@ -99,7 +99,7 @@ function HitModal({ raceInfo, sections, isFukusho, onClose }: { raceInfo: string
   const shareText = [
     `🎊【速報・AI的中】${raceInfo}`,
     honmeHorse ? `${isFukusho ? "🎯複勝推奨" : "◎本命"}: ${honmeHorse} が的中！` : "的中しました！",
-    `信頼度${confScore}%の予想が的中→予想ロジックも全公開中`,
+    `分析充実度${confScore}%の参考予想が的中→予想ロジックも全公開中`,
     "▶ 無料で試す → https://keiba-yoso-ai.vercel.app",
     isFukusho ? "#競馬複勝的中 #競馬AI予想 #複勝 #keiba" : "#競馬的中 #競馬予想AI #G1 #keiba #競馬",
   ].filter(Boolean).join("\n");
@@ -148,8 +148,8 @@ function ConfidenceBadge({ sections }: { sections: PredictionSection[] }) {
                 score >= 65 ? "bg-yellow-100 text-yellow-800 border-yellow-300" :
                 "bg-gray-100 text-gray-700 border-gray-300";
   return (
-    <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border ${color}`} style={{ fontVariantNumeric: "tabular-nums", fontWeight: 900 }}>
-      信頼度 {score}%
+    <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border ${color}`} style={{ fontVariantNumeric: "tabular-nums", fontWeight: 900 }} title="AIの分析情報充実度スコアです。的中率を示すものではありません">
+      分析充実度 {score}%
     </span>
   );
 }
@@ -286,7 +286,7 @@ function PredictionCard({ sections, raceInfo, rawText, isFukusho }: { sections: 
   const ogUrl = `https://keiba-yoso-ai.vercel.app/api/og?race=${encodeURIComponent(raceInfo)}&horse=${encodeURIComponent(honmeHorse)}&confidence=${confidenceScore}&mode=${isFukusho ? "fukusho" : "standard"}`;
   const shareText = [
     `🏇【AI予想】${raceInfo}`,
-    honmeHorse ? (isFukusho ? `🎯複勝推奨: ${honmeHorse}（信頼度${confidenceScore}%）` : `◎本命: ${honmeHorse}（信頼度${confidenceScore}%）`) : "",
+    honmeHorse ? (isFukusho ? `🎯複勝推奨: ${honmeHorse}（分析充実度${confidenceScore}%・参考情報）` : `◎本命: ${honmeHorse}（分析充実度${confidenceScore}%・参考情報）`) : "",
     isFukusho ? "複勝4軸スコア分析→予想ロジック全公開中" : "4軸AI分析（過去成績/コース/騎手/馬場）→予想ロジック全公開",
     "▶ 無料で試す →",
     isFukusho ? "#競馬複勝予想 #競馬AI #keiba" : "#競馬予想AI #G1 #競馬 #keiba",
@@ -935,6 +935,16 @@ export default function PredictPage() {
                       回収率に記録
                     </Link>
                   </div>
+                  {/* 景表法準拠・免責文言 */}
+                  <div className="mt-4 bg-yellow-50 border border-yellow-300 rounded-xl p-3">
+                    <p className="text-xs font-bold text-yellow-800 mb-1">重要事項（景品表示法準拠）</p>
+                    <ul className="text-xs text-yellow-700 space-y-0.5 list-disc list-inside">
+                      <li>本予想はAIによる参考情報の提供を目的としたサービスです。</li>
+                      <li>馬券の的中・収益を保証するものではありません。</li>
+                      <li>馬券購入はご自身の判断と責任で行ってください。</li>
+                      <li>競馬は公営競技です。20歳未満の方は馬券を購入できません。</li>
+                    </ul>
+                  </div>
                   {/* 次のアクション3選 */}
                   <div className="mt-4 bg-green-50/80 backdrop-blur-sm border border-green-200/60 rounded-xl p-4">
                     <p className="text-sm font-bold text-green-800 mb-3">次にやるべきこと3選</p>
@@ -1007,7 +1017,7 @@ export default function PredictPage() {
                         </div>
                         <div className="flex items-center gap-1 text-xs text-yellow-300 font-bold">
                           <svg viewBox="0 0 16 16" className="w-4 h-4" aria-hidden="true"><path d="M8 1L2 4v4c0 4 2.5 7 6 8 3.5-1 6-4 6-8V4L8 1z" fill="%2316a34a"/><path d="M6 8l1.5 1.5L10 7" stroke="white" strokeWidth="1.2" strokeLinecap="round"/></svg>
-                          <span>30日返金保証</span>
+                          <span>30日以内解約可能</span>
                         </div>
                       </div>
                     </div>

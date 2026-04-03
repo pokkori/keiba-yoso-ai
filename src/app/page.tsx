@@ -497,7 +497,8 @@ export default function Home() {
             if (!filtered.length) return null;
             return (
               <div className="mt-8">
-                <h3 className="text-lg font-bold text-white text-center mb-4"><span className="px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-amber-500 text-green-900 mr-1">RANK</span> 的中実績ランキング</h3>
+                <h3 className="text-lg font-bold text-white text-center mb-1"><span className="px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-amber-500 text-green-900 mr-1">RANK</span> 的中実績サンプル（参考）</h3>
+                <p className="text-xs text-yellow-300/70 text-center mb-3">※バックテストDB記録からの参考表示です。将来の的中・収益を保証するものではありません。</p>
                 <div className="space-y-3">
                   {filtered.map((h, i) => (
                     <div key={i} className="flex items-center gap-3 border border-white/10 rounded-xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(8px)' }}>
@@ -1310,7 +1311,7 @@ export default function Home() {
             <span>OK</span><span>いつでも解約OK</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-yellow-300 font-bold">
-            <span>️</span><span>30日返金保証</span>
+            <span>️</span><span>30日以内解約可能</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-green-300">
             <span></span><span>業界最安¥980/月〜</span>

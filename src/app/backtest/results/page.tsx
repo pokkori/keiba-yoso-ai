@@ -3,7 +3,7 @@ import Link from "next/link";
 export const metadata = {
   title: "バックテスト実績公開 | 競馬予想AI",
   description:
-    "競馬予想AIの複勝モードによる実際の予想実績を全公開。13レース中5的中・的中率38%。的中も外れも隠しません。",
+    "競馬予想AIの複勝モードによる実際の予想実績を全公開（参考値）。的中も外れも隠しません。過去の実績は将来の的中・収益を保証するものではありません。",
 };
 
 const SUMMARY_STATS = [
@@ -208,9 +208,12 @@ export default function BacktestResultsPage() {
       {/* Summary Stats */}
       <section className="py-12 px-6">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-lg font-bold text-gray-300 text-center mb-8">
+          <h2 className="text-lg font-bold text-gray-300 text-center mb-2">
             2026年1〜3月 バックテスト実績サマリー
           </h2>
+          <p className="text-xs text-yellow-600 text-center mb-6 bg-yellow-950/30 border border-yellow-700/30 rounded-lg px-4 py-2">
+            過去13件のバックテストに基づく参考値です。投資・回収を保証するものではありません。
+          </p>
           <div className="grid grid-cols-3 gap-4">
             {SUMMARY_STATS.map((s) => (
               <div

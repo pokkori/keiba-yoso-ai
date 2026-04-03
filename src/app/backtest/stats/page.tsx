@@ -139,9 +139,12 @@ export default function BacktestStatsPage() {
               </section>
             ) : (
               <section className="mb-10">
-                <h2 className="text-lg font-bold text-gray-300 mb-5">
+                <h2 className="text-lg font-bold text-gray-300 mb-2">
                   的中率・回収率（買い推奨{stats.buyCount}件）
                 </h2>
+                <p className="text-xs text-gray-500 mb-5">
+                  過去{stats.buyCount}件のバックテストに基づく参考値です。投資・回収を保証するものではありません。
+                </p>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="bg-gray-900 border border-green-800 rounded-2xl p-6 text-center">
                     <div className="text-3xl md:text-4xl font-bold text-yellow-400 mb-1">
@@ -151,6 +154,7 @@ export default function BacktestStatsPage() {
                     <div className="text-xs text-gray-500">
                       95%CI: {Math.round(stats.hitRateLow * 100)}〜{Math.round(stats.hitRateHigh * 100)}%
                     </div>
+                    <div className="text-xs text-gray-600 mt-1">参考値</div>
                   </div>
                   <div className="bg-gray-900 border border-green-800 rounded-2xl p-6 text-center">
                     <div className={`text-3xl md:text-4xl font-bold mb-1 ${stats.recoveryRate >= 100 ? "text-green-400" : "text-red-400"}`}>
@@ -158,6 +162,7 @@ export default function BacktestStatsPage() {
                     </div>
                     <div className="text-sm font-bold text-white mb-1">回収率</div>
                     <div className="text-xs text-gray-500">100%以上が収支プラス</div>
+                    <div className="text-xs text-gray-600 mt-1">参考値</div>
                   </div>
                   <div className="bg-gray-900 border border-green-800 rounded-2xl p-6 text-center">
                     <div className={`text-3xl md:text-4xl font-bold mb-1 ${stats.totalReturn - stats.totalInvested >= 0 ? "text-green-400" : "text-red-400"}`}>
@@ -166,6 +171,7 @@ export default function BacktestStatsPage() {
                     </div>
                     <div className="text-sm font-bold text-white mb-1">収支合計</div>
                     <div className="text-xs text-gray-500">100円/レース投資時</div>
+                    <div className="text-xs text-gray-600 mt-1">参考値</div>
                   </div>
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-4">
