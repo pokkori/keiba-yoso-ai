@@ -3,6 +3,21 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
+interface ConfidenceBand {
+  label: string;
+  minConf: number;
+  maxConf: number;
+  buyCount: number;
+  evaluatedCount: number;
+  hitCount: number;
+  hitRate: number;
+  hitRateLow: number;
+  hitRateHigh: number;
+  totalReturn: number;
+  totalInvested: number;
+  recoveryRate: number;
+}
+
 interface BacktestStats {
   totalPredictions: number;
   buyCount: number;
@@ -15,6 +30,7 @@ interface BacktestStats {
   totalInvested: number;
   recoveryRate: number;
   period: { from: string; to: string };
+  confidenceBreakdown: ConfidenceBand[];
 }
 
 const MIN_SAMPLES = 100;
@@ -242,6 +258,47 @@ export default function BacktestStatsPage() {
                 ※過去実績値です。将来の回収率を保証するものではありません。馬券購入は自己責任で。
               </p>
             </section>
+
+            {/* 確信度別パフォーマンス */}
+            {stats.confidenceBreakdown && stats.confidenceBreakdown.some(b => b.evaluatedCount > 0) && (
+              <section className="mb-8">
+                <div className="bg-gray-900 border border-gray-700 rounded-2xl p-5">
+                  <h2 className="text-sm font-bold text-gray-300 mb-1">確信度別パフォーマンス</h2>
+                  <p className="text-xs text-gray-500 mb-3">
+                    AIの確信度スコアが高いレースほど的中率・回収率が高いか検証中（2026年4月〜記録開始）
+                  </p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="text-gray-500 border-b border-gray-700">
+                          <th className="text-left py-2 pr-3">確信度</th>
+                          <th className="text-right py-2 px-2">件数</th>
+                          <th className="text-right py-2 px-2">的中率</th>
+                          <th className="text-right py-2 px-2">回収率</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {stats.confidenceBreakdown.map(band => (
+                          <tr key={band.label} className="border-b border-gray-800">
+                            <td className="py-2 pr-3 font-medium text-gray-200">{band.label}</td>
+                            <td className="py-2 px-2 text-right text-gray-400">{band.evaluatedCount}件</td>
+                            <td className={`py-2 px-2 text-right font-bold ${band.hitRate >= 0.5 ? "text-green-400" : "text-gray-400"}`}>
+                              {band.evaluatedCount > 0 ? `${(band.hitRate * 100).toFixed(1)}%` : "-"}
+                            </td>
+                            <td className={`py-2 px-2 text-right font-bold ${band.recoveryRate >= 100 ? "text-green-400" : band.recoveryRate > 0 ? "text-yellow-400" : "text-gray-500"}`}>
+                              {band.evaluatedCount > 0 ? `${band.recoveryRate.toFixed(1)}%` : "-"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-2">
+                    ※件数が少ない間は参考値です。確信度8以上のレースに絞ると回収率が向上する傾向を検証中。
+                  </p>
+                </div>
+              </section>
+            )}
 
             {/* 免責文言 */}
             <section className="mb-8">

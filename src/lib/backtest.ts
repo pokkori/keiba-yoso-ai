@@ -19,6 +19,21 @@ export interface PredictionLog {
   updatedAt: string | null;
 }
 
+export interface ConfidenceBand {
+  label: string;
+  minConf: number;
+  maxConf: number;
+  buyCount: number;
+  evaluatedCount: number;
+  hitCount: number;
+  hitRate: number;
+  hitRateLow: number;
+  hitRateHigh: number;
+  totalReturn: number;
+  totalInvested: number;
+  recoveryRate: number;
+}
+
 export interface BacktestStats {
   totalPredictions: number;
   buyCount: number;
@@ -31,6 +46,7 @@ export interface BacktestStats {
   totalInvested: number; // buyCount * 100
   recoveryRate: number; // totalReturn / totalInvested * 100
   period: { from: string; to: string };
+  confidenceBreakdown: ConfidenceBand[];
 }
 
 // ウィルソン区間計算（95%CI）
@@ -164,6 +180,43 @@ export async function getBacktestStats(): Promise<BacktestStats> {
   const totalReturn = hitLogs.reduce((s, l) => s + (l.returnAmount ?? 0), 0);
   const { low, high } = wilsonInterval(hitLogs.length, completedBuy.length);
   const dates = logs.map((l) => l.raceDate).sort();
+
+  const bands: { label: string; minConf: number; maxConf: number }[] = [
+    { label: "高確信度（8〜10）", minConf: 8, maxConf: 10 },
+    { label: "中確信度（6〜7）",  minConf: 6, maxConf: 7 },
+    { label: "低確信度（〜5）",   minConf: 0, maxConf: 5 },
+  ];
+
+  const confidenceBreakdown: ConfidenceBand[] = bands.map((band) => {
+    const bandBuyLogs = buyLogs.filter(
+      (l) =>
+        l.confidence !== null &&
+        l.confidence >= band.minConf &&
+        l.confidence <= band.maxConf
+    );
+    const evaluated = bandBuyLogs.filter((l) => l.hit !== null);
+    const hits = evaluated.filter((l) => l.hit === true);
+    const bandTotalReturn = hits.reduce((s, l) => s + (l.returnAmount ?? 0), 0);
+    const { low: bandLow, high: bandHigh } = wilsonInterval(hits.length, evaluated.length);
+    return {
+      label: band.label,
+      minConf: band.minConf,
+      maxConf: band.maxConf,
+      buyCount: bandBuyLogs.length,
+      evaluatedCount: evaluated.length,
+      hitCount: hits.length,
+      hitRate: evaluated.length > 0 ? hits.length / evaluated.length : 0,
+      hitRateLow: bandLow,
+      hitRateHigh: bandHigh,
+      totalReturn: bandTotalReturn,
+      totalInvested: evaluated.length * 100,
+      recoveryRate:
+        evaluated.length > 0
+          ? (bandTotalReturn / (evaluated.length * 100)) * 100
+          : 0,
+    };
+  });
+
   return {
     totalPredictions: logs.length,
     buyCount: buyLogs.length,
@@ -183,5 +236,6 @@ export async function getBacktestStats(): Promise<BacktestStats> {
       from: dates[0] ?? "-",
       to: dates[dates.length - 1] ?? "-",
     },
+    confidenceBreakdown,
   };
 }
