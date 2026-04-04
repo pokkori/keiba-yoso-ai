@@ -405,6 +405,70 @@ function detectOddsInconsistency(horses: HorseBasic[]): string {
   return lines.join("\n");
 }
 
+// ─── Benter式Market Edge分析 ──────────────────────────────────────────────────
+
+/**
+ * 単勝オッズ配列からimplied probability計算（正規化済み）
+ * 日本競馬の過学習防止: 0.75〜0.80倍の正規化因子
+ */
+function calcImpliedProbabilities(oddsArr: number[]): number[] {
+  const rawProbs = oddsArr.map(o => (o > 0 ? 1 / o : 0));
+  const sum = rawProbs.reduce((a, b) => a + b, 0);
+  if (sum === 0) return rawProbs;
+  return rawProbs.map(p => p / sum);
+}
+
+/**
+ * 複勝オッズ文字列から3着内implied probability
+ * "1.5〜2.3倍" → 中央値で計算
+ */
+function calcFukushoImplied(fukushoOddsStr: string): number {
+  const match = fukushoOddsStr.match(/([\d.]+)[〜~\-]([\d.]+)/);
+  if (match) {
+    const mid = (parseFloat(match[1]) + parseFloat(match[2])) / 2;
+    return mid > 0 ? 1 / mid : 0;
+  }
+  const single = parseFloat(fukushoOddsStr);
+  return single > 0 ? 1 / single : 0;
+}
+
+/**
+ * 馬リストからimplied prob分析セクションを生成
+ */
+function buildBenterSection(horses: HorseBasic[]): string {
+  const withOdds = horses.filter(h => h.tanshOdds && parseFloat(h.tanshOdds) > 0);
+  if (withOdds.length < 4) return "";
+
+  const oddsArr = withOdds.map(h => parseFloat(h.tanshOdds!));
+  const impliedProbs = calcImpliedProbabilities(oddsArr);
+
+  let section = "\n【市場確率分析（Benter式・コード計算済み）】\n";
+  section += "単勝オッズから算出したimplied probability（過剰投票補正済み）:\n";
+
+  withOdds.forEach((h, i) => {
+    const pop = h.popularity ? `${h.popularity}番人気` : "";
+    section += `${h.num}番 ${h.name} ${pop}: implied_prob=${(impliedProbs[i]*100).toFixed(1)}% (単勝${oddsArr[i]}倍)\n`;
+  });
+
+  // 複勝オッズがある場合
+  const withFukusho = withOdds.filter(h => h.fukushoOdds);
+  if (withFukusho.length > 0) {
+    section += "\n複勝implied probability（3着内確率）:\n";
+    for (const h of withFukusho) {
+      const prob = calcFukushoImplied(h.fukushoOdds!);
+      section += `${h.num}番 ${h.name}: 3着内implied_prob=${(prob*100).toFixed(1)}% (複勝${h.fukushoOdds})\n`;
+    }
+  }
+
+  section += "\n【Market Edge判定基準】\n";
+  section += "あなたの推定確率 - implied_prob = Market Edge\n";
+  section += "Edge > +5%: 買い推奨 / Edge +2〜5%: 対抗 / Edge < 0%: スキップ\n";
+  section += "Edge < 0%の馬を本命にすることは禁止。Edge > 5%がない場合はスキップ推奨。\n";
+  section += "控除率20%(単勝・複勝)を考慮: Edge > 3%でないと長期的に利益が出ません。\n";
+
+  return section;
+}
+
 // ─── Batch-fetch all horse details ───────────────────────────────────────────
 
 async function fetchAllHorseDetails(horses: HorseBasic[], log: string[]): Promise<string[]> {
@@ -654,6 +718,9 @@ export async function POST(req: NextRequest) {
   // オッズ一貫性分析（市場の歪み検出）
   const oddsInconsistencyNote = detectOddsInconsistency(raceData.rawHorses);
 
+  // Benter式Market Edge分析セクション（コード側でimplied prob計算済み）
+  const benterSection = buildBenterSection(raceData.rawHorses);
+
   let prompt: string;
 
   if (mode === "fukusho") {
@@ -669,7 +736,7 @@ export async function POST(req: NextRequest) {
 
 出走馬詳細情報:
 ${raceData.horses}
-${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}
+${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}${benterSection ? `${benterSection}\n` : ""}
 === STEP0: レースカテゴリチェック（最優先）===
 
 【統計的根拠】重賞・特別レースの的中率33%（収支プラス）、一般クラス戦の的中率9%（大幅マイナス）。
@@ -735,7 +802,7 @@ SKIPの場合、以下の形式のみを出力し、他は一切書かない:
 出走馬詳細情報:
 ${raceData.horses}
 ${budgetLine}
-${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}
+${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}${benterSection ? `${benterSection}\n` : ""}
 【★最重要★ 複勝120%回収率維持のための鉄則（全て厳守・例外なし）】
 
 【SKIP優先原則】迷ったら買わない。スキップはゼロ損失。買って外れたら確実にマイナス。
@@ -801,7 +868,7 @@ ${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}
 出走馬詳細情報:
 ${raceData.horses}
 ${budgetSection}
-${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}
+${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}${benterSection ? `${benterSection}\n` : ""}
 === レースカテゴリチェック（最優先・必ず最初に確認）===
 
 【統計的根拠】重賞・特別レースの的中率33%（収支プラス）、一般クラス戦の的中率9%（大幅マイナス）。
@@ -892,13 +959,37 @@ ${!isGradeRace ? "⚠️ このレースは一般クラス戦の可能性があ�
 (F)馬体重増加: 馬体重+10kg以上増加馬は市場が過剰に嫌がるため期待値プラスになりやすい→減点しない。
 (G)横山琉人騎手(芝): 回収率139.9%（2021-2024実績）→芝レースで積極評価。`;
 
+    const calibrationRules = `
+【キャリブレーション最適化（最重要・精度より確率の正確さを優先）】
+あなたは「当てること」より「確率を正確に推定すること」を優先してください。
+
+「確信度8/10」と言ったとき、実際に80%の確率で的中しなければなりません。
+過去のデータ傾向:
+- 「確信度8」推奨が実際に60%しか当たらない場合 → 確信度を6に下げて正直に報告すること
+- 「スキップ」と判定したレースが実際に当たりまくる場合 → フィルター基準を見直すこと
+
+【正しいキャリブレーション例】
+- 単勝2倍の馬 → implied_prob=50%前後 → AIが「60%で当たる」と言うなら確信度6〜7程度が妥当
+- 単勝10倍の馬 → implied_prob=10%前後 → AIが「20%で当たる」と言うなら確信度6程度が妥当（エッジは+10%）
+- 単勝10倍の馬でAIが「80%で当たる」と言う場合 → 過剰自信・スキップすべき
+
+Market Edgeがプラスで、かつキャリブレーション的に合理的な場合のみ買い推奨してください。
+`;
+
+    const backtestRulesWithCalibration = backtestRules + calibrationRules;
+
     const confidenceRule = `【確信度スコア必須出力】全ての予想の末尾に「確信度: X/10」を必ず出力すること。8-10:強い買い推奨（条件が複数重なっている）、6-7:買い（標準的な推奨）、5以下:スキップ推奨（迷いがある）。確信度6以下の場合は【推奨判定】スキップとすること。`;
+
+    const marketEdgeTableRule = `【Market Edge分析表（出走馬4頭以上かつオッズデータある場合のみ出力）】
+プロンプト中に「市場確率分析（Benter式）」セクションが含まれる場合は、推奨判定の前に以下の表を出力すること:
+| 馬番 | 馬名 | AI推定確率 | implied prob | Edge | 判定 |
+上記表でEdge > +5%の馬のみ買い推奨候補とすること。`;
 
     const systemPrompt = mode === "fukusho"
       ? isBacktest
-        ? `あなたはプロの競馬アナリストで複勝一点買いの専門家です。長期回収率120%以上を目標とします。【絶対ルール】(1)情報不足でも追加要求・謝罪禁止。(2)バックテストモード:人気データなくても馬名・騎手・斤量・過去成績から定性的に判断。数値スコアリングやEV計算は行わないこと。(3)一般クラス戦（未勝利・1勝・2勝・新馬）即スキップ。(4)重賞・特別以外即スキップ。(5)15頭以上即スキップ。(6)馬場「重」「不良」即スキップ。(7)9頭以下の重賞は能力差が出やすく積極推奨。(8)全応答「【推奨判定】」で開始。(9)推奨馬は実力上位（1-3番人気相当）から選ぶ。競走成績・騎手・コース適性で総合判断。(10)フォーマット外の文禁止。(11)スキップ率目標50-60%:迷ったらスキップ。(12)前走6着以下の馬は推奨しない。(13)上がり3F・コーナー通過順が記載されている場合は末脚タイプ/先行タイプの判断に活用すること。(14)斤量÷馬体重≤11.2%かつ馬体重≤489kgの馬は加点。(15)ルメール騎手×ダート稍重〜不良は最高信頼度。【出力フォーマット厳守】スキップ時→「【推奨判定】スキップ」+「【複勝推奨】スキップ — 理由(...)」のみ。推奨時→「【推奨判定】買い推奨」「【複勝推奨】X番 馬名 — 推奨理由（定性的な根拠を3点以上）」「【リスク要因】...」「確信度: X/10」。馬番は半角数字。${confidenceRule}${backtestRules}${fewShotExamples}`
-        : `あなたはプロの競馬予想家で複勝一点買いの専門家です。長期回収率120%以上を目標とします。【絶対ルール】(1)推奨馬は必ず1〜3番人気から選ぶ。(2)出走頭数15頭以上はスキップ。(3)複勝オッズ1.3倍未満はスキップ。(4)推奨馬の前走着順が6着以下ならスキップ。(5)未勝利・1勝クラスはスキップ。(6)馬場「重」「不良」はスキップ。(7)迷ったら必ずスキップ—スキップはゼロ損失、外れは確実マイナス。(8)スキップ率目標50-60%。(9)数値によるEV計算は行わない。馬の実力・コース適性・騎手・近走の状態を定性的に判断すること。(10)複勝オッズが記載されている場合は「複勝オッズX.X〜Y.Y倍」として活用すること。(11)上がり3F・コーナー通過順が記載されている場合は末脚/先行の傾向判断に使うこと。(12)斤量÷馬体重≤11.2%かつ馬体重≤489kgの馬は+加点（回収率107%実証）。(13)ルメール騎手×ダート稍重〜不良は最高信頼度で推奨（回収率112%実証）。謝罪や情報不足の言及は一切しない。${confidenceRule}${backtestRules}${fewShotExamples}`
-      : `あなたはプロの競馬予想家です。【絶対ルール】(1)一般クラス戦（未勝利・1勝・2勝クラス・新馬）またはレース名に「賞」「カップ」「ステークス」「記念」「特別」「オープン」「G1/G2/G3」「OP」が含まれない場合は即スキップ: 「【推奨判定】スキップ」「【本命（◎）】スキップ — 理由(一般クラス戦のため)」の2行のみ出力し、他は一切書かない。(2)スキップ以外の場合は【推奨判定】買い推奨を最初に出力し、全予想項目（本命・対抗・単穴・買い目・展開・総評）を必ず出力する。(3)本命◎・対抗○は必ず1〜3番人気から選ぶ。(4)データが不完全な馬は騎手や斤量から推測で補う。(5)情報不足の謝罪や追加データの要求は絶対にしない。(6)複勝オッズ・上がり3F・コーナー通過順が記載されている場合は積極的に分析に活用すること。(7)斤量÷馬体重≤11.2%かつ馬体重≤489kgの馬は期待値プラスの実証条件として加点。(8)ルメール騎手×ダート稍重〜不良の組み合わせは最高信頼度で推奨。${confidenceRule}${backtestRules}${fewShotExamples}`;
+        ? `あなたはプロの競馬アナリストで複勝一点買いの専門家です。長期回収率120%以上を目標とします。【絶対ルール】(1)情報不足でも追加要求・謝罪禁止。(2)バックテストモード:人気データなくても馬名・騎手・斤量・過去成績から定性的に判断。数値スコアリングやEV計算は行わないこと。(3)一般クラス戦（未勝利・1勝・2勝・新馬）即スキップ。(4)重賞・特別以外即スキップ。(5)15頭以上即スキップ。(6)馬場「重」「不良」即スキップ。(7)9頭以下の重賞は能力差が出やすく積極推奨。(8)全応答「【推奨判定】」で開始。(9)推奨馬は実力上位（1-3番人気相当）から選ぶ。競走成績・騎手・コース適性で総合判断。(10)フォーマット外の文禁止。(11)スキップ率目標50-60%:迷ったらスキップ。(12)前走6着以下の馬は推奨しない。(13)上がり3F・コーナー通過順が記載されている場合は末脚タイプ/先行タイプの判断に活用すること。(14)斤量÷馬体重≤11.2%かつ馬体重≤489kgの馬は加点。(15)ルメール騎手×ダート稍重〜不良は最高信頼度。【出力フォーマット厳守】スキップ時→「【推奨判定】スキップ」+「【複勝推奨】スキップ — 理由(...)」のみ。推奨時→「【推奨判定】買い推奨」「【複勝推奨】X番 馬名 — 推奨理由（定性的な根拠を3点以上）」「【リスク要因】...」「確信度: X/10」。馬番は半角数字。${marketEdgeTableRule}${confidenceRule}${backtestRulesWithCalibration}${fewShotExamples}`
+        : `あなたはプロの競馬予想家で複勝一点買いの専門家です。長期回収率120%以上を目標とします。【絶対ルール】(1)推奨馬は必ず1〜3番人気から選ぶ。(2)出走頭数15頭以上はスキップ。(3)複勝オッズ1.3倍未満はスキップ。(4)推奨馬の前走着順が6着以下ならスキップ。(5)未勝利・1勝クラスはスキップ。(6)馬場「重」「不良」はスキップ。(7)迷ったら必ずスキップ—スキップはゼロ損失、外れは確実マイナス。(8)スキップ率目標50-60%。(9)数値によるEV計算は行わない。馬の実力・コース適性・騎手・近走の状態を定性的に判断すること。(10)複勝オッズが記載されている場合は「複勝オッズX.X〜Y.Y倍」として活用すること。(11)上がり3F・コーナー通過順が記載されている場合は末脚/先行の傾向判断に使うこと。(12)斤量÷馬体重≤11.2%かつ馬体重≤489kgの馬は+加点（回収率107%実証）。(13)ルメール騎手×ダート稍重〜不良は最高信頼度で推奨（回収率112%実証）。謝罪や情報不足の言及は一切しない。${marketEdgeTableRule}${confidenceRule}${backtestRulesWithCalibration}${fewShotExamples}`
+      : `あなたはプロの競馬予想家です。【絶対ルール】(1)一般クラス戦（未勝利・1勝・2勝クラス・新馬）またはレース名に「賞」「カップ」「ステークス」「記念」「特別」「オープン」「G1/G2/G3」「OP」が含まれない場合は即スキップ: 「【推奨判定】スキップ」「【本命（◎）】スキップ — 理由(一般クラス戦のため)」の2行のみ出力し、他は一切書かない。(2)スキップ以外の場合は【推奨判定】買い推奨を最初に出力し、全予想項目（本命・対抗・単穴・買い目・展開・総評）を必ず出力する。(3)本命◎・対抗○は必ず1〜3番人気から選ぶ。(4)データが不完全な馬は騎手や斤量から推測で補う。(5)情報不足の謝罪や追加データの要求は絶対にしない。(6)複勝オッズ・上がり3F・コーナー通過順が記載されている場合は積極的に分析に活用すること。(7)斤量÷馬体重≤11.2%かつ馬体重≤489kgの馬は期待値プラスの実証条件として加点。(8)ルメール騎手×ダート稍重〜不良の組み合わせは最高信頼度で推奨。${marketEdgeTableRule}${confidenceRule}${backtestRulesWithCalibration}${fewShotExamples}`;
 
     // 全モードSonnet 4.6（分析品質最優先・競馬知識・血統・騎手の判断力が段違い）
     const model = "claude-sonnet-4-20250514";
