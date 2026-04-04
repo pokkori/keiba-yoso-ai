@@ -187,6 +187,62 @@ export default function BacktestStatsPage() {
               </section>
             )}
 
+            {/* バックテスト実証済み戦略 */}
+            <section className="mb-8">
+              <h2 className="text-lg font-bold text-gray-300 mb-2">実データ分析：高回収条件</h2>
+              <p className="text-xs text-gray-500 mb-4">
+                8,327件の実データ + DeepResearch（学術論文・統計分析）で確認された条件。過去実績値・将来保証なし。
+              </p>
+              <div className="space-y-3">
+                {[
+                  {
+                    label: "控除率最優遇馬券",
+                    desc: "単勝・複勝は控除率20%（3連単27.5%より7.5pt有利）",
+                    rr: "構造的優位",
+                    badge: "実証",
+                    color: "border-green-700",
+                  },
+                  {
+                    label: "斤量体重比≤11.2% × 馬体重≤489kg",
+                    desc: "斤量÷馬体重が11.2%以下かつ馬体重489kg以下の馬",
+                    rr: "回収率107.1%",
+                    badge: "実証",
+                    color: "border-yellow-700",
+                  },
+                  {
+                    label: "ルメール騎手 × ダート稍重〜不良",
+                    desc: "ルメール騎手がダートの稍重・重・不良馬場で騎乗するレース",
+                    rr: "回収率112%",
+                    badge: "実証",
+                    color: "border-yellow-700",
+                  },
+                  {
+                    label: "オッズ2〜10倍帯（中穴ゾーン）",
+                    desc: "単勝・複勝オッズ2〜10倍の馬。過小評価されやすく期待値プラス傾向",
+                    rr: "回収率100〜104%",
+                    badge: "自社データ",
+                    color: "border-blue-700",
+                  },
+                ].map((row) => (
+                  <div key={row.label} className={`bg-gray-900 border ${row.color} rounded-xl p-4 flex items-start justify-between gap-3`}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs px-2 py-0.5 bg-gray-800 text-gray-400 rounded">{row.badge}</span>
+                        <span className="text-sm font-bold text-white">{row.label}</span>
+                      </div>
+                      <p className="text-xs text-gray-400">{row.desc}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-sm font-bold text-green-400">{row.rr}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-600 mt-3">
+                ※過去実績値です。将来の回収率を保証するものではありません。馬券購入は自己責任で。
+              </p>
+            </section>
+
             {/* 免責文言 */}
             <section className="mb-8">
               <div className="bg-gray-900 border border-gray-700 rounded-xl p-5">
