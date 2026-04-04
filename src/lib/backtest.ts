@@ -10,6 +10,7 @@ export interface PredictionLog {
   horseName: string | null;
   ev: number | null; // 期待値
   odds: number | null;
+  confidence: number | null; // 確信度スコア（1-10）
   createdAt: string;
   // 翌日更新
   actualPos: number | null;
@@ -65,6 +66,7 @@ export async function savePrediction(
         horse_name: log.horseName,
         ev: log.ev,
         odds: log.odds,
+        confidence: log.confidence ?? null,
         actual_pos: log.actualPos ?? null,
         hit: log.hit ?? null,
         return_amount: log.returnAmount ?? null,
@@ -125,6 +127,7 @@ export async function getPredictionLogs(): Promise<PredictionLog[]> {
         horse_name: string | null;
         ev: number | null;
         odds: number | null;
+        confidence: number | null;
         created_at: string;
         actual_pos: number | null;
         hit: boolean | null;
@@ -140,6 +143,7 @@ export async function getPredictionLogs(): Promise<PredictionLog[]> {
         horseName: row.horse_name,
         ev: row.ev,
         odds: row.odds,
+        confidence: row.confidence,
         createdAt: row.created_at,
         actualPos: row.actual_pos,
         hit: row.hit,

@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
     horseName?: string | null;
     ev?: number | null;
     odds?: number | null;
+    confidence?: number | null;
     // バックテスト用: 予想と結果を同時保存
     actualPos?: number | null;
     hit?: boolean | null;
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
     horseName: body.horseName ?? null,
     ev: body.ev ?? null,
     odds: body.odds ?? null,
+    confidence: body.confidence ?? null,
     actualPos: body.actualPos ?? null,
     hit: body.hit ?? null,
     returnAmount: body.returnAmount ?? null,
