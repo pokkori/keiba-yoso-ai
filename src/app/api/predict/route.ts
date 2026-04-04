@@ -469,6 +469,30 @@ function buildBenterSection(horses: HorseBasic[]): string {
   return section;
 }
 
+// ─── フラクショナルKelly基準（複勝専用） ────────────────────────────────────────
+
+/**
+ * フラクショナルKelly基準で賭け比率を計算する
+ * @param confidenceScore - AIの確信度スコア（1〜10）
+ * @param fukushoOdds - 複勝オッズ文字列（例: "2.3〜3.1倍"）
+ * @returns フラクショナルKelly値（0.25×Kelly）。負値はスキップを意味する
+ */
+function calcKellyFraction(confidenceScore: number, fukushoOdds: string | null): number {
+  // 複勝オッズ文字列から中央値を取得（例："2.3〜3.1倍" → 2.7）
+  let midOdds = 2.0; // デフォルト
+  if (fukushoOdds) {
+    const match = fukushoOdds.match(/([\d.]+)[〜~\-]([\d.]+)/);
+    if (match) midOdds = (parseFloat(match[1]) + parseFloat(match[2])) / 2;
+    else {
+      const single = parseFloat(fukushoOdds);
+      if (single > 0) midOdds = single;
+    }
+  }
+  const p_ai = confidenceScore / 10; // 確信度10段階→確率
+  const kelly_f = (p_ai * midOdds - 1) / (midOdds - 1);
+  return kelly_f * 0.25; // フラクショナルKelly（0.25倍で保守的運用）
+}
+
 // ─── Batch-fetch all horse details ───────────────────────────────────────────
 
 async function fetchAllHorseDetails(horses: HorseBasic[], log: string[]): Promise<string[]> {
@@ -963,7 +987,12 @@ ${!isGradeRace ? "⚠️ このレースは一般クラス戦の可能性があ�
     プロスペクト理論で大穴の過剰人気バイアスが実証されており、長期的に期待値がマイナス。
     8番人気以下を「絶対来る」と推奨することは禁止（既存ルール(C)と同様）。
 (I) 複勝・単勝（控除率20%）が最も期待値が高い。三連単（27.5%）は控除率が最も高い。
-    資金配分: 複勝70%・単勝20%・三連単10%以下が理想的な配分。`;
+    資金配分: 複勝70%・単勝20%・三連単10%以下が理想的な配分。
+(J) 中オッズ帯集中戦略（日本市場の学術実証）
+   - 複勝2〜5倍の馬が最も期待値が高い（京都大・神戸大の実証研究による逆FLB効果）
+   - 複勝1.5倍以下の人気馬は「安全だが期待値が低い」→ スキップ推奨（控除率20%を考慮すると長期マイナス）
+   - 複勝10倍以上は既存ルール(H)通り除外（大穴の過剰人気バイアス）
+   - 3連単より複勝→単勝→2連単の優先順位を維持すること（控除率の差が決定的）`;
 
     const calibrationRules = `
 【キャリブレーション最適化（最重要・精度より確率の正確さを優先）】
@@ -1067,11 +1096,34 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
               || fullText.match(/\((\d+)\/10\)/);
             const confidence = confidenceMatch ? parseInt(confidenceMatch[1]) : null;
 
+            // ─── フラクショナルKelly動的スキップ（追加フィルター） ───
+            // 買い推奨の場合のみKellyフィルターを適用（スキップ済みはそのまま通過）
+            let finalRecommendation: "skip" | "buy" = recommendation;
+            if (!isSkip && confidence !== null && mode === "fukusho") {
+              // 推奨馬の複勝オッズを取得（複勝推奨セクションから馬番を特定してrawHorsesから引く）
+              let recommendedFukushoOdds: string | null = null;
+              if (horseNum !== null) {
+                const matchedHorse = raceData.rawHorses.find(h => parseInt(h.num) === horseNum);
+                recommendedFukushoOdds = matchedHorse?.fukushoOdds ?? null;
+              }
+
+              if (recommendedFukushoOdds !== null) {
+                // 複勝オッズが取得できた場合のみKelly計算を実行
+                const kellyFraction = calcKellyFraction(confidence, recommendedFukushoOdds);
+                if (kellyFraction <= 0.02) {
+                  // Kelly基準を下回る → スキップに強制変更
+                  finalRecommendation = "skip";
+                  console.log(`Kelly skip: confidence=${confidence}, fukushoOdds=${recommendedFukushoOdds}, kelly=${kellyFraction.toFixed(4)}`);
+                }
+              }
+              // 複勝オッズが取得できない場合はKelly計算をスキップ（確信度フィルターのみ適用済み）
+            }
+
             await savePrediction({
               raceId: body.raceId!,
               raceName: raceInfoStr,
               raceDate: raceDateRaw,
-              recommendation,
+              recommendation: finalRecommendation,
               horseNum,
               horseName,
               ev: null,
