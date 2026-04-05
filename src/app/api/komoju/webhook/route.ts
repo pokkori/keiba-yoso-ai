@@ -19,7 +19,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing signature' }, { status: 401 })
     }
     const expected = crypto.createHmac('sha256', webhookSecret).update(body).digest('hex')
-    if (expected !== signature) {
+    const expectedBuf = Buffer.from(expected, 'hex')
+    const signatureBuf = Buffer.from(signature, 'hex')
+    const valid = expectedBuf.length === signatureBuf.length &&
+      crypto.timingSafeEqual(expectedBuf, signatureBuf)
+    if (!valid) {
       console.error('Komoju webhook: invalid signature')
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
