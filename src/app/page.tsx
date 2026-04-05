@@ -50,13 +50,10 @@ function getNextG1s(count = 3) {
   return G1_RACES.filter(r => new Date(r.date) >= today).slice(0, count);
 }
 
-// 的中実績ランキング TOP5
+// 的中実績ランキング（確認済み実績のみ表示）
 const HIT_RANKING = [
   { rank: 1, race: "小倉大賞典(G3)", date: "2026/3/8", bet: "複勝", horse: "ショウナンアデイブ", odds: "3.7倍", profit: "+¥2,700", badge: "bg-yellow-400 text-green-900" },
   { rank: 2, race: "弥生賞(G2)", date: "2026/3/2", bet: "複勝", horse: "ライヒスアドラー", odds: "1.1倍", profit: "+¥100", badge: "bg-gray-300 text-gray-800" },
-  { rank: 3, race: "阪神大賞典(G2)", date: "2026/3/22", bet: "複勝", horse: "AI推奨馬", odds: "予想中", profit: "—", badge: "bg-amber-700 text-white" },
-  { rank: 4, race: "スプリングS(G2)", date: "2026/3/15", bet: "未記録", horse: "予想記録なし", odds: "—", profit: "—", badge: "bg-gray-200 text-gray-500" },
-  { rank: 5, race: "金鯱賞(G2)", date: "2026/3/15", bet: "未記録", horse: "予想記録なし", odds: "—", profit: "—", badge: "bg-gray-200 text-gray-500" },
 ];
 
 // AI予想根拠の4軸データ（サンプル表示用）
@@ -1286,12 +1283,12 @@ export default function Home() {
       {/* Final CTA */}
       <section className="py-16 px-4 bg-green-900 text-white text-center overflow-x-hidden">
         <div className="inline-flex items-center gap-2 bg-yellow-400/20 border border-yellow-400/50 rounded-full px-4 py-1.5 mb-4">
-          <span className="text-yellow-300 text-xs font-bold">️ 30日間返金保証付き</span>
+          <span className="text-yellow-300 text-xs font-bold">いつでも解約OK</span>
         </div>
         <h2 className="text-xl md:text-2xl font-bold mb-3">今週のG1、AIと一緒に本命を絞ろう</h2>
         <p className="text-green-200 text-sm mb-1">登録不要・カード不要で今すぐ無料体験できます。</p>
         <p className="text-yellow-300 text-xs font-bold mb-1">netkeiba（¥4,980/月）の1/5の価格で同等以上の分析を提供</p>
-        <p className="text-green-300 text-xs mb-8">有料プランはいつでも解約可能 · 30日以内なら全額返金</p>
+        <p className="text-green-300 text-xs mb-8">有料プランはいつでも解約可能 · 翌月更新日まで利用継続</p>
         <div className="flex flex-col gap-4 justify-center items-center w-full max-w-sm mx-auto sm:max-w-none sm:flex-row">
           <button onClick={() => startCheckout("pro")}
             aria-label="プロプランで始める（月額2,980円）"
@@ -1311,10 +1308,10 @@ export default function Home() {
             <span>OK</span><span>いつでも解約OK</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-yellow-300 font-bold">
-            <span>️</span><span>30日以内解約可能</span>
+            <span>OK</span><span>いつでも解約可能</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-green-300">
-            <span></span><span>業界最安¥980/月〜</span>
+            <span></span><span>netkeiba比1/5の¥980/月〜</span>
           </div>
         </div>
       </section>
