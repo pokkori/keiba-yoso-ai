@@ -750,6 +750,43 @@ export async function POST(req: NextRequest) {
   // Benter式Market Edge分析セクション（コード側でimplied prob計算済み）
   const benterSection = buildBenterSection(raceData.rawHorses);
 
+  // ── 複勝帯自動スキップ（サーバーサイド・LLM呼び出し前） ──
+  // 複勝オッズがある場合、2.0〜5.0倍帯の馬がいなければLLM呼び出し前に自動スキップ
+  if (mode === "fukusho") {
+    const horsesWithFukusho = raceData.rawHorses.filter(h => h.fukushoOdds);
+    if (horsesWithFukusho.length > 0) {
+      const hasOptimalBand = horsesWithFukusho.some(h => {
+        const match = h.fukushoOdds!.match(/([\d.]+)[〜~\-]([\d.]+)/);
+        const mid = match
+          ? (parseFloat(match[1]) + parseFloat(match[2])) / 2
+          : parseFloat(h.fukushoOdds!);
+        return !isNaN(mid) && mid >= 2.0 && mid <= 5.0;
+      });
+      if (!hasOptimalBand) {
+        console.log(`[FukushoBandSkip] ${body.raceId}: no horse in 2.0-5.0x fukusho band → auto-skip`);
+        const skipText = "【推奨判定】スキップ\n【複勝推奨】スキップ — 理由(複勝2〜5倍帯の馬がいないため自動スキップ)\n確信度: 0/10";
+        const newCountSkip = cookieCount + 1;
+        const raceInfoStrSkip = raceData.info.trim();
+        const encoderSkip = new TextEncoder();
+        const skipStream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(encoderSkip.encode(skipText));
+            controller.enqueue(encoderSkip.encode(`\nDONE:${JSON.stringify({ count: newCountSkip, mode, raceInfo: raceInfoStrSkip, autoSkipped: true })}`));
+            controller.close();
+          }
+        });
+        const skipHeaders: Record<string, string> = {
+          "Content-Type": "text/event-stream; charset=utf-8",
+          "Cache-Control": "no-cache",
+        };
+        if (!isPremium) {
+          skipHeaders["Set-Cookie"] = `${COOKIE_KEY}=${newCountSkip}; Max-Age=${60 * 60 * 24}; SameSite=Lax; HttpOnly; Secure; Path=/`;
+        }
+        return new Response(skipStream, { headers: skipHeaders });
+      }
+    }
+  }
+
   let prompt: string;
 
   if (mode === "fukusho") {
