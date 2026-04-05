@@ -488,7 +488,12 @@ function calcKellyFraction(confidenceScore: number, fukushoOdds: string | null):
       if (single > 0) midOdds = single;
     }
   }
-  const p_ai = confidenceScore / 10; // 確信度10段階→確率
+  // LLMの過信バイアスを補正: confidence/10だと過大評価になる
+  // 競馬複勝実績より: 確信度8でも実際的中率は35%前後（3着以内）
+  const conservativeMap: Record<number, number> = {
+    10: 0.55, 9: 0.47, 8: 0.35, 7: 0.28, 6: 0.20, 5: 0.14, 4: 0.09
+  };
+  const p_ai = conservativeMap[confidenceScore] ?? Math.max(0.01, confidenceScore / 20);
   const kelly_f = (p_ai * midOdds - 1) / (midOdds - 1);
   return kelly_f * 0.25; // フラクショナルKelly（0.25倍で保守的運用）
 }
