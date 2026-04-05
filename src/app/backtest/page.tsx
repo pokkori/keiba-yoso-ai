@@ -280,7 +280,7 @@ export default function BacktestPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="flex items-center justify-between px-6 py-4 border-b border-green-200 bg-green-900">
-        <Link href="/" className="text-xl font-bold text-white">🏇 競馬予想AI</Link>
+        <Link href="/" className="text-xl font-bold text-white">競馬予想AI</Link>
         <div className="flex items-center gap-4">
           <Link href="/predict" className="text-sm text-green-300 hover:text-white">予想する</Link>
           <Link href="/tracker" className="text-sm text-green-300 hover:text-white">回収率管理</Link>
@@ -288,7 +288,7 @@ export default function BacktestPage() {
       </nav>
 
       <div className="max-w-3xl mx-auto py-8 px-4">
-        <h1 className="text-xl font-bold text-gray-900 mb-1">📊 バックテスト</h1>
+        <h1 className="text-xl font-bold text-gray-900 mb-1">バックテスト</h1>
         <p className="text-sm text-gray-500 mb-3">AI予想と実際の結果を照合します（¥1,000/レース想定）</p>
 
         {/* モード切替 */}
@@ -296,12 +296,12 @@ export default function BacktestPage() {
           <button
             onClick={() => setBetMode("fukusho")}
             className={`text-sm px-4 py-2 rounded-xl font-bold transition-colors ${betMode === "fukusho" ? "bg-amber-500 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-amber-50"}`}>
-            🎯 複勝モード
+            複勝モード
           </button>
           <button
             onClick={() => setBetMode("standard")}
             className={`text-sm px-4 py-2 rounded-xl font-bold transition-colors ${betMode === "standard" ? "bg-green-700 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-green-50"}`}>
-            🏆 通常モード（本命◎）
+            通常モード（本命◎）
           </button>
         </div>
 
@@ -386,7 +386,7 @@ export default function BacktestPage() {
                       {row.status === "idle" && (
                         <button onClick={() => analyzeRace(idx)}
                           className="text-xs bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-lg font-bold">
-                          🎯 AI分析
+                          AI分析
                         </button>
                       )}
                       {row.status === "error" && (
@@ -404,7 +404,7 @@ export default function BacktestPage() {
                       {/* AI予想 */}
                       <div className={`rounded-lg p-3 ${row.skip ? "bg-gray-50" : betMode === "fukusho" ? "bg-amber-50" : "bg-blue-50"}`}>
                         <div className={`font-bold mb-1 ${row.skip ? "text-gray-500" : betMode === "fukusho" ? "text-amber-800" : "text-blue-800"}`}>
-                          {betMode === "fukusho" ? "🎯 AI複勝推奨" : "🏆 AI本命（◎）"}
+                          {betMode === "fukusho" ? "AI複勝推奨" : "AI本命（◎）"}
                         </div>
                         {row.skip ? (
                           <span className="text-gray-400 text-xs">このレースはスキップ推奨（ベット対象外）</span>
@@ -425,7 +425,7 @@ export default function BacktestPage() {
 
                       {/* 実際の結果 */}
                       <div className={`rounded-lg p-3 ${row.hit ? "bg-green-50" : "bg-gray-50"}`}>
-                        <div className="font-bold text-gray-700 mb-1">📋 実際の結果</div>
+                        <div className="font-bold text-gray-700 mb-1">実際の結果</div>
                         {row.result?.top3.length ? (
                           <div className="space-y-0.5">
                             {row.result.top3.map(f => {
