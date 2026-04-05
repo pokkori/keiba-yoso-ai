@@ -224,7 +224,7 @@ export async function GET(req: NextRequest) {
     .eq("recommendation", "buy")
     .is("hit", null)
     .order("created_at", { ascending: true })
-    .limit(30);
+    .limit(50);
 
   if (fetchError) {
     console.error("fetch pending error:", fetchError.message);
@@ -263,8 +263,8 @@ export async function GET(req: NextRequest) {
 
     if (result === null) {
       skippedCount++;
-      // 3秒待機してから次のリクエスト
-      await sleep(3000);
+      // 1秒待機してから次のリクエスト
+      await sleep(1000);
       continue;
     }
 
@@ -291,8 +291,8 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // 3秒待機（netkeibaへの負荷軽減）
-    await sleep(3000);
+    // 1秒待機（netkeibaへの負荷軽減）
+    await sleep(1000);
   }
 
   return NextResponse.json({
