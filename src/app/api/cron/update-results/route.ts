@@ -18,6 +18,17 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/** EUC-JP / Shift-JIS 対応デコード（db.netkeiba.com はEUC-JP） */
+async function decodeBuffer(buffer: ArrayBuffer): Promise<string> {
+  const sniff = new TextDecoder("utf-8", { fatal: false }).decode(buffer.slice(0, 2000));
+  const cs = (sniff.match(/charset=["']?\s*([a-zA-Z0-9_-]+)/i)?.[1] || "utf-8")
+    .toLowerCase().replace(/[_-]/g, "");
+  if (cs === "eucjp" || cs === "xeucjp") return new TextDecoder("euc-jp").decode(buffer);
+  if (cs === "shiftjis" || cs === "xsjis" || cs === "sjis" || cs === "windows31j")
+    return new TextDecoder("shift_jis").decode(buffer);
+  return new TextDecoder("utf-8", { fatal: false }).decode(buffer);
+}
+
 /**
  * netkeibaの結果ページから複勝払い戻しと着順を取得する
  */
@@ -33,7 +44,9 @@ async function fetchRaceResult(
       console.error(`fetchRaceResult: HTTP ${res.status} for race ${raceId}`);
       return null;
     }
-    html = await res.text();
+    // db.netkeiba.com はEUC-JPのためarrayBufferで受け取ってデコード
+    const buf = await res.arrayBuffer();
+    html = await decodeBuffer(buf);
   } catch (e) {
     console.error(`fetchRaceResult: fetch error for ${raceId}:`, e);
     return null;
