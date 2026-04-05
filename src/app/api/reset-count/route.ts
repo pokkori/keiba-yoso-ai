@@ -1,8 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  // 本番環境では開発用エンドポイントを無効化
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not Found" }, { status: 404 });
+  }
+
+  void req;
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
 <script>
   localStorage.removeItem("keiba_predict_count");

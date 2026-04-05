@@ -721,6 +721,10 @@ export async function POST(req: NextRequest) {
   } else {
     isPremium = req.cookies.get("premium")?.value === "1";
   }
+  // バックテストはプレミアム限定機能（非プレミアムユーザーによる無料枠バイパス防止）
+  if (isBacktest && !isPremium) {
+    return NextResponse.json({ error: "PREMIUM_REQUIRED" }, { status: 403 });
+  }
   const cookieCount = parseInt(req.cookies.get(COOKIE_KEY)?.value || "0");
   if (!isPremium && !isBacktest && cookieCount >= FREE_LIMIT) {
     return NextResponse.json({ error: "LIMIT_REACHED" }, { status: 429 });

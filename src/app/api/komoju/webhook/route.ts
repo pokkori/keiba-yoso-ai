@@ -9,12 +9,19 @@ export async function POST(req: Request) {
     const signature = req.headers.get('x-komoju-signature')
     const webhookSecret = process.env.KOMOJU_WEBHOOK_SECRET
 
-    if (webhookSecret && signature) {
-      const expected = crypto.createHmac('sha256', webhookSecret).update(body).digest('hex')
-      if (expected !== signature) {
-        console.error('Komoju webhook: invalid signature')
-        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
-      }
+    // webhookSecretが未設定 or signatureがない場合は必ず拒否
+    if (!webhookSecret) {
+      console.error('Komoju webhook: KOMOJU_WEBHOOK_SECRET is not set')
+      return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 })
+    }
+    if (!signature) {
+      console.error('Komoju webhook: missing x-komoju-signature header')
+      return NextResponse.json({ error: 'Missing signature' }, { status: 401 })
+    }
+    const expected = crypto.createHmac('sha256', webhookSecret).update(body).digest('hex')
+    if (expected !== signature) {
+      console.error('Komoju webhook: invalid signature')
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
 
     const event = JSON.parse(body)
