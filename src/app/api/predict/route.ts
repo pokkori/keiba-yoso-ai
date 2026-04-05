@@ -785,9 +785,10 @@ STEP0でSKIPの場合、以下の形式のみを出力し、他は一切書か�
 
 以下のどれか1つでも当てはまればSKIPしてください。
 
-条件B: 出走馬が15頭以上 → 大荒れリスク高（統計的に荒れる確率が高い）→ SKIP（120%回収率維持のため15頭以上は全てスキップ）
+条件B: 出走馬が15頭以上 → 大荒れリスク高（統計的に荒れる確率が高い）→ SKIP（120%回収率維持のため15頭以上は全てスきップ）
 条件F: 出走頭数が5頭未満 → 小規模開催・特殊レース → SKIP
 条件G: 馬場状態が「重」または「不良」→ 実力差が出にくく波乱必至 → SKIP
+条件H: レース名に「ハンデ」「ハンデキャップ」が含まれる → ハンデ戦は上位人気でも逆転多発・複勝回収率不安定 → SKIP
 
 ※バックテストモードのため人気データ条件（A/C/D/E）は省略。あなた自身の競馬知識（馬名・騎手・血統・実績）を使って判断してください。
 ※出走頭数は出走馬リストの馬番の最大値から判断してください。
@@ -853,8 +854,9 @@ ${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}${benterSection ? 
 鉄則5: 【期待値（EV）絶対ルール】EV = 複勝オッズ × 3着内確率 ≥ 1.30 を必ず確認（従来1.20→1.30に厳格化。バックテストで1.20では長期マイナスと判明）
   - 複勝オッズ1.5倍未満: 当たっても利益薄のためスキップ（従来1.3倍→1.5倍に厳格化）
   - 複勝オッズ1.5〜1.8倍 × 確率75%以上: EV 1.13〜1.35 → 推奨（1番人気・少頭数のみ）
-  - 複勝オッズ1.8〜2.5倍 × 確率65%以上: EV 1.17〜1.63 → 積極推奨（最も収益性が高いゾーン）
-  - 複勝オッズ2.5倍超: 人気薄のためスキップ（期待値不安定）
+  - 複勝オッズ1.8〜4.0倍 × 確率50%以上: EV 0.90〜2.00 → 積極推奨（統計的最高期待値ゾーン。京都大・神戸大実証）
+  - 複勝オッズ4.0倍超: 人気薄のためスキップ（期待値不安定）
+  - ※以前の「2.5倍超スキップ」は過剰に厳しかった。2〜5倍帯が最高EV帯のため4.0倍に緩和。
 鉄則6: 前走条件フィルター
   - 推奨馬の前走着順が6着以下 → スキップ（近走不振馬は人気馬でも危険）
   - 前走から間隔が5週以上（長期休養明け）→ 注意フラグ、慎重判断
@@ -927,6 +929,7 @@ ${!isGradeRace ? "⚠️ このレースは一般クラス戦の可能性があ�
 鉄則3: 出走頭数15頭以上は大荒れリスク → スキップ（120%回収率のため15頭以上は全カット）
 鉄則3b: 馬場状態が「重」または「不良」→ スキップ（実力差が出にくい）
 鉄則3c: 出走頭数9頭以下の重賞・特別は能力差が表れやすく積極推奨
+鉄則3d: レース名に「ハンデ」「ハンデキャップ」が含まれる → スキップ（ハンデ戦は上位人気でも逆転多発）
 
 出走馬の過去成績・騎手・斤量・馬齢・調教師情報をもとに、以下の形式で予想を出力してください：
 
@@ -1138,12 +1141,21 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
               }
 
               if (recommendedFukushoOdds !== null) {
-                // 複勝オッズが取得できた場合のみKelly計算を実行
-                const kellyFraction = calcKellyFraction(confidence, recommendedFukushoOdds);
-                if (kellyFraction <= 0.02) {
-                  // Kelly基準を下回る → スキップに強制変更
+                // 複勝オッズ上限フィルター（4.0倍超はスキップ）
+                // 統計的最高期待値帯は2〜4倍（京都大・神戸大実証）
+                const oddsMatch = recommendedFukushoOdds.match(/([\d.]+)[〜~\-]([\d.]+)/);
+                const oddsLow = oddsMatch ? parseFloat(oddsMatch[1]) : parseFloat(recommendedFukushoOdds) || 0;
+                if (oddsLow > 4.0) {
                   finalRecommendation = "skip";
-                  console.log(`Kelly skip: confidence=${confidence}, fukushoOdds=${recommendedFukushoOdds}, kelly=${kellyFraction.toFixed(4)}`);
+                  console.log(`OddsUpperSkip: fukushoOdds=${recommendedFukushoOdds} > 4.0 → skip（人気薄）`);
+                } else {
+                  // 複勝オッズが取得できた場合のみKelly計算を実行
+                  const kellyFraction = calcKellyFraction(confidence, recommendedFukushoOdds);
+                  if (kellyFraction <= 0.02) {
+                    // Kelly基準を下回る → スキップに強制変更
+                    finalRecommendation = "skip";
+                    console.log(`Kelly skip: confidence=${confidence}, fukushoOdds=${recommendedFukushoOdds}, kelly=${kellyFraction.toFixed(4)}`);
+                  }
                 }
               }
               // 複勝オッズが取得できない場合はKelly計算をスキップ（確信度フィルターのみ適用済み）
