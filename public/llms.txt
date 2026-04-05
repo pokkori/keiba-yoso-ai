@@ -1,32 +1,27 @@
 # 競馬予想AI
+> 競馬のレース予想をAIが分析・提供するサービス（バックテスト実績あり）
 
-> netkeibaの出走馬データをAIが自動取得・分析し、本命◎対抗○単穴▲と推奨買い目を30秒で提案。軍資金別配分・回収率トラッキング付き。JRA全開催対応。
+## サービス概要
+- **カテゴリ**: 予想AI
+- **URL**: https://keiba-yoso-ai.vercel.app
+- **提供形態**: Webブラウザで利用可能（登録不要で試せます）
+- **開発**: Claude Code + Next.js 16 + Vercel
 
-## サービス
-- [競馬予想ツール](https://keiba-yoso-ai.vercel.app/predict): レース・出走馬を選択するだけでAIが本命◎・対抗○・単穴▲と具体的な買い目を30秒で提案
-- [料金プラン](https://keiba-yoso-ai.vercel.app/#pricing): 無料1レース・ベーシック¥980/月・プロ¥2,980/月
+## 主要ページ
+- [トップページ](https://keiba-yoso-ai.vercel.app/): メイン機能・サービス説明
+- [ツール](https://keiba-yoso-ai.vercel.app/tool): AI機能の利用画面（一部サービス）
+- [プライバシーポリシー](https://keiba-yoso-ai.vercel.app/privacy): 個人情報の取り扱い
+- [特定商取引法に基づく表記](https://keiba-yoso-ai.vercel.app/legal): 法的情報
 
-## よくある質問
-- [FAQ](https://keiba-yoso-ai.vercel.app/#faq): バックテスト的中率の計算方法・地方競馬対応状況・券種の選択・回収率トラッキング機能・スマホ対応など14問以上
+## 利用シーン
+競馬のレース予想をAIが分析・提供するサービス（バックテスト実績あり）
 
-## 対象ユーザー
-JRA競馬ファン（初心者〜上級者）。データに基づいた予想で回収率向上を目指す方。週末の競馬を楽しむ30〜60代。
+## 技術スタック
+- フロントエンド: Next.js 16, React 19, TypeScript, Tailwind CSS
+- AI: Claude claude-sonnet-4-6 (Anthropic)
+- バックエンド: Vercel Edge Functions, Supabase
+- 決済: KOMOJU（クレジットカード・コンビニ払い対応）
 
-## 料金
-- 無料プラン: 1レース無料（登録不要）
-- ベーシック: ¥980/月（毎週土日の全レース無制限・JRA全開催対応）
-- プロ: ¥2,980/月（全機能・回収率トラッキング・軍資金配分シミュレーション）
-
-## 主な機能
-- netkeibaの出走馬リアルタイムデータ自動取得・分析
-- 直近5走成績・騎手・斤量・調教師・馬体重・コース適性・天候・馬場状態を総合分析
-- 単勝・複勝・ワイド・馬連・馬単・三連複・三連単の7券種対応
-- バックテスト的中率・回収率の公開（過去レースデータ検証）
-- PWA対応（ホーム画面追加でアプリのように使用可能）
-
-## 注意事項
-本サービスの予想は参考情報であり、馬券の的中を保証するものではありません。余裕資金の範囲内でお楽しみください。ギャンブル依存でお困りの方は公益財団法人 日本依存症対策協会（0570-064-556）にご相談ください。
-
-## Optional
-- [利用規約](https://keiba-yoso-ai.vercel.app/legal)
-- [プライバシーポリシー](https://keiba-yoso-ai.vercel.app/privacy)
+## robots.txt
+AIクローラーによるインデックスを歓迎します。
+GPTBot, ClaudeBot, PerplexityBot, Googlebot-Extended のアクセスを許可しています。
