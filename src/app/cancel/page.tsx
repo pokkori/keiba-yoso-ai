@@ -42,7 +42,7 @@ export default function CancelPage() {
             href="mailto:support@pokkorilab.com?subject=競馬予想AI%20解約のご連絡&body=解約を希望します。%0D%0A登録メールアドレス：%0D%0A"
             className="block w-full bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200 text-sm mb-4"
           >
-            📧 解約確認メールを送る
+            解約確認メールを送る
           </a>
           <p className="text-xs text-gray-400 mb-6">
             ※ 課金停止の手続きはサポートが確認次第対応いたします（通常1営業日以内）
@@ -96,7 +96,7 @@ export default function CancelPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white rounded-2xl border border-gray-200 p-8">
         <div className="text-center mb-6">
-          <div className="text-4xl mb-2">🚴</div>
+          <div className="w-10 h-10 mb-2 mx-auto rounded-full bg-gray-200" />
           <h1 className="text-xl font-bold text-gray-900 mb-1">解約手続き</h1>
           <p className="text-sm text-gray-500">ご利用いただきありがとうございました</p>
         </div>

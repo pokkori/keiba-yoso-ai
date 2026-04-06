@@ -232,7 +232,7 @@ export default async function RacePage({ params }: Props) {
       />
 
       <nav className="flex items-center justify-between px-4 py-4 border-b border-green-200 bg-green-900 sticky top-0 z-10">
-        <Link href="/" className="text-base md:text-xl font-bold text-white">🏇 競馬予想AI</Link>
+        <Link href="/" className="text-base md:text-xl font-bold text-white">競馬予想AI</Link>
         <div className="flex items-center gap-2 md:gap-4">
           <Link href="/predict" className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-4 py-1.5 rounded-full text-sm transition-colors">
             無料で試す
@@ -262,9 +262,9 @@ export default async function RacePage({ params }: Props) {
           </div>
           <h1 className="text-2xl md:text-4xl font-bold text-white mb-2">{race.name} AI予想完全攻略</h1>
           <div className="flex flex-wrap gap-3 text-sm text-green-200 mb-4">
-            <span>📅 {race.displayDate}</span>
-            <span>📍 {race.venue}</span>
-            <span>📏 {race.distance}</span>
+            <span>{race.displayDate}</span>
+            <span>{race.venue}</span>
+            <span>{race.distance}</span>
             {!isPast && daysLeft > 0 && (
               <span className="bg-red-600 text-white text-xs font-black px-3 py-0.5 rounded-full">あと{daysLeft}日</span>
             )}
@@ -283,7 +283,7 @@ export default async function RacePage({ params }: Props) {
           <div className="grid sm:grid-cols-2 gap-4">
             {race.aiPoints.map((point, i) => (
               <div key={i} className="bg-green-50 border border-green-200 rounded-xl p-5">
-                <h3 className="font-bold text-green-800 text-sm mb-2">📊 {point.title}</h3>
+                <h3 className="font-bold text-green-800 text-sm mb-2">{point.title}</h3>
                 <p className="text-green-700 text-xs leading-relaxed">{point.detail}</p>
               </div>
             ))}
@@ -294,7 +294,7 @@ export default async function RacePage({ params }: Props) {
       {/* AIで予想するCTA */}
       <section className="py-10 px-4 bg-green-900 text-white text-center">
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-xl font-bold mb-2">🏇 {race.name}をAIで予想する</h2>
+          <h2 className="text-xl font-bold mb-2">{race.name}をAIで予想する</h2>
           <p className="text-green-200 text-sm mb-6">30秒で本命◎・対抗○・単穴▲と買い目が自動生成されます。登録不要・2レース無料。</p>
           <Link
             href="/predict"

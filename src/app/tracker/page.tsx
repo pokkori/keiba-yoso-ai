@@ -140,7 +140,7 @@ export default function TrackerPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="flex items-center justify-between px-6 py-4 border-b border-green-200 bg-green-900">
-        <Link href="/" className="text-xl font-bold text-white">🏇 競馬予想AI</Link>
+        <Link href="/" className="text-xl font-bold text-white">競馬予想AI</Link>
         <div className="flex items-center gap-4">
           <Link href="/predict" className="text-sm text-green-200 hover:text-white transition-colors">予想する</Link>
           <Link href="/backtest" className="text-sm text-green-200 hover:text-white transition-colors">的中検証</Link>
@@ -149,7 +149,7 @@ export default function TrackerPage() {
 
       <div className="max-w-3xl mx-auto py-10 px-4">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">📊 回収率トラッカー</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">回収率トラッカー</h1>
           <p className="text-gray-500 text-sm">馬券成績を記録して回収率を管理・可視化しましょう</p>
         </div>
 
@@ -193,8 +193,8 @@ export default function TrackerPage() {
         {filteredRecords.length > 0 && (
           <div className={`rounded-xl p-3 mb-5 text-center font-bold text-sm ${totalProfit >= 0 ? "bg-green-50 border border-green-300 text-green-800" : "bg-red-50 border border-red-200 text-red-700"}`}>
             {totalProfit >= 0
-              ? `✅ 現在 +¥${totalProfit.toLocaleString()} のプラス収支（${filteredRecords.length}レース集計）`
-              : `📉 現在 -¥${Math.abs(totalProfit).toLocaleString()} のマイナス収支（${filteredRecords.length}レース集計）`
+              ? `現在 +¥${totalProfit.toLocaleString()} のプラス収支（${filteredRecords.length}レース集計）`
+              : `現在 -¥${Math.abs(totalProfit).toLocaleString()} のマイナス収支（${filteredRecords.length}レース集計）`
             }
             <p className="text-xs font-normal mt-0.5 opacity-70">※統計的有意性には30件以上のサンプルが必要です</p>
           </div>
@@ -233,7 +233,7 @@ export default function TrackerPage() {
           </div>
           <button onClick={addRecord}
             className="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 rounded-xl transition-colors text-sm">
-            📝 記録する
+            記録する
           </button>
         </div>
 
@@ -274,7 +274,7 @@ export default function TrackerPage() {
           </div>
         ) : (
           <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-gray-200">
-            <p className="text-4xl mb-3">🏇</p>
+            <div className="w-12 h-12 mb-3 mx-auto rounded-full bg-gray-100 border border-gray-200" />
             <p className="font-medium text-gray-600 mb-1">まだ記録がありません</p>
             <p className="text-sm">レース結果を記録して回収率を管理しましょう</p>
             <Link href="/predict" className="inline-block mt-4 bg-green-700 text-white font-bold px-5 py-2 rounded-xl text-sm hover:bg-green-800 transition-colors">

@@ -548,7 +548,7 @@ export default function NewsPage() {
   return (
     <main className="min-h-screen bg-white">
       <nav className="flex items-center justify-between px-4 py-4 border-b border-green-200 bg-green-900 sticky top-0 z-10">
-        <Link href="/" className="text-base md:text-xl font-bold text-white">🏇 競馬予想AI</Link>
+        <Link href="/" className="text-base md:text-xl font-bold text-white">競馬予想AI</Link>
         <div className="flex items-center gap-3">
           <Link href="/how-to" className="text-sm text-green-200 hover:text-white hidden sm:inline">使い方</Link>
           <Link href="/predict" className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-4 py-1.5 rounded-full text-sm transition-colors">
@@ -565,7 +565,7 @@ export default function NewsPage() {
         {/* 今日の一言 */}
         {todayContext.isRaceDay ? (
           <div className="mt-3 inline-block bg-yellow-400 text-green-900 text-xs font-black px-4 py-2 rounded-full animate-pulse">
-            🏇 {todayContext.message}
+            {todayContext.message}
           </div>
         ) : (
           <p className="text-green-300 text-xs mt-2">{todayContext.message}</p>
@@ -622,7 +622,7 @@ export default function NewsPage() {
       {/* 今週の注目レース */}
       <section id="this-week" className="py-12 px-4 max-w-4xl mx-auto">
         <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-          <span className="text-yellow-500">🏆</span> 今週の注目レース
+          今週の注目レース
           {thisWeek.length === 0 && (
             <span className="text-sm font-normal text-gray-500">（今週G1はありません — 次の注目レースを表示）</span>
           )}
@@ -656,7 +656,7 @@ export default function NewsPage() {
                 {/* AI注目本命予告 */}
                 <div className="bg-green-900 text-white rounded-xl p-4 mb-4 flex items-center justify-between flex-wrap gap-3">
                   <div>
-                    <p className="text-green-300 text-xs font-bold mb-1">🤖 AIの注目馬（当日予想で詳細確認）</p>
+                    <p className="text-green-300 text-xs font-bold mb-1">AIの注目馬（当日予想で詳細確認）</p>
                     <p className="text-white font-bold text-base">{race.aiHonmei}</p>
                   </div>
                   <div className="text-right">
@@ -665,7 +665,7 @@ export default function NewsPage() {
                   </div>
                 </div>
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                  <p className="text-xs font-bold text-green-700 mb-1">🤖 AIのコメント</p>
+                  <p className="text-xs font-bold text-green-700 mb-1">AIのコメント</p>
                   <p className="text-sm text-green-800 leading-relaxed">{race.aiNote}</p>
                 </div>
                 <div className="mt-4 text-center">
@@ -684,7 +684,7 @@ export default function NewsPage() {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between flex-wrap gap-3 mb-2">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <span>🔍</span> 過去G1「AIが当てた・外した」検証コーナー
+              過去G1「AIが当てた・外した」検証コーナー
             </h2>
             <span className="text-xs bg-green-100 text-green-700 font-bold px-3 py-1 rounded-full border border-green-200">景品表示法対応・全結果公開</span>
           </div>
@@ -774,7 +774,7 @@ export default function NewsPage() {
       {/* 次週以降のレース */}
       <section id="coming-g1" className="py-12 px-4 max-w-4xl mx-auto">
         <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-          <span>📅</span> 今後の春G1スケジュール
+          今後の春G1スケジュール
         </h2>
         <div className="space-y-4">
           {displayNextRaces.map((race) => (
@@ -793,7 +793,7 @@ export default function NewsPage() {
               <p className="text-sm text-gray-600 leading-relaxed mb-2">{race.aiNote}</p>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-green-700 font-bold bg-green-50 border border-green-200 px-2 py-1 rounded-full">
-                  🤖 AI注目軸: {race.aiKeyPoint}
+                  AI注目軸: {race.aiKeyPoint}
                 </span>
               </div>
             </div>

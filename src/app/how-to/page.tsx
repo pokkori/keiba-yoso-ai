@@ -10,7 +10,7 @@ export default function HowToPage() {
   return (
     <div className="min-h-screen bg-white">
       <nav className="flex items-center justify-between px-4 py-4 border-b border-green-200 bg-green-900 sticky top-0 z-10">
-        <Link href="/" className="text-base md:text-xl font-bold text-white">🏇 競馬予想AI</Link>
+        <Link href="/" className="text-base md:text-xl font-bold text-white">競馬予想AI</Link>
         <div className="flex items-center gap-3">
           <Link href="/predict" className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-4 py-1.5 rounded-full text-sm transition-colors">
             無料で試す
@@ -28,7 +28,7 @@ export default function HowToPage() {
 
         {/* 目次 */}
         <div className="bg-green-50 border border-green-200 rounded-xl p-5 mb-10">
-          <p className="font-bold text-green-800 text-sm mb-3">📋 このページの内容</p>
+          <p className="font-bold text-green-800 text-sm mb-3">このページの内容</p>
           <ol className="space-y-1 text-sm text-green-700">
             <li><a href="#step1" className="hover:underline">1. AI予想を使う前に知っておくべきこと</a></li>
             <li><a href="#step2" className="hover:underline">2. 複勝モードを使った買い方の基本</a></li>
@@ -51,9 +51,9 @@ export default function HowToPage() {
           </div>
           <div className="space-y-3">
             {[
-              { icon: "✅", title: "AIが得意なこと", desc: "出走馬の過去成績・騎手相性・コース適性・馬場状態のデータ分析。人間が30分かかる情報収集を30秒で完了。" },
-              { icon: "⚠️", title: "AIが苦手なこと", desc: "当日のパドック気配・馬の体調変化・レース中のアクシデント・オーナー・調教師の内情など、データに現れない要素。" },
-              { icon: "🎯", title: "正しい使い方", desc: "AIの分析結果を「参考データ」として使い、最終判断は自分で行う。分析根拠を読んで「なぜこの馬か」を理解してから購入。" },
+              { icon: "◎", title: "AIが得意なこと", desc: "出走馬の過去成績・騎手相性・コース適性・馬場状態のデータ分析。人間が30分かかる情報収集を30秒で完了。" },
+              { icon: "△", title: "AIが苦手なこと", desc: "当日のパドック気配・馬の体調変化・レース中のアクシデント・オーナー・調教師の内情など、データに現れない要素。" },
+              { icon: "→", title: "正しい使い方", desc: "AIの分析結果を「参考データ」として使い、最終判断は自分で行う。分析根拠を読んで「なぜこの馬か」を理解してから購入。" },
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-3 bg-gray-50 rounded-xl p-4">
                 <span className="text-xl shrink-0">{item.icon}</span>
@@ -74,7 +74,7 @@ export default function HowToPage() {
           </div>
           <p className="text-gray-600 text-sm mb-4 leading-relaxed">初心者〜中級者には「複勝モード」をおすすめします。3着以内に入れば的中なので、単勝・馬連より的中率が高く安定しやすいからです。</p>
           <div className="bg-green-900 text-white rounded-xl p-5 mb-4">
-            <p className="text-yellow-300 text-xs font-bold mb-3">📊 複勝の的中条件比較</p>
+            <p className="text-yellow-300 text-xs font-bold mb-3">複勝の的中条件比較</p>
             <div className="space-y-2 text-xs">
               {[
                 { bet: "単勝", condition: "1着のみ", prob: "約10〜15%", note: "高配当だが難しい" },
@@ -153,7 +153,7 @@ export default function HowToPage() {
             </table>
           </div>
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-            <p className="text-amber-800 font-bold text-sm mb-1">💡 期待値ポイント</p>
+            <p className="text-amber-800 font-bold text-sm mb-1">期待値ポイント</p>
             <p className="text-amber-700 text-xs leading-relaxed">競馬の控除率は約20〜25%です。つまり「全レースをランダムに購入し続けると長期的には75〜80%しか返ってきません」。AIを使うことで、期待値の高いレース・馬に絞り込み、控除率の壁を越えることを目指します。</p>
           </div>
         </section>
@@ -212,12 +212,12 @@ export default function HowToPage() {
           <p className="text-gray-600 text-sm mb-4">「買わない」という選択が回収率を大きく改善します。以下に当てはまるレースはスキップを推奨します。</p>
           <div className="grid sm:grid-cols-2 gap-3">
             {[
-              { icon: "🚫", title: "フルゲート（18頭立て）のハンデ戦", desc: "頭数が多くハンデ差があるレースは波乱率が高い。AIの精度が落ちるパターン。" },
-              { icon: "🚫", title: "新馬戦・未勝利の初出走組多数", desc: "過去成績データが少ない馬が多く、AIの分析根拠が薄くなる。" },
-              { icon: "🚫", title: "雨天後の重・不良馬場", desc: "馬場が荒れると脚質・適性が大きく変わり、通常の分析が通用しにくい。" },
-              { icon: "🚫", title: "長期休み明けの有力馬多数", desc: "休み明けの馬の仕上がりはデータに現れない。パドック確認が必須。" },
-              { icon: "🚫", title: "AIのリスクスコアが「高」", desc: "AIが自信を持てないレースは「スキップ推奨」を表示。この判断を信頼する。" },
-              { icon: "🚫", title: "騎手・調教師の乗替わりが多いレース", desc: "コンビの変更が多いほどデータの信頼性が下がる。" },
+              { icon: "×", title: "フルゲート（18頭立て）のハンデ戦", desc: "頭数が多くハンデ差があるレースは波乱率が高い。AIの精度が落ちるパターン。" },
+              { icon: "×", title: "新馬戦・未勝利の初出走組多数", desc: "過去成績データが少ない馬が多く、AIの分析根拠が薄くなる。" },
+              { icon: "×", title: "雨天後の重・不良馬場", desc: "馬場が荒れると脚質・適性が大きく変わり、通常の分析が通用しにくい。" },
+              { icon: "×", title: "長期休み明けの有力馬多数", desc: "休み明けの馬の仕上がりはデータに現れない。パドック確認が必須。" },
+              { icon: "×", title: "AIのリスクスコアが「高」", desc: "AIが自信を持てないレースは「スキップ推奨」を表示。この判断を信頼する。" },
+              { icon: "×", title: "騎手・調教師の乗替わりが多いレース", desc: "コンビの変更が多いほどデータの信頼性が下がる。" },
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-xl p-3">
                 <span className="text-lg shrink-0">{item.icon}</span>
@@ -243,8 +243,8 @@ export default function HowToPage() {
               { pattern: "レース中の展開・ペース", howto: "スローペースになると差し馬が有利になる。AIは傾向を分析するが「この日のペース」は不確定要素。展開予測も一つの参考として使う。" },
             ].map((item, i) => (
               <div key={i} className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                <p className="text-sm font-bold text-gray-800 mb-1">⚠️ {item.pattern}</p>
-                <p className="text-xs text-gray-600 leading-relaxed">💡 対処法: {item.howto}</p>
+                <p className="text-sm font-bold text-gray-800 mb-1">注意: {item.pattern}</p>
+                <p className="text-xs text-gray-600 leading-relaxed">対処法: {item.howto}</p>
               </div>
             ))}
           </div>
@@ -254,7 +254,7 @@ export default function HowToPage() {
         {/* 過去G1検証コーナーへの導線 */}
         <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-6 mb-8">
           <div className="flex items-start gap-3">
-            <span className="text-2xl">🔍</span>
+            <span className="text-2xl font-bold text-green-700">→</span>
             <div>
               <h2 className="text-base font-bold text-gray-900 mb-1">「AIが当てた・外した」検証コーナー（平日も読める）</h2>
               <p className="text-sm text-gray-600 leading-relaxed mb-3">

@@ -95,7 +95,7 @@ export default function CalendarPage() {
       <nav className="border-b border-gray-800 bg-gray-950/80 backdrop-blur sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="text-green-400 font-bold text-lg tracking-tight hover:text-green-300 transition-colors">
-            🏇 競馬予想AI
+            競馬予想AI
           </Link>
           <Link
             href="/predict"
@@ -123,7 +123,7 @@ export default function CalendarPage() {
 
         {/* Top CTA */}
         <div className="bg-gradient-to-r from-green-900/50 to-emerald-900/50 border border-green-700/50 rounded-2xl p-6 mb-10 text-center">
-          <p className="text-green-300 font-bold text-lg mb-1">🎯 G1レースの予想を今すぐ確認</p>
+          <p className="text-green-300 font-bold text-lg mb-1">G1レースの予想を今すぐ確認</p>
           <p className="text-gray-400 text-sm mb-4">
             netkeibaの出走馬データをAIが自動取得・分析。登録不要・無料3回から。
           </p>
@@ -170,7 +170,7 @@ export default function CalendarPage() {
         {/* G1 Race Calendar */}
         <section className="mb-12">
           <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <span>📅</span> 2026年 G1レース全日程
+            2026年 G1レース全日程
           </h2>
 
           <div className="space-y-3">
@@ -207,7 +207,7 @@ export default function CalendarPage() {
                       </span>
                       {upcoming && (
                         <span className="bg-amber-500 text-black text-xs font-black px-2 py-0.5 rounded-full animate-pulse">
-                          🔥 直近
+                          人気
                         </span>
                       )}
                       {past && (
@@ -217,7 +217,7 @@ export default function CalendarPage() {
                       )}
                     </div>
                     <div className="flex flex-wrap gap-3 text-sm text-gray-400">
-                      <span>📍 {race.venue}</span>
+                      <span>{race.venue}</span>
                       <span
                         className={`font-semibold ${race.surface === "ダート" ? "text-amber-500" : "text-green-500"}`}
                       >
