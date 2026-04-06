@@ -32,7 +32,11 @@ export default function CancelPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-2xl border border-gray-200 p-8 text-center">
-          <div className="text-5xl mb-4">✅</div>
+          <div className="w-12 h-12 mb-4 mx-auto rounded-full bg-green-100 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-green-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53-1.9-1.9a.75.75 0 0 0-1.06 1.06l2.5 2.5a.75.75 0 0 0 1.14-.094l3.776-5.224z" clipRule="evenodd"/>
+            </svg>
+          </div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">解約手続きが完了しました</h1>
           <p className="text-sm text-gray-500 mb-6">
             プレミアム機能のご利用ありがとうございました。<br />

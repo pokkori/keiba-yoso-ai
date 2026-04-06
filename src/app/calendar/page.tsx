@@ -138,7 +138,7 @@ export default function CalendarPage() {
         {/* How AI Works Section */}
         <section className="mb-12">
           <h2 className="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2">
-            <span>⚡</span> AIはどうやってG1レースを予想するのか
+            AIはどうやってG1レースを予想するのか
           </h2>
           <div className="grid md:grid-cols-3 gap-4">
             {[
@@ -255,7 +255,7 @@ export default function CalendarPage() {
         {/* FAQ for SEO */}
         <section className="mb-12">
           <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <span>❓</span> よくある質問
+            よくある質問
           </h2>
           <div className="space-y-4">
             {[

@@ -102,7 +102,7 @@ export default function TrackerPage() {
     return (
       <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-6">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-sm font-bold text-gray-900">📈 回収率推移グラフ（直近{n}レース）</p>
+          <p className="text-sm font-bold text-gray-900">回収率推移グラフ（直近{n}レース）</p>
           <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${lastRoi >= 100 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
             現在 {lastRoi}%
           </span>
