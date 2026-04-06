@@ -1,0 +1,35 @@
+name: Quality Check
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Emoji scan (UI files)
+        run: |
+          echo "Scanning for emoji in UI files..."
+          if grep -rP "[\x{1F300}-\x{1F9FF}\x{2600}-\x{27BF}]" --include="*.tsx" --include="*.ts" \
+            --exclude-dir=node_modules --exclude-dir=.next \
+            . | grep -v "icon:\|emoji:\|twitter.com\|/api/og\|shareText\|tweetText\|\.md:" | grep -v "^Binary"; then
+            echo "::warning::UI emoji detected - please replace with SVG"
+          else
+            echo "No UI emoji found"
+          fi
