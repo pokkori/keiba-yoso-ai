@@ -56,20 +56,20 @@ export function SetPlanBanner({ onStartCheckout }: Props) {
             "いつでも解約OK（次回更新前に停止可能）",
           ].map((feat) => (
             <li key={feat} className="flex items-start gap-2">
-              <span className="text-yellow-400 mt-0.5 shrink-0">✓</span>
+              <svg className="w-3.5 h-3.5 text-yellow-400 mt-0.5 shrink-0" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7l4 4 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               {feat}
             </li>
           ))}
         </ul>
 
-        {/* CTA */}
+        {/* CTA — KOMOJU審査中のため準備中 */}
         <button
-          onClick={() => onStartCheckout(process.env.NEXT_PUBLIC_KOMOJU_SET_PLAN_ID ?? "set-plan")}
-          aria-label="3競技セットプランを申し込む（月額6,980円・22%オフ）"
+          disabled
+          aria-label="3競技セットプランは現在準備中です"
           data-testid="set-plan-cta"
-          className="block w-full text-center bg-yellow-400 hover:bg-yellow-300 text-green-900 font-black py-4 rounded-full text-base transition-colors min-h-[52px]"
+          className="block w-full text-center bg-gray-500 text-gray-300 font-black py-4 rounded-full text-base cursor-not-allowed opacity-60 min-h-[52px]"
         >
-          3競技セットプランを申し込む
+          準備中 — まもなく申込み開始
         </button>
 
         <p className="text-emerald-300 text-xs text-center mt-3">

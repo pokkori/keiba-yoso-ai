@@ -421,6 +421,29 @@ export default function Home() {
         <p className="text-green-400 text-sm mt-2">登録不要・カード不要・今すぐ体験</p>
       </section>
 
+      {/* クロスセルバナー — 競輪・ボートレースもまとめてお得 */}
+      <div className="px-4 py-4 border-b border-white/5" style={{ background: 'rgba(30,20,60,0.6)' }}>
+        <div className="max-w-2xl mx-auto rounded-xl border border-indigo-500/30 bg-gradient-to-r from-indigo-900 to-purple-900 p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold text-indigo-300 tracking-widest uppercase mb-1">3競技セットプラン</p>
+              <p className="text-lg font-bold text-white leading-snug">競輪・ボートレースもまとめてお得！</p>
+              <p className="text-sm text-indigo-200 mt-1">
+                単品¥3,000/月 × 3本 = ¥9,000 →
+                <span className="text-yellow-300 font-black ml-1">セット¥6,980/月（22%OFF）</span>
+              </p>
+            </div>
+            <a
+              href="#set-plan"
+              className="shrink-0 inline-block text-center bg-yellow-400 text-indigo-900 font-black px-6 py-3 rounded-full text-sm transition-colors hover:bg-yellow-300 min-h-[44px] leading-tight"
+              aria-label="3競技セットプランの詳細を見る"
+            >
+              セットプランを見る →
+            </a>
+          </div>
+        </div>
+      </div>
+
       {/* 次のG1まで○日 — 時限urgency CTA */}
       {(() => {
         const nextRace = getNextG1s(1)[0];
