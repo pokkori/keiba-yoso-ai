@@ -1318,11 +1318,13 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
                 const popularityVal = matchedHorseForFilter?.popularity
                   ? parseInt(matchedHorseForFilter.popularity) : null;
 
-                // 11番人気以降スキップ（DeepResearch実証: 10番人気以降で複勝回収率61.9%に急落）
-                // ※39%は18番人気の値（誤りを修正済み）。11番人気以降スキップは有効
-                if (popularityVal !== null && !isNaN(popularityVal) && popularityVal >= 11) {
+                // 10番人気以降スキップ（DeepResearch 2026-04-07確定・jradb2018-2022 5場横断）
+                // 10番人気以下の複回収率: 5場平均61.9%（5場横断データで境界確定）
+                // 11番人気推定65〜75%・14番人気62.4%・15番人気59.9%・18番人気39%
+                // ※旧コメント「39%は18番人気の値」修正済み。正確なカットオフは10番人気
+                if (popularityVal !== null && !isNaN(popularityVal) && popularityVal >= 10) {
                   finalRecommendation = "skip";
-                  console.log(`PopularitySkip: ${popularityVal}番人気 → skip（jradb2018-2022実証: 11番人気以降複勝回収率65-75%）`);
+                  console.log(`PopularitySkip: ${popularityVal}番人気 → skip（jradb2018-2022 5場平均: 10番人気以下複回収率61.9%）`);
                 }
 
                 // 大穴帯スキップ: 単勝15倍以上×8番人気以降（複勝回収率61-77%・期待値低い）
