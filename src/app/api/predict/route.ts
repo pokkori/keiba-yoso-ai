@@ -1303,7 +1303,7 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
               }
 
               if (recommendedFukushoOdds !== null) {
-                // 推奨馬の単勝オッズ・人気を取得（DeepResearch 2026-04-07: 単勝10-14.9倍帯が最高EV）
+                // 推奨馬の単勝オッズ・人気を取得（DeepResearch 2026-04-07検証済み）
                 const matchedHorseForFilter = horseNum !== null
                   ? raceData.rawHorses.find(h => parseInt(h.num) === horseNum)
                   : null;
@@ -1312,19 +1312,24 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
                 const popularityVal = matchedHorseForFilter?.popularity
                   ? parseInt(matchedHorseForFilter.popularity) : null;
 
-                // 11番人気以降は複勝回収率39%まで急落 → 強制スキップ
+                // 11番人気以降スキップ（DeepResearch実証: 10番人気以降で複勝回収率61.9%に急落）
+                // ※39%は18番人気の値（誤りを修正済み）。11番人気以降スキップは有効
                 if (popularityVal !== null && !isNaN(popularityVal) && popularityVal >= 11) {
                   finalRecommendation = "skip";
-                  console.log(`PopularitySkip: ${popularityVal}番人気 → skip（DeepResearch実証: 11番人気以降=複勝回収率39%）`);
+                  console.log(`PopularitySkip: ${popularityVal}番人気 → skip（jradb2018-2022実証: 11番人気以降複勝回収率65-75%）`);
                 }
 
-                // 単勝オッズ10-14.9倍帯: 最高EV帯（DeepResearch実証: 平均回収率86%超）
-                // → 複勝オッズ上限を5.5倍まで拡張（本来の4.0倍では切り過ぎ）
-                const fukushoUpperLimit =
-                  (tanshOddsVal !== null && tanshOddsVal >= 10.0 && tanshOddsVal <= 14.9) ? 5.5 : 4.0;
+                // 大穴帯スキップ: 単勝15倍以上×8番人気以降（複勝回収率61-77%・期待値低い）
+                if (finalRecommendation === "buy" && tanshOddsVal !== null && tanshOddsVal >= 15.0
+                    && popularityVal !== null && popularityVal >= 8) {
+                  finalRecommendation = "skip";
+                  console.log(`LongShotSkip: tanshOdds=${tanshOddsVal}倍 pop=${popularityVal}番人気 → skip（大穴帯）`);
+                }
 
-                // 複勝オッズ範囲フィルター（2.0倍未満・上限超はスキップ）
-                // バックテスト989件実証: 2〜3倍=回収率180%、2倍未満=45.7%（確実マイナス）
+                // 複勝オッズ範囲フィルター（2.0倍未満・4.0倍超はスキップ）
+                // バックテスト989件実証: 2〜3倍=回収率180%、2倍未満=45.7%
+                // ※単勝10-14.9倍優遇は不要（実測77.8%で特段優位なし・DeepResearch修正）
+                const fukushoUpperLimit = 4.0;
                 const oddsMatch = recommendedFukushoOdds.match(/([\d.]+)[〜~\-]([\d.]+)/);
                 const oddsLow = oddsMatch ? parseFloat(oddsMatch[1]) : parseFloat(recommendedFukushoOdds) || 0;
                 if (finalRecommendation === "buy" && oddsLow > 0 && oddsLow < 2.0) {
@@ -1332,7 +1337,7 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
                   console.log(`OddsLowerSkip: fukushoOdds=${recommendedFukushoOdds} < 2.0 → skip（バックテスト989件実証・2倍未満は回収率45.7%）`);
                 } else if (finalRecommendation === "buy" && oddsLow > fukushoUpperLimit) {
                   finalRecommendation = "skip";
-                  console.log(`OddsUpperSkip: fukushoOdds=${recommendedFukushoOdds} > ${fukushoUpperLimit} → skip（人気薄・tanshOdds=${tanshOddsVal}）`);
+                  console.log(`OddsUpperSkip: fukushoOdds=${recommendedFukushoOdds} > ${fukushoUpperLimit} → skip（人気薄）`);
                 } else {
                   // 複勝オッズが取得できた場合のみKelly計算を実行
                   if (confidence !== null) {
