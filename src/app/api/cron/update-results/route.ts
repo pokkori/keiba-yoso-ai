@@ -250,19 +250,36 @@ export async function GET(req: NextRequest) {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   // recommendation='buy' AND (hit IS NULL OR (hit=true AND return_amount=0))
-  // hit=true&return_amount=0はHTML構造変更(2025)で払戻取得失敗していたバグ対象を再取得
-  const { data: pendingRows, error: fetchError } = await supabase
-    .from("keiba_prediction_logs")
-    .select("id, race_id, horse_num, race_date")
-    .eq("recommendation", "buy")
-    .or("hit.is.null,and(hit.eq.true,return_amount.eq.0)")
-    .order("created_at", { ascending: true })
-    .limit(50);
-
+  // 2クエリに分けて結合（Supabase JS OR構文の互換性問題回避）
+  const [res1, res2] = await Promise.all([
+    supabase
+      .from("keiba_prediction_logs")
+      .select("id, race_id, horse_num, race_date")
+      .eq("recommendation", "buy")
+      .is("hit", null)
+      .order("created_at", { ascending: true })
+      .limit(50),
+    supabase
+      .from("keiba_prediction_logs")
+      .select("id, race_id, horse_num, race_date")
+      .eq("recommendation", "buy")
+      .eq("hit", true)
+      .eq("return_amount", 0)
+      .order("created_at", { ascending: true })
+      .limit(50),
+  ]);
+  const fetchError = res1.error || res2.error;
   if (fetchError) {
     console.error("fetch pending error:", fetchError.message);
     return NextResponse.json({ error: fetchError.message }, { status: 500 });
   }
+  // 重複排除してマージ
+  const seen = new Set<string>();
+  const pendingRows = [...(res1.data || []), ...(res2.data || [])].filter(r => {
+    if (seen.has(r.id)) return false;
+    seen.add(r.id);
+    return true;
+  });
 
   if (!pendingRows || pendingRows.length === 0) {
     return NextResponse.json({ ok: true, message: "No pending records", updated: 0 });
