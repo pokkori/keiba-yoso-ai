@@ -213,7 +213,7 @@ async function fetchRaceResult(
           const cells = row.match(/<(?:th|td)[^>]*>([\s\S]*?)<\/(?:th|td)>/gi) ?? [];
           if (cells.length >= 3) {
             // cells[1]=馬番リスト(改行区切り), cells[2]=払戻額リスト(改行区切り)
-            const stripTags = (s: string) => s.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim();
+            const stripTags = (s: string) => s.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim();
             const numCell = stripTags(cells[1]);
             const amtCell = stripTags(cells[2]);
             const nums = numCell.split(/\n/).map((s) => s.trim()).filter(Boolean);
