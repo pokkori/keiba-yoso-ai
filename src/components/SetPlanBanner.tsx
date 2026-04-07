@@ -11,6 +11,7 @@ interface Props {
 export function SetPlanBanner({ onStartCheckout }: Props) {
   return (
     <section
+      id="set-plan"
       className="py-10 px-6"
       aria-labelledby="set-plan-heading"
       data-testid="set-plan-banner"

@@ -959,7 +959,7 @@ ${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}${benterSection ? 
   期待値: EV = X.XX（1.0以上のみ購入推奨）
 
 ◆ スキップ推奨条件
-  複勝オッズ見込み1.8倍未満・確信度5以下・馬場重不良・15頭以上のハンデ戦
+  複勝オッズ見込み2.0倍未満・確信度5以下・馬場重不良・15頭以上のハンデ戦
 
 ※データが不完全な馬は騎手・斤量から推測すること。謝罪・追加情報要求は不要。`;
     }
@@ -1060,7 +1060,7 @@ ${!isGradeRace ? "⚠️ このレースは一般クラス戦の可能性があ�
 ### 正解例4: スキップ（大幅距離延長）
 レース: 2024年天皇賞春 京都芝3200m
 人気馬: 1番人気 単勝2.8倍 複勝1.6倍
-分析: 前走1600mから3200mへ大幅延長・初コース・複勝1.6倍（1.8倍未満スキップ帯）
+分析: 前走1600mから3200mへ大幅延長・初コース・複勝1.6倍（2.0倍未満スキップ帯）
 判定: **スキップ推奨** → 実際: 4着（スキップ正解。距離延長馬の複勝回収率は統計的に69%）
 
 ### 正解例5: スキップ（コース替わり・初コース）
@@ -1146,7 +1146,7 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
     const systemPrompt = mode === "fukusho"
       ? isBacktest
         ? `あなたはプロの競馬アナリストで複勝一点買いの専門家です。長期回収率120%以上を目標とします。【絶対ルール】(1)情報不足でも追加要求・謝罪禁止。(2)バックテストモード:人気データなくても馬名・騎手・斤量・過去成績から定性的に判断。数値スコアリングやEV計算は行わないこと。(3)一般クラス戦（未勝利・1勝・2勝・新馬）即スキップ。(4)重賞・特別以外即スキップ。(5)15頭以上即スキップ。(6)馬場「重」「不良」即スキップ。(7)9頭以下の重賞は能力差が出やすく積極推奨。(8)全応答「【推奨判定】」で開始。(9)推奨馬は実力上位（1-3番人気相当）から選ぶ。競走成績・騎手・コース適性で総合判断。(10)フォーマット外の文禁止。(11)スキップ率目標50-60%:迷ったらスキップ。(12)前走6着以下の馬は推奨しない。(13)上がり3F・コーナー通過順が記載されている場合は末脚タイプ/先行タイプの判断に活用すること。(14)斤量÷馬体重≤11.2%かつ馬体重≤489kgの馬は加点。(15)ルメール騎手×ダート稍重〜不良は最高信頼度。【出力フォーマット厳守】スキップ時→「【推奨判定】スキップ」+「【複勝推奨】スキップ — 理由(...)」のみ。推奨時→「【推奨判定】買い推奨」「【複勝推奨】X番 馬名 — 推奨理由（定性的な根拠を3点以上）」「【リスク要因】...」「確信度: X/10」。馬番は半角数字。${marketEdgeTableRule}${confidenceRule}${backtestRulesWithCalibration}${fewShotExamples}`
-        : `あなたはプロの競馬予想家で複勝一点買いの専門家です。長期回収率120%以上を目標とします。【絶対ルール】(1)推奨馬は必ず1〜3番人気から選ぶ。(2)出走頭数15頭以上はスキップ。(3)複勝オッズ1.3倍未満はスキップ。(4)推奨馬の前走着順が6着以下ならスキップ。(5)未勝利・1勝クラスはスキップ。(6)馬場「重」「不良」はスキップ。(7)迷ったら必ずスキップ—スキップはゼロ損失、外れは確実マイナス。(8)スキップ率目標50-60%。(9)数値によるEV計算は行わない。馬の実力・コース適性・騎手・近走の状態を定性的に判断すること。(10)複勝オッズが記載されている場合は「複勝オッズX.X〜Y.Y倍」として活用すること。(11)上がり3F・コーナー通過順が記載されている場合は末脚/先行の傾向判断に使うこと。(12)斤量÷馬体重≤11.2%かつ馬体重≤489kgの馬は+加点（回収率107%実証）。(13)ルメール騎手×ダート稍重〜不良は最高信頼度で推奨（回収率112%実証）。謝罪や情報不足の言及は一切しない。【買い目提示ルール】買い推奨時は必ず以下の構造で買い方を出力すること。◆推奨馬券（複勝モード）: X番 [馬名] 複勝 [軍資金の70%]円 → 推定払戻: [複勝下限オッズ]×[購入額]=[推定払戻額]円。◆追加オプション: 単勝オッズ〜4倍=X番 単勝[軍資金の20%]円を追加 / 単勝オッズ5倍以上=馬単 X番→Y番[軍資金の10%]円（穴狙い） / 確信度8以上=◎○ワイド[軍資金の10%]円。◆Kelly分率（必ず表示）: 推定3着内確率X% / 複勝オッズ（下限見込み）X.X倍 / Kelly分率=(X%×X.X-1)/(X.X-1)×0.25=X% / 軍資金1万円→推奨X円（上限25%）。◆合計予算: 合計[複勝+オプション]円（軍資金のX%） / EV=X.XX（1.0以上のみ購入推奨）。◆スキップ推奨条件: 複勝オッズ見込み1.8倍未満・確信度5以下・馬場重不良・15頭以上のハンデ戦。${marketEdgeTableRule}${confidenceRule}${backtestRulesWithCalibration}${fewShotExamples}`
+        : `あなたはプロの競馬予想家で複勝一点買いの専門家です。長期回収率120%以上を目標とします。【絶対ルール】(1)推奨馬は必ず1〜3番人気から選ぶ。(2)出走頭数15頭以上はスキップ。(3)複勝オッズ2.0倍未満はスキップ（バックテスト989件実証・2倍未満回収率45.7%）。(4)推奨馬の前走着順が6着以下ならスキップ。(5)未勝利・1勝クラスはスキップ。(6)馬場「重」「不良」はスキップ。(7)迷ったら必ずスキップ—スキップはゼロ損失、外れは確実マイナス。(8)スキップ率目標50-60%。(9)数値によるEV計算は行わない。馬の実力・コース適性・騎手・近走の状態を定性的に判断すること。(10)複勝オッズが記載されている場合は「複勝オッズX.X〜Y.Y倍」として活用すること。(11)上がり3F・コーナー通過順が記載されている場合は末脚/先行の傾向判断に使うこと。(12)斤量÷馬体重≤11.2%かつ馬体重≤489kgの馬は+加点（回収率107%実証）。(13)ルメール騎手×ダート稍重〜不良は最高信頼度で推奨（回収率112%実証）。謝罪や情報不足の言及は一切しない。【買い目提示ルール】買い推奨時は必ず以下の構造で買い方を出力すること。◆推奨馬券（複勝モード）: X番 [馬名] 複勝 [軍資金の70%]円 → 推定払戻: [複勝下限オッズ]×[購入額]=[推定払戻額]円。◆追加オプション: 単勝オッズ〜4倍=X番 単勝[軍資金の20%]円を追加 / 単勝オッズ5倍以上=馬単 X番→Y番[軍資金の10%]円（穴狙い） / 確信度8以上=◎○ワイド[軍資金の10%]円。◆Kelly分率（必ず表示）: 推定3着内確率X% / 複勝オッズ（下限見込み）X.X倍 / Kelly分率=(X%×X.X-1)/(X.X-1)×0.25=X% / 軍資金1万円→推奨X円（上限25%）。◆合計予算: 合計[複勝+オプション]円（軍資金のX%） / EV=X.XX（1.0以上のみ購入推奨）。◆スキップ推奨条件: 複勝オッズ見込み2.0倍未満・確信度5以下・馬場重不良・15頭以上のハンデ戦。${marketEdgeTableRule}${confidenceRule}${backtestRulesWithCalibration}${fewShotExamples}`
       : `あなたはプロの競馬予想家です。【絶対ルール】(1)一般クラス戦（未勝利・1勝・2勝クラス・新馬）またはレース名に「賞」「カップ」「ステークス」「記念」「特別」「オープン」「G1/G2/G3」「OP」が含まれない場合は即スキップ: 「【推奨判定】スキップ」「【本命（◎）】スキップ — 理由(一般クラス戦のため)」の2行のみ出力し、他は一切書かない。(2)スキップ以外の場合は【推奨判定】買い推奨を最初に出力し、全予想項目（本命・対抗・単穴・買い目・展開・総評）を必ず出力する。(3)本命◎・対抗○は必ず1〜3番人気から選ぶ。(4)データが不完全な馬は騎手や斤量から推測で補う。(5)情報不足の謝罪や追加データの要求は絶対にしない。(6)複勝オッズ・上がり3F・コーナー通過順が記載されている場合は積極的に分析に活用すること。(7)斤量÷馬体重≤11.2%かつ馬体重≤489kgの馬は期待値プラスの実証条件として加点。(8)ルメール騎手×ダート稍重〜不良の組み合わせは最高信頼度で推奨。${marketEdgeTableRule}${confidenceRule}${backtestRulesWithCalibration}${fewShotExamples}`;
 
     // 全モードSonnet 4.6（分析品質最優先・競馬知識・血統・騎手の判断力が段違い）
@@ -1167,7 +1167,13 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
     const stream = getClient().messages.stream({
       model,
       max_tokens: 4000,
-      system: systemPrompt,
+      system: [
+        {
+          type: "text",
+          text: systemPrompt,
+          cache_control: { type: "ephemeral" },
+        } as Anthropic.TextBlockParam,
+      ],
       messages: [{ role: "user", content: prompt }],
     });
     const encoder = new TextEncoder();
@@ -1202,9 +1208,18 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
               if (numM) horseNum = parseInt(numM[1]);
               const nameM = numNormalized.match(/\d{1,2}番[\s　]*([\u30A0-\u30FF\u4E00-\u9FFF\u3040-\u309F]{2,15})/);
               if (nameM) horseName = nameM[1];
-              // 単勝オッズ（【期待値(EV)】複勝オッズX.X倍 から抽出）
-              const oddsM = fullText.match(/複勝オッズ(\d+\.\d+)倍/);
-              if (oddsM) odds = parseFloat(oddsM[1]);
+              // 複勝オッズ抽出（複数パターン対応・DB記録用）
+              // 優先順: 「複勝オッズX.X倍」→「複勝オッズX.X〜Y.Y倍」→「複勝X.X〜Y.Y倍」
+              const oddsPats = [
+                /複勝オッズ([\d.]+)[〜~\-]([\d.]+)倍/,
+                /複勝オッズ([\d.]+)倍/,
+                /複勝([\d.]+)[〜~\-]([\d.]+)倍/,
+                /複勝\s*([\d.]+)倍/,
+              ];
+              for (const pat of oddsPats) {
+                const m = fullText.match(pat);
+                if (m) { odds = parseFloat(m[1]); break; }
+              }
             } else if (!isSkip && mode === "standard") {
               // 【本命（◎）】馬番 馬名 から抽出
               const honM = fullText.match(/【本命[（(◎)）】][^】]*】([\s\S]*?)(?=【|$)/)?.[1] ?? "";
@@ -1222,36 +1237,72 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
             // ─── フラクショナルKelly動的スキップ（追加フィルター） ───
             // 買い推奨の場合のみKellyフィルターを適用（スキップ済みはそのまま通過）
             let finalRecommendation: "skip" | "buy" = recommendation;
-            if (!isSkip && confidence !== null && mode === "fukusho") {
-              // 推奨馬の複勝オッズを取得（複勝推奨セクションから馬番を特定してrawHorsesから引く）
+
+            // AI出力から複勝オッズを抽出（rawHorsesがnullの場合のフォールバック）
+            // パターン例: 「複勝オッズ2.3倍」「複勝2.3〜3.1倍」「複勝オッズ2.3〜3.1倍」「1.9倍〜2.5倍」
+            let aiParsedFukushoOdds: string | null = null;
+            if (!isSkip && mode === "fukusho") {
+              const aiOddsPatterns = [
+                /複勝オッズ([\d.]+)[〜~\-]([\d.]+)倍/,
+                /複勝オッズ([\d.]+)倍/,
+                /複勝([\d.]+)[〜~\-]([\d.]+)倍/,
+                /複勝\s*([\d.]+)倍/,
+                /\(複勝([\d.]+)[〜~\-]([\d.]+)倍\)/,
+              ];
+              for (const pat of aiOddsPatterns) {
+                const m = fullText.match(pat);
+                if (m) {
+                  aiParsedFukushoOdds = m[2] ? `${m[1]}〜${m[2]}倍` : `${m[1]}倍`;
+                  break;
+                }
+              }
+              // DB保存用oddsの更新（AI出力からの抽出が優先）
+              if (aiParsedFukushoOdds && odds === null) {
+                const aiOddsMatch = aiParsedFukushoOdds.match(/([\d.]+)/);
+                if (aiOddsMatch) odds = parseFloat(aiOddsMatch[1]);
+              }
+            }
+
+            if (!isSkip && mode === "fukusho") {
+              // 推奨馬の複勝オッズを取得（rawHorses優先 → AI出力フォールバック）
               let recommendedFukushoOdds: string | null = null;
               if (horseNum !== null) {
                 const matchedHorse = raceData.rawHorses.find(h => parseInt(h.num) === horseNum);
                 recommendedFukushoOdds = matchedHorse?.fukushoOdds ?? null;
               }
+              // rawHorsesから取れない場合はAI出力から抽出したオッズを使う
+              if (recommendedFukushoOdds === null) {
+                recommendedFukushoOdds = aiParsedFukushoOdds;
+              }
 
               if (recommendedFukushoOdds !== null) {
-                // 複勝オッズ範囲フィルター（1.8倍未満・4.0倍超はスキップ）
-                // 統計的最高期待値帯は1.8〜4倍（京都大・神戸大実証）
+                // 複勝オッズ範囲フィルター（2.0倍未満・4.0倍超はスキップ）
+                // バックテスト989件実証: 2〜3倍=回収率180%、2倍未満=45.7%（確実マイナス）
                 const oddsMatch = recommendedFukushoOdds.match(/([\d.]+)[〜~\-]([\d.]+)/);
                 const oddsLow = oddsMatch ? parseFloat(oddsMatch[1]) : parseFloat(recommendedFukushoOdds) || 0;
-                if (oddsLow < 1.8 && oddsLow > 0) {
+                if (oddsLow > 0 && oddsLow < 2.0) {
                   finalRecommendation = "skip";
-                  console.log(`OddsLowerSkip: fukushoOdds=${recommendedFukushoOdds} < 1.8 → skip（控除率構造上長期マイナス）`);
+                  console.log(`OddsLowerSkip: fukushoOdds=${recommendedFukushoOdds} < 2.0 → skip（バックテスト989件実証・2倍未満は回収率45.7%）`);
                 } else if (oddsLow > 4.0) {
                   finalRecommendation = "skip";
                   console.log(`OddsUpperSkip: fukushoOdds=${recommendedFukushoOdds} > 4.0 → skip（人気薄）`);
                 } else {
                   // 複勝オッズが取得できた場合のみKelly計算を実行
-                  const kellyFraction = calcKellyFraction(confidence, recommendedFukushoOdds);
-                  if (kellyFraction <= 0.02) {
-                    // Kelly基準を下回る → スキップに強制変更
-                    finalRecommendation = "skip";
-                    console.log(`Kelly skip: confidence=${confidence}, fukushoOdds=${recommendedFukushoOdds}, kelly=${kellyFraction.toFixed(4)}`);
+                  if (confidence !== null) {
+                    const kellyFraction = calcKellyFraction(confidence, recommendedFukushoOdds);
+                    if (kellyFraction <= 0.02) {
+                      finalRecommendation = "skip";
+                      console.log(`Kelly skip: confidence=${confidence}, fukushoOdds=${recommendedFukushoOdds}, kelly=${kellyFraction.toFixed(4)}`);
+                    }
                   }
                 }
+              } else {
+                // 複勝オッズが取得不可かつ確信度6以下はスキップ（情報不足のため慎重判断）
+                if (confidence !== null && confidence <= 6) {
+                  finalRecommendation = "skip";
+                  console.log(`LowConfidenceNoOddsSkip: confidence=${confidence} <= 6 かつ複勝オッズ未取得 → skip`);
+                }
               }
-              // 複勝オッズが取得できない場合はKelly計算をスキップ（確信度フィルターのみ適用済み）
             }
 
             await savePrediction({

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { isActiveSubscription } from "@/lib/supabase";
+import { verifyValue } from "@/lib/secure-cookie";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +33,9 @@ export async function GET() {
     return NextResponse.json({ isPremium, email });
   }
 
-  const payjpPremium = !!cookieStore.get("premium")?.value;
+  const premiumCookie = cookieStore.get("premium")?.value;
+  const payjpPremiumValue = premiumCookie ? verifyValue(premiumCookie) : null;
+  const payjpPremium = !!payjpPremiumValue;
 
   if (!payjpPremium) {
     return NextResponse.json({ isPremium: false });

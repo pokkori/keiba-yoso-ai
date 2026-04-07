@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { signValue } from "@/lib/secure-cookie";
 
 export const dynamic = "force-dynamic";
 
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
       }
       // subscription IDを保存（解約検知に使用）
       const res = NextResponse.json({ ok: true });
-      res.cookies.set("premium", plan === "pro" ? "pro" : "1", {
+      res.cookies.set("premium", signValue(plan === "pro" ? "pro" : "1"), {
         httpOnly: true,
         secure: true,
         sameSite: "lax",
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
     }
 
     const res = NextResponse.json({ ok: true });
-    res.cookies.set("premium", "pro", {
+    res.cookies.set("premium", signValue("pro"), {
       httpOnly: true,
       secure: true,
       sameSite: "lax",
