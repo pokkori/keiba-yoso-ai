@@ -249,12 +249,13 @@ export async function GET(req: NextRequest) {
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-  // recommendation='buy' AND hit IS NULL のレコードを最大30件取得
+  // recommendation='buy' AND (hit IS NULL OR (hit=true AND return_amount=0))
+  // hit=true&return_amount=0はHTML構造変更(2025)で払戻取得失敗していたバグ対象を再取得
   const { data: pendingRows, error: fetchError } = await supabase
     .from("keiba_prediction_logs")
     .select("id, race_id, horse_num, race_date")
     .eq("recommendation", "buy")
-    .is("hit", null)
+    .or("hit.is.null,and(hit.eq.true,return_amount.eq.0)")
     .order("created_at", { ascending: true })
     .limit(50);
 
