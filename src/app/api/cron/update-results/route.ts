@@ -199,6 +199,38 @@ async function fetchRaceResult(
     }
   }
 
+  // パターン4: <table class="pay_table_01">（db.netkeiba.com の現行HTML構造）
+  // 複勝行のth/tdは「複勝 | 馬番(\n区切り) | 払戻額(\n区切り) | 票数」の形式
+  if (returnAmount === 0) {
+    const payTable01Matches = [...html.matchAll(
+      /<table[^>]+class=["'][^"']*pay_table_01[^"']*["'][^>]*>([\s\S]*?)<\/table>/gi
+    )];
+    outer4: for (const tableMatch of payTable01Matches) {
+      const rows3 = tableMatch[1].match(/<tr[^>]*>([\s\S]*?)<\/tr>/gi) ?? [];
+      for (const row of rows3) {
+        if (/複勝/.test(row)) {
+          // th/td のテキストを改行区切りで取得
+          const cells = row.match(/<(?:th|td)[^>]*>([\s\S]*?)<\/(?:th|td)>/gi) ?? [];
+          if (cells.length >= 3) {
+            // cells[1]=馬番リスト(改行区切り), cells[2]=払戻額リスト(改行区切り)
+            const stripTags = (s: string) => s.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim();
+            const numCell = stripTags(cells[1]);
+            const amtCell = stripTags(cells[2]);
+            const nums = numCell.split(/\n/).map((s) => s.trim()).filter(Boolean);
+            const amts = amtCell.split(/\n/).map((s) => s.trim()).filter(Boolean);
+            for (let i = 0; i < nums.length; i++) {
+              if (parseInt(nums[i], 10) === playerNum && i < amts.length) {
+                returnAmount = parseInt(amts[i].replace(/,/g, ""), 10);
+                break outer4;
+              }
+            }
+          }
+          break;
+        }
+      }
+    }
+  }
+
   const hit = actualPos > 0 ? actualPos <= 3 : returnAmount > 0;
 
   if (actualPos === 0 && returnAmount === 0) {
