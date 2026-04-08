@@ -632,12 +632,15 @@ async function fetchRaceData(raceId: string, isBacktest = false): Promise<FetchR
   let horses: HorseBasic[];
   if (shutubaHorses && shutubaHorses.length > 0) {
     horses = shutubaHorses;
-    // Merge jockey from odds API if shutuba didn't capture it
+    // Merge jockey/odds from odds API (shutuba pages don't include odds)
     if (baseHorses) {
       for (const h of horses) {
-        if (!h.jockey) {
-          const match = baseHorses.find(o => o.num === h.num);
-          if (match?.jockey) h.jockey = match.jockey;
+        const match = baseHorses.find(o => o.num === h.num);
+        if (match) {
+          if (!h.jockey && match.jockey) h.jockey = match.jockey;
+          // 単勝オッズ・人気をマージ（shutubaHTMLにはオッズが含まれないため必須）
+          if (!h.tanshOdds && match.tanshOdds) h.tanshOdds = match.tanshOdds;
+          if (!h.popularity && match.popularity) h.popularity = match.popularity;
         }
       }
     }
@@ -1337,10 +1340,20 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
 
                 // 複勝オッズ範囲フィルター（2.0倍未満・4.0倍超はスキップ）
                 // バックテスト989件実証: 2〜3倍=回収率180%、2倍未満=45.7%
-                // ※単勝10-14.9倍優遇は不要（実測77.8%で特段優位なし・DeepResearch修正）
-                const fukushoUpperLimit = 4.0;
+                // ※単勝5-7倍帯は160.7%実績のため複勝上限を6.0倍に拡張（2026-04-08 DR確定）
+                const is57Band = tanshOddsVal !== null && tanshOddsVal >= 5.0 && tanshOddsVal < 7.0;
+                const fukushoUpperLimit = is57Band ? 6.0 : 4.0;
                 const oddsMatch = recommendedFukushoOdds.match(/([\d.]+)[〜~\-]([\d.]+)/);
                 const oddsLow = oddsMatch ? parseFloat(oddsMatch[1]) : parseFloat(recommendedFukushoOdds) || 0;
+                // 4-5倍死亡帯サーバーサイド強制スキップ（confidence≥9のみ通過）
+                // バックテスト989件実証: 4-5倍帯回収率36.7%（backtestRules(B)確定）
+                if (finalRecommendation === "buy" && oddsLow >= 4.0 && oddsLow < 5.0 && !is57Band) {
+                  const hasStrongConfidence = confidence !== null && confidence >= 9;
+                  if (!hasStrongConfidence) {
+                    finalRecommendation = "skip";
+                    console.log(`DeadZone45Skip: fukushoOdds=${recommendedFukushoOdds} in [4.0,5.0) confidence=${confidence} → skip（バックテスト36.7%帯）`);
+                  }
+                }
                 if (finalRecommendation === "buy" && oddsLow > 0 && oddsLow < 2.0) {
                   finalRecommendation = "skip";
                   console.log(`OddsLowerSkip: fukushoOdds=${recommendedFukushoOdds} < 2.0 → skip（バックテスト989件実証・2倍未満は回収率45.7%）`);
