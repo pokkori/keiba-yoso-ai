@@ -46,6 +46,7 @@ if (existsSync(envPath)) {
 
 // ── 引数解析 ────────────────────────────────────────────────────────────────
 const DRY_RUN = process.argv.includes("--dry-run");
+const REPLACE_ZERO = process.argv.includes("--replace-zero"); // return_amount=0の既存データを上書き
 const limitArg = process.argv.find((a) => a.startsWith("--limit="))?.split("=")[1]
   || (process.argv.includes("--limit") ? process.argv[process.argv.indexOf("--limit") + 1] : null);
 const MAX_RACE_LIMIT = limitArg ? parseInt(limitArg, 10) : Infinity;
@@ -53,6 +54,7 @@ const yearArg = process.argv.find((a) => a.startsWith("--year="))?.split("=")[1]
 const TARGET_YEARS = yearArg ? [parseInt(yearArg, 10)] : [2023, 2024, 2025];
 
 if (DRY_RUN) console.log("[dry-run] DBを更新しません");
+if (REPLACE_ZERO) console.log("[replace-zero] return_amount=0の既存データを上書きします");
 if (MAX_RACE_LIMIT < Infinity) console.log(`[limit] 最大 ${MAX_RACE_LIMIT} レースで停止`);
 console.log(`[対象年] ${TARGET_YEARS.join(", ")}`);
 
@@ -308,16 +310,36 @@ async function fetchRaceFullResult(raceId) {
 // ── DB: 既存race_idを確認（重複挿入防止） ──────────────────────────────────
 async function getExistingRaceIds(client, raceIds) {
   if (raceIds.length === 0) return new Set();
-  const res = await client.query(
-    `SELECT DISTINCT race_id FROM keiba_prediction_logs WHERE race_id = ANY($1)`,
-    [raceIds]
-  );
+  let query;
+  if (REPLACE_ZERO) {
+    // --replace-zero モード: return_amount>0のデータがある race_id のみ既存扱い
+    // return_amount=0のみのrace_idは再処理対象とする
+    query = `
+      SELECT DISTINCT race_id FROM keiba_prediction_logs
+      WHERE race_id = ANY($1)
+      AND race_id IN (
+        SELECT race_id FROM keiba_prediction_logs
+        WHERE race_id = ANY($1) AND return_amount > 0
+      )
+    `;
+  } else {
+    query = `SELECT DISTINCT race_id FROM keiba_prediction_logs WHERE race_id = ANY($1)`;
+  }
+  const res = await client.query(query, [raceIds]);
   return new Set(res.rows.map((r) => r.race_id));
 }
 
 // ── DB: レース結果を一括挿入 ────────────────────────────────────────────────
 async function insertRaceResults(client, raceId, raceName, raceDate, horses) {
   if (horses.length === 0) return 0;
+
+  // --replace-zero モードの場合、return_amount=0の旧データを先に削除
+  if (REPLACE_ZERO) {
+    await client.query(
+      `DELETE FROM keiba_prediction_logs WHERE race_id = $1 AND return_amount = 0`,
+      [raceId]
+    );
+  }
 
   // 複勝圏内（3着以内）のみ買い推奨として挿入（バックテスト用）
   // 全馬挿入して、実際の着順から hit を決定する
