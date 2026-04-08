@@ -1,0 +1,7 @@
+{
+  "updatedAt": "2026-04-08T00:00:00.000Z",
+  "sport": "keiba",
+  "minSamplesForCalibration": 30,
+  "points": [],
+  "_note": "confidence列が蓄積されたらscripts/update-calibration.mjsで自動更新される。現状はcalibration.tsのconservativeMapフォールバックを使用"
+}

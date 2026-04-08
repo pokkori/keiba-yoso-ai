@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { savePrediction } from "@/lib/backtest";
+import { getCalibratedProb } from "@/lib/calibration";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 55; // Vercel hobby max 60s
@@ -488,12 +489,9 @@ function calcKellyFraction(confidenceScore: number, fukushoOdds: string | null):
       if (single > 0) midOdds = single;
     }
   }
-  // LLMの過信バイアスを補正: confidence/10だと過大評価になる
-  // 競馬複勝実績より: 確信度8でも実際的中率は35%前後（3着以内）
-  const conservativeMap: Record<number, number> = {
-    10: 0.55, 9: 0.47, 8: 0.35, 7: 0.28, 6: 0.20, 5: 0.14, 4: 0.09
-  };
-  const p_ai = conservativeMap[confidenceScore] ?? Math.max(0.01, confidenceScore / 20);
+  // キャリブレーション済み確率を使用（Supabaseの実績データから補正）
+  // calibration.tsのIsotonic RegressionでLLMの過信バイアスを自動補正
+  const p_ai = getCalibratedProb(confidenceScore, "keiba");
   const kelly_f = (p_ai * midOdds - 1) / (midOdds - 1);
   return kelly_f * 0.25; // フラクショナルKelly（0.25倍で保守的運用）
 }
