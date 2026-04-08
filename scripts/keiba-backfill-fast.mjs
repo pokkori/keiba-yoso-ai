@@ -214,27 +214,46 @@ async function fetchRaceFullResult(raceId) {
   }
 
   // ── 複勝払い戻しテーブル解析 ──
+  // HTML構造: <dl class="pay_block"> > <table class="pay_table_01">
+  //   <tr><th class="fuku">複勝</th><td>10<br />3<br />2</td><td class="txt_r">210<br />340<br />1,120</td>...</tr>
   const fukushoMap = {}; // horseNum → returnAmount
 
-  // pay_block テーブルから複勝を探す
-  const payBlockMatch = html.match(
-    /<table[^>]+class=["'][^"']*pay_block[^"']*["'][^>]*>([\s\S]*?)<\/table>/i
+  // pay_table_01 テーブルを全て取得
+  const payTables = html.matchAll(
+    /<table[^>]+class=["'][^"']*pay_table_01[^"']*["'][^>]*>([\s\S]*?)<\/table>/gi
   );
-  if (payBlockMatch) {
-    const rows = payBlockMatch[1].match(/<tr[^>]*>([\s\S]*?)<\/tr>/gi) ?? [];
+  outer: for (const payTableMatch of payTables) {
+    const rows = payTableMatch[1].match(/<tr[^>]*>([\s\S]*?)<\/tr>/gi) ?? [];
     for (const row of rows) {
-      if (/複勝/.test(row)) {
-        const numMatches = row.match(/(\d+)番/g) ?? [];
-        const amtMatches = row.match(/[¥￥]?([\d,]+)円?/g) ?? [];
-        for (let i = 0; i < numMatches.length; i++) {
-          const num = parseInt(numMatches[i].replace("番", ""), 10);
-          if (i < amtMatches.length) {
-            const amt = parseInt(amtMatches[i].replace(/[¥￥,円]/g, ""), 10);
-            if (amt >= 100) fukushoMap[num] = amt;
-          }
+      // <th class="fuku"> で複勝行を識別
+      if (!/<th[^>]+class=["'][^"']*fuku[^"']*["']/.test(row)) continue;
+
+      // <td> を順番に取得（1番目=馬番、2番目=払戻金額）
+      const tds = row.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) ?? [];
+      if (tds.length < 2) break;
+
+      // tdのテキストを取得（<br />区切りで複数値）
+      const getTexts = (td) =>
+        (td.match(/<td[^>]*>([\s\S]*?)<\/td>/i)?.[1] ?? "")
+          .replace(/<br\s*\/?>/gi, "\n")
+          .replace(/<[^>]+>/g, "")
+          .trim()
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean);
+
+      const numTexts = getTexts(tds[0]); // 馬番リスト
+      const amtTexts = getTexts(tds[1]); // 払戻金額リスト
+
+      for (let i = 0; i < numTexts.length; i++) {
+        const num = parseInt(numTexts[i].replace(/[^\d]/g, ""), 10);
+        if (isNaN(num) || num <= 0) continue;
+        if (i < amtTexts.length) {
+          const amt = parseInt(amtTexts[i].replace(/[^\d]/g, ""), 10);
+          if (!isNaN(amt) && amt >= 100) fukushoMap[num] = amt;
         }
-        break;
       }
+      break outer;
     }
   }
 
