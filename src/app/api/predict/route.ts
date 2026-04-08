@@ -755,6 +755,40 @@ export async function POST(req: NextRequest) {
   // Benter式Market Edge分析セクション（コード側でimplied prob計算済み）
   const benterSection = buildBenterSection(raceData.rawHorses);
 
+  // ── 低回収率会場スキップ（サーバーサイド・LLM呼び出し前・API費用節約） ──
+  // Supabaseバックテスト実証: 小倉=47.7%回収・札幌=8.9%回収（期待値マイナスの確定会場）
+  // 補足: 函館も夏開催で低回収傾向だが十分なサンプルなしのため保留
+  {
+    const trackCode = body.raceId.substring(4, 6);
+    const LOW_RECOVERY_TRACKS: Record<string, string> = {
+      "10": "小倉（バックテスト実証: 回収率47.7%）",
+      "01": "札幌（バックテスト実証: 回収率8.9%）",
+    };
+    const lowRecoveryReason = LOW_RECOVERY_TRACKS[trackCode];
+    if (lowRecoveryReason) {
+      console.log(`[VenueSkip] ${body.raceId} → ${lowRecoveryReason}`);
+      const skipText = `【推奨判定】スキップ\n【複勝推奨】スキップ — 理由(${lowRecoveryReason} のため自動スキップ)\n確信度: 0/10`;
+      const newCountSkip = cookieCount + 1;
+      const raceInfoStrSkip = raceData.info.trim();
+      const encoderSkip = new TextEncoder();
+      const skipStream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoderSkip.encode(skipText));
+          controller.enqueue(encoderSkip.encode(`\nDONE:${JSON.stringify({ count: newCountSkip, mode, raceInfo: raceInfoStrSkip, autoSkipped: true })}`));
+          controller.close();
+        }
+      });
+      const skipHeaders: Record<string, string> = {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache",
+      };
+      if (!isPremium) {
+        skipHeaders["Set-Cookie"] = `${COOKIE_KEY}=${newCountSkip}; Max-Age=${60 * 60 * 24}; SameSite=Lax; HttpOnly; Secure; Path=/`;
+      }
+      return new Response(skipStream, { headers: skipHeaders });
+    }
+  }
+
   // ── 複勝帯自動スキップ（サーバーサイド・LLM呼び出し前） ──
   // 複勝オッズがある場合、2.0〜5.0倍帯の馬がいなければLLM呼び出し前に自動スキップ
   if (mode === "fukusho") {
@@ -1368,14 +1402,12 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
                     console.log(`MidOddsTighten34: odds=${oddsLow} conf=${confidence} → skip（3-4倍帯 confidence<8）`);
                   }
                 }
-                // 4-5倍死亡帯サーバーサイド強制スキップ（confidence≥9のみ通過）
-                // バックテスト240件実証: 4-5倍帯回収率36.7%（backtestRules(B)確定）
+                // 4-5倍死亡帯サーバーサイド強制スキップ（全件スキップ・DR2026-04-08確定）
+                // バックテスト240件実証: 4-5倍帯回収率36.7%（confidence高低問わず期待値マイナス確定）
+                // 旧: confidence<9のみスキップ → 新: 全件スキップ（9以上でも36.7%＝LLM費用の無駄）
                 if (finalRecommendation === "buy" && oddsLow >= 4.0 && oddsLow < 5.0 && !is57Band) {
-                  const hasStrongConfidence = confidence !== null && confidence >= 9;
-                  if (!hasStrongConfidence) {
-                    finalRecommendation = "skip";
-                    console.log(`DeadZone45Skip: fukushoOdds=${recommendedFukushoOdds} in [4.0,5.0) confidence=${confidence} → skip（バックテスト36.7%帯）`);
-                  }
+                  finalRecommendation = "skip";
+                  console.log(`DeadZone45Skip: fukushoOdds=${recommendedFukushoOdds} in [4.0,5.0) → skip全件（バックテスト36.7%帯・DR確定）`);
                 }
                 if (finalRecommendation === "buy" && oddsLow > 0 && oddsLow < 2.0) {
                   finalRecommendation = "skip";
