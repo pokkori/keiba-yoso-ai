@@ -1004,8 +1004,10 @@ ${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}${benterSection ? 
 鉄則1【2026年改定・人気縛り撤廃】: 推奨馬は人気順位ではなく以下3条件を全て満たす馬から選ぶ
   条件A: Market Edge（AIの推定3着内確率 - implied_prob）≥ +12%（8%→12%厳格化: バックテスト107%→115%目標・DeepResearch確定）
   条件B: 複勝EV（複勝オッズ × 推定3着内確率）≥ 1.30
-  条件C: 複勝オッズ 3.0〜6.0倍（2.9倍以下は控除率構造上EV達成不可能・6.1倍超は不安定）
-  ※3.2〜4.5倍「死亡帯」内包警告: バックテスト回収率36%。この帯はEV≥1.45かつEdge≥+15%でないとスキップ。
+  条件C: 複勝オッズ 2.0〜3.0倍（堅軸帯・的中重視） または 5.0〜7.0倍（妙味帯・逆FLB最大帯）を優先
+    ※バイモーダル戦略（DR2026-04-08確定）: バックテスト実証 2-3倍帯=180%回収 / 5-7倍帯=160%回収
+    ※3.0〜4.9倍帯（死亡帯）: 回収率36〜112%で不安定。confidence=9以上のみ推奨可
+    ※7.0倍超: 回収率55%以下（過小評価されすぎ）→ 原則スキップ
   ※1番人気縛りを廃止。2〜6番人気で条件を満たす馬を最優先で探すこと。
   ※1番人気で複勝2.5倍以下の馬は過剰人気（JRA統計: 複勝回収率83.8%）のため原則スキップ。
 鉄則2: 重賞・G1/G2/G3・特別競走は上位人気が固まりやすいが、人気縛りは設けない。
@@ -1467,12 +1469,13 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
                 const fukushoUpperLimit = is57Band ? 6.0 : 4.0;
                 const oddsMatch = recommendedFukushoOdds.match(/([\d.]+)[〜~\-]([\d.]+)/);
                 const oddsLow = oddsMatch ? parseFloat(oddsMatch[1]) : parseFloat(recommendedFukushoOdds) || 0;
-                // 3.0-4.0倍帯: confidence<8はスキップ（バックテスト240件: 3-4倍=112%だが信頼確保のため）
-                // 2026-04-08 DR確定: 3-4倍帯は少サンプルで統計不安定→confidence8+のみ通過
+                // 3.0-4.0倍帯: confidence<9はスキップ（バックテスト240件: 3-4倍=112%だが統計不安定）
+                // 2026-04-08 DR確定: 3-4倍帯は少サンプル不安定→confidence9+のみ通過(8→9に引き上げ)
+                // 根拠: バイモーダル戦略(2-3倍180%/5-7倍160%が安定高回収)に集中するためconfidence要件を強化
                 if (finalRecommendation === "buy" && oddsLow >= 3.0 && oddsLow < 4.0 && !is57Band) {
-                  if (confidence === null || confidence < 8) {
+                  if (confidence === null || confidence < 9) {
                     finalRecommendation = "skip";
-                    console.log(`MidOddsTighten34: odds=${oddsLow} conf=${confidence} → skip（3-4倍帯 confidence<8）`);
+                    console.log(`MidOddsTighten34: odds=${oddsLow} conf=${confidence} → skip（3-4倍帯 confidence<9・DR確定）`);
                   }
                 }
                 // 4-5倍死亡帯サーバーサイド強制スキップ（全件スキップ・DR2026-04-08確定）
