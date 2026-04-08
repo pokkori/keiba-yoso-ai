@@ -541,6 +541,76 @@ function detectFrontRunner(horsesStr: string, horseNum: number): boolean {
   return ratio >= 0.6;
 }
 
+/**
+ * 前走上がり3Fトップ3フィルター（DeepResearch 2026-04-08確定）
+ * 直近1走の上がり3Fタイムが全馬中トップ3以内かどうか判定。
+ * 実証: 上がり3F最速馬の複勝率64-68%、複勝回収率84-87%（+4〜7%改善）
+ * @param horsesStr 全馬の履歴テキスト
+ * @param horseNum 対象馬番
+ * @returns "top1"|"top3"|"other"|"unknown"
+ */
+function checkLastRaceAgari3F(horsesStr: string, horseNum: number): "top1" | "top3" | "other" | "unknown" {
+  const sections = horsesStr.split(/\n\n+/);
+
+  // 各馬の直近1走の上がり3Fを収集
+  const agariMap: Map<number, number> = new Map();
+  for (const section of sections) {
+    // 馬番を取得
+    const numMatch = section.match(/(?:馬番[：: ]*(\d+)\b|【(\d+)番】|^(\d+)番 )/m);
+    if (!numMatch) continue;
+    const num = parseInt(numMatch[1] ?? numMatch[2] ?? numMatch[3], 10);
+    if (isNaN(num)) continue;
+
+    // 最初に出現する「上がり3F:XX.X秒」を直近1走として取得
+    const agariMatch = section.match(/上がり3F:([\d.]+)秒/);
+    if (agariMatch) {
+      agariMap.set(num, parseFloat(agariMatch[1]));
+    }
+  }
+
+  if (!agariMap.has(horseNum)) return "unknown";
+  const targetAgari = agariMap.get(horseNum)!;
+  if (isNaN(targetAgari)) return "unknown";
+
+  // 全馬のタイムをソート（小さいほど速い）
+  const allAgaris = [...agariMap.values()].filter(t => !isNaN(t) && t > 0).sort((a, b) => a - b);
+  if (allAgaris.length < 3) return "unknown";
+
+  const rank = allAgaris.indexOf(targetAgari) + 1; // 1-indexed
+  if (rank === 1) return "top1";
+  if (rank <= 3) return "top3";
+  return "other";
+}
+
+/**
+ * 騎手乗り替わり検出（DeepResearch 2026-04-08確定）
+ * 現在の騎手が前走から変わっているか、かつトップ騎手かどうかを判定。
+ * 実証: 乗り替わり→ルメール/川田/福永: 複勝率85%超
+ * @param horsesStr 全馬の履歴テキスト
+ * @param horseNum 対象馬番
+ * @param currentJockey 現在の騎手名
+ * @returns "top_jockey_change"|"change"|"same"|"unknown"
+ */
+const TOP_JOCKEYS = ["ルメール", "川田", "福永", "武豊", "横山武", "横山典", "戸崎", "松山", "岩田望", "デムーロ", "モレイラ", "北村友"];
+
+function detectJockeyChange(horsesStr: string, horseNum: number, currentJockey: string): "top_jockey_change" | "change" | "same" | "unknown" {
+  if (!currentJockey) return "unknown";
+  const sections = horsesStr.split(/\n\n+/);
+  const targetSection = sections.find(s =>
+    new RegExp(`(?:馬番[：: ]*${horseNum}\\b|【${horseNum}番】|^${horseNum}番 )`, "m").test(s)
+  );
+  if (!targetSection) return "unknown";
+
+  // 最初に出現する「騎手:XXX」を直近1走の騎手として取得
+  const jockeyMatch = targetSection.match(/騎手:([^\s\d,（「\n]+)/);
+  if (!jockeyMatch) return "unknown";
+  const prevJockey = jockeyMatch[1].trim();
+
+  if (prevJockey === currentJockey) return "same";
+  const isTopJockey = TOP_JOCKEYS.some(j => currentJockey.includes(j));
+  return isTopJockey ? "top_jockey_change" : "change";
+}
+
 // ─── Batch-fetch all horse details ───────────────────────────────────────────
 
 async function fetchAllHorseDetails(horses: HorseBasic[], log: string[]): Promise<string[]> {
@@ -800,6 +870,34 @@ export async function POST(req: NextRequest) {
   // Benter式Market Edge分析セクション（コード側でimplied prob計算済み）
   const benterSection = buildBenterSection(raceData.rawHorses);
 
+  // 上がり3F・騎手乗り替わり分析セクション（DeepResearch 2026-04-08）
+  const agariJockeyNotes: string[] = [];
+  if (raceData.horses && raceData.rawHorses.length > 0) {
+    for (const horse of raceData.rawHorses) {
+      const num = parseInt(horse.num, 10);
+      if (isNaN(num)) continue;
+
+      // 上がり3Fランク
+      const agariRank = checkLastRaceAgari3F(raceData.horses, num);
+      if (agariRank === "top1") {
+        agariJockeyNotes.push(`【上がり3F分析】${horse.num}番 ${horse.name}: 前走上がり3F最速（全馬1位）→ 複勝率64-68%実証・加点評価`);
+      } else if (agariRank === "top3") {
+        agariJockeyNotes.push(`【上がり3F分析】${horse.num}番 ${horse.name}: 前走上がり3Fトップ3→ 末脚信頼度高・加点評価`);
+      }
+
+      // 騎手乗り替わり
+      if (horse.jockey) {
+        const jockeyStatus = detectJockeyChange(raceData.horses, num, horse.jockey);
+        if (jockeyStatus === "top_jockey_change") {
+          agariJockeyNotes.push(`【騎手乗替分析】${horse.num}番 ${horse.name}: ${horse.jockey}への乗り替わり（トップ騎手）→ 複勝率85%超実証・積極加点`);
+        }
+      }
+    }
+  }
+  const agariJockeySection = agariJockeyNotes.length > 0
+    ? `\n【DeepResearch 2026-04-08確定: 上がり3F・騎手乗り替わり分析】\n${agariJockeyNotes.join("\n")}\n`
+    : "";
+
   // ── 低回収率会場スキップ（サーバーサイド・LLM呼び出し前・API費用節約） ──
   // Supabaseバックテスト実証: 小倉=47.7%回収・札幌=8.9%回収（期待値マイナスの確定会場）
   // 補足: 函館も夏開催で低回収傾向だが十分なサンプルなしのため保留
@@ -914,7 +1012,7 @@ export async function POST(req: NextRequest) {
 
 出走馬詳細情報:
 ${raceData.horses}
-${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}${benterSection ? `${benterSection}\n` : ""}
+${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}${benterSection ? `${benterSection}\n` : ""}${agariJockeySection}
 === STEP0: レースカテゴリチェック（最優先）===
 
 【統計的根拠】重賞・特別レースの的中率33%（収支プラス）、一般クラス戦の的中率9%（大幅マイナス）。
@@ -996,7 +1094,7 @@ SKIPの場合、以下の形式のみを出力し、他は一切書かない:
 出走馬詳細情報:
 ${raceData.horses}
 ${budgetLine}
-${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}${benterSection ? `${benterSection}\n` : ""}
+${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}${benterSection ? `${benterSection}\n` : ""}${agariJockeySection}
 【★最重要★ 複勝120%回収率維持のための鉄則（全て厳守・例外なし）】
 
 【SKIP優先原則】迷ったら買わない。スキップはゼロ損失。買って外れたら確実にマイナス。
@@ -1102,7 +1200,7 @@ ${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}${benterSection ? 
 出走馬詳細情報:
 ${raceData.horses}
 ${budgetSection}
-${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}${benterSection ? `${benterSection}\n` : ""}
+${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}${benterSection ? `${benterSection}\n` : ""}${agariJockeySection}
 === レースカテゴリチェック（最優先・必ず最初に確認）===
 
 【統計的根拠】重賞・特別レースの的中率33%（収支プラス）、一般クラス戦の的中率9%（大幅マイナス）。
