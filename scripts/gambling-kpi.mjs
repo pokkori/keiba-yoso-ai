@@ -834,7 +834,7 @@ async function boatKPI(client) {
     console.log("\n  ─── [SIM-5] conf=null 1.2-2.5倍特化（旧実装・参考値） ─");
     console.log(`  n=${fmt(s5.eval_f)} 的中率: ${pct(s5.hit_f, s5.eval_f)}  回収率: ${rr(s5.ret_f, parseInt(s5.eval_f) * 100)}`);
 
-    // SIM-5B: conf_null 1.5-2.5倍のみ（現行実装: 1.2-1.5倍帯ROI110.5%を除外）
+    // SIM-5B: conf_null 1.5-2.5倍のみ（旧実装: SIM-Lに移行済み）
     const { rows: sim5b } = await client.query(`
       SELECT
         COUNT(*) FILTER (WHERE hit IS NOT NULL
@@ -849,7 +849,7 @@ async function boatKPI(client) {
       FROM boat_prediction_logs WHERE recommendation='buy'
     `);
     const s5b = sim5b[0];
-    console.log("\n  ─── [SIM-5B] conf=null 1.5-2.5倍特化（現行実装） ──");
+    console.log("\n  ─── [SIM-5B] conf=null 1.5-2.5倍特化（旧実装・参考） ──");
     console.log(`  n=${fmt(s5b.eval_f)} 的中率: ${pct(s5b.hit_f, s5b.eval_f)}  回収率: ${rr(s5b.ret_f, parseInt(s5b.eval_f) * 100)}`);
 
     // SIM-6: 高ROI会場のみ（丸亀/蒲郡/唐津/児島/福岡/尼崎）
@@ -925,7 +925,7 @@ async function boatKPI(client) {
     console.log(`  ├ SIM-5B部分: n=1189 ROI=131.4%（既知）`);
     console.log(`  └ conf>=10部分: n=${fmt(sG.n_conf10)} ROI=${sG.roi_conf10}%`);
 
-    // SIM-H: SIM-5B + conf>=10 芦屋+住之江除外 → ROI=118.1%(n=1341) ← 現行実装
+    // SIM-H: SIM-5B + conf>=10 芦屋+住之江除外 → ROI=118.1%(n=1341)
     const CONF10_VENUES_H = CONF10_VENUES.filter(v => v !== "住之江"); // 住之江も除外
     const conf10VenHStr = CONF10_VENUES_H.map(v => `'${v}'`).join(",");
     const { rows: simH } = await client.query(`
@@ -958,7 +958,7 @@ async function boatKPI(client) {
     console.log(`  n合計=${fmt(sH.eval_f)} 的中率: ${pct(sH.hit_f, sH.eval_f)}  回収率: ${rr(sH.ret_f, parseInt(sH.eval_f) * 100)}`);
     console.log(`  └ conf>=10部分: n=${fmt(sH.n_conf10)} ROI=${sH.roi_conf10}%`);
 
-    // SIM-I競艇: SIM-H + R4/R7/R10/R12スキップ → ROI=127.4%(n=1784) ← 現行実装
+    // SIM-I競艇: SIM-H + R4/R7/R10/R12スキップ → ROI=127.4%(n=1784)
     // Supabase実証: R4=114.5%/R7=117.1%/R10=115.6%/R12=117.1% (SIM-H平均123.9%を下回る)
     const { rows: simIBoat } = await client.query(`
       SELECT
@@ -989,7 +989,7 @@ async function boatKPI(client) {
     console.log("\n  ─── [SIM-I] SIM-I 競艇(R4/7/10/12全除外) ──");
     console.log(`  n合計=${fmt(sIBoat.eval_f)} 的中率: ${pct(sIBoat.hit_f, sIBoat.eval_f)}  回収率: ${rr(sIBoat.ret_f, parseInt(sIBoat.eval_f) * 100)}`);
 
-    // SIM-J競艇: SIM-I + 高ROI venue×R(下関/常滑/徳山/津/大村)の除外R4/7/10/12を復活 ← 現行実装
+    // SIM-J競艇: SIM-I + 高ROI venue×R(下関/常滑/徳山/津/大村)の除外R4/7/10/12を復活
     // 期待値: n=1995 ROI≈128.6% スキップ率69.4%
     const BOAT_J_RESTORE = [["下関",7],["常滑",4],["常滑",12],["徳山",12],["津",10],
       ["常滑",7],["下関",4],["大村",10],["大村",7]];
