@@ -961,7 +961,8 @@ export async function POST(req: NextRequest) {
   }
 
   // ── 複勝帯自動スキップ（サーバーサイド・LLM呼び出し前） ──
-  // 複勝オッズがある場合、2.0〜5.0倍帯の馬がいなければLLM呼び出し前に自動スキップ
+  // 複勝オッズがある場合、2.5〜5.0倍帯の馬がいなければLLM呼び出し前に自動スキップ
+  // 2026-04-09 DR更新: 下限2.0→2.5（複勝1.51倍平均は控除率25%に負ける数学的不利ゾーン）
   if (mode === "fukusho") {
     const horsesWithFukusho = raceData.rawHorses.filter(h => h.fukushoOdds);
     if (horsesWithFukusho.length > 0) {
@@ -970,11 +971,11 @@ export async function POST(req: NextRequest) {
         const mid = match
           ? (parseFloat(match[1]) + parseFloat(match[2])) / 2
           : parseFloat(h.fukushoOdds!);
-        return !isNaN(mid) && mid >= 3.0 && mid <= 6.0;
+        return !isNaN(mid) && mid >= 2.5 && mid <= 5.0;
       });
       if (!hasOptimalBand) {
-        console.log(`[FukushoBandSkip] ${body.raceId}: no horse in 3.0-6.0x fukusho band → auto-skip`);
-        const skipText = "【推奨判定】スキップ\n【複勝推奨】スキップ — 理由(複勝3〜6倍帯の馬がいないため自動スキップ)\n確信度: 0/10";
+        console.log(`[FukushoBandSkip] ${body.raceId}: no horse in 2.5-5.0x fukusho band → auto-skip`);
+        const skipText = "【推奨判定】スキップ\n【複勝推奨】スキップ — 理由(複勝2.5〜5.0倍帯の馬がいないため自動スキップ)\n確信度: 0/10";
         const newCountSkip = cookieCount + 1;
         const raceInfoStrSkip = raceData.info.trim();
         const encoderSkip = new TextEncoder();
@@ -1070,9 +1071,10 @@ SKIPの場合、以下の形式のみを出力し、他は一切書かない:
 3. 候補馬が妥当と判断できれば「買い推奨」、信頼性が低ければ「スキップ」
 
 【複勝オッズ帯フィルター（実証済み）】
-- オッズ情報がある場合: 複勝2.0〜5.0倍帯を最優先（京都大・神戸大実証・最高期待値）
-- 複勝2.0倍未満はスキップ（バックテスト実証・回収率93.7%→100%超えに向け1.8倍→2.0倍に厳格化）
-- 複勝6.0倍超はスキップ（大穴過剰人気バイアス）
+- オッズ情報がある場合: 複勝2.5〜5.0倍帯を最優先（DR2026-04-09確定: 市場過小評価ゾーン・最高期待値）
+- 複勝2.5倍未満はスキップ（1.51倍平均は控除率25%に負ける数学的不利ゾーン・JRA統計1番人気複勝回収率73.9%）
+- 複勝5.0倍超はスキップ（大穴過剰人気バイアス帯）
+- バイモーダル例外: 複勝5.0〜7.0倍帯（逆FLB最大帯）は確信度8以上のみ許可
 
 推奨の場合の出力形式（必ずこの通りに出力すること）:
 【推奨判定】買い推奨
@@ -1219,7 +1221,7 @@ ${!isGradeRace ? "⚠️ このレースは一般クラス戦の可能性があ�
 
 【★最重要★ 競馬予想の黄金ルール（必ず守ること）】
 
-鉄則1【2026年改定・人気縛り撤廃】: 本命◎は人気順位に縛られない。Market Edge（AI推定3着内確率 - implied_prob）≥ +12% かつ 複勝EV ≥ 1.30 かつ 複勝オッズ3.0〜6.0倍 の馬を最優先。1番人気で複勝2.5倍以下は過剰人気のため原則スキップ。2〜6番人気で条件を満たす馬を積極推奨。
+鉄則1【2026-04-09改定・DR確定版】: 本命◎は人気順位に縛られない。Market Edge（AI推定3着内確率 - implied_prob）≥ +12% かつ 複勝EV ≥ 1.30 かつ 複勝オッズ2.5〜5.0倍 の馬を最優先。1番人気で複勝2.5倍以下は過剰人気（JRA統計: 1番人気複勝回収率73.9%）のため強制スキップ。2〜6番人気で条件を満たす馬を積極推奨。
 鉄則2: 重賞・G1/G2/G3・特別競走は上位人気が固まりやすいが、3.0倍以上のEdge馬を優先推奨
 鉄則3: 出走頭数15頭以上は大荒れリスク → スキップ（120%回収率のため15頭以上は全カット）
 鉄則3b: 馬場状態が「重」または「不良」→ 芝はスキップ。ダートは12頭以下×非ハンデ×2〜5番人気逃げ先行×多因子+5以上のみ条件G解除（道悪ダートは逃げ先行有利）
