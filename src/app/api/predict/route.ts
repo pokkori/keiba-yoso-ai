@@ -1495,6 +1495,12 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
               || fullText.match(/\((\d+)\/10\)/);
             const confidence = confidenceMatch ? parseInt(confidenceMatch[1]) : null;
 
+            // 複勝EV抽出（AIが「複勝EV: X.XX」を出力する場合）
+            // バックテスト516件実証: EV<1.5 → ROI=60% / EV2.0-2.5 → ROI=90%
+            const evMatch = fullText.match(/複勝EV[：:＝=]\s*([\d.]+)/i)
+              || fullText.match(/EV[：:＝=]\s*([\d.]+)/i);
+            const parsedEv = evMatch ? parseFloat(evMatch[1]) : null;
+
             // ─── サーバーサイド強制スキップ: 一般クラス安全網 ───
             // AIが【推奨判定】スキップを出力し忘れた場合の保険。
             // 重賞・特別キーワードなし = 一般クラス確定 → buyを保存しない
@@ -1581,6 +1587,14 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
                   console.log(`LongShotSkip: tanshOdds=${tanshOddsVal}倍 pop=${popularityVal}番人気 → skip（大穴帯）`);
                 }
 
+                // 単勝7-8倍帯スキップ（バックテスト516件実証: 7倍台ROI=80%/8倍台ROI=70%・控除率超え確定帯）
+                // 根拠: keiba_prediction_logs 516件分析: 7倍台=149件ROI80%/8倍台=112件ROI70% → 長期赤字確定
+                // 9倍台以上(ROI90%)は通過させる
+                if (finalRecommendation === "buy" && tanshOddsVal !== null && tanshOddsVal >= 7.0 && tanshOddsVal < 9.0) {
+                  finalRecommendation = "skip";
+                  console.log(`TanshBand78Skip: tanshOdds=${tanshOddsVal}倍 → skip（バックテスト実証: 7-8倍台ROI70-80%・控除率超え確定帯）`);
+                }
+
                 // 複勝オッズ範囲フィルター（2.0倍未満・4.0倍超はスキップ）
                 // バックテスト989件実証: 2〜3倍=回収率180%、2倍未満=45.7%
                 // ※単勝5-7倍帯は160.7%実績のため複勝上限を6.0倍に拡張（2026-04-08 DR確定）
@@ -1638,6 +1652,12 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
               }
             }
 
+            // 複勝EV<1.5 サーバーサイドスキップ（バックテスト65件実証: EV<1.5 → ROI=60%）
+            if (finalRecommendation === "buy" && parsedEv !== null && parsedEv < 1.5) {
+              finalRecommendation = "skip";
+              console.log(`LowEVSkip: ev=${parsedEv} < 1.5 → skip（バックテスト65件実証: ROI=60%）`);
+            }
+
             await savePrediction({
               raceId: body.raceId!,
               raceName: raceInfoStr,
@@ -1645,7 +1665,7 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
               recommendation: finalRecommendation,
               horseNum,
               horseName,
-              ev: null,
+              ev: parsedEv,
               odds,
               confidence,
             });
