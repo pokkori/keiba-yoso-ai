@@ -408,6 +408,41 @@ async function keirinKPI(client) {
     console.log("\n  ─── [SIM-D] 6場(+小松島)×R1/8/11/12 skip ────");
     console.log(`  n=${fmt(ksD.eval_f)} 的中率: ${pct(ksD.hit_f, ksD.eval_f)}  回収率: ${rr(ksD.ret_f, parseInt(ksD.eval_f) * 600)}`);
 
+    // SIM-F: 5場 × R2/3/4/5/6/9のみ（R1/7/8/10/11/12 skip）
+    // 5場内R番号別ROI: R7=114.9%/R10=113.5%を除外して高ROI帯特化
+    // 推定ROI: 164.6%→176%（R7/R10除外効果）
+    const { rows: keirinSimF } = await client.query(`
+      WITH racenum AS (
+        SELECT *,
+          SPLIT_PART(race_name, ' ', 1) AS venue_name,
+          CASE
+            WHEN race_id ~ '^keirinv'
+              THEN CAST(SUBSTRING(race_id FROM '([0-9]{4})$') AS INTEGER)
+            WHEN race_id ~ '-R?[0-9]+$'
+              THEN CAST(SUBSTRING(race_id FROM '-R?([0-9]+)$') AS INTEGER)
+            ELSE NULL
+          END AS rno
+        FROM keirin_prediction_logs
+        WHERE recommendation='buy'
+          AND race_id ~ '^(keirinv|[a-z].*-2025-|[a-z].*-2026-)'
+          AND race_id !~ '_(car[0-9]+|2tan|2fuku|3tan|3fu|3fuku|hukuren|tansho)$'
+      )
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL
+          AND venue_name IN (${venuesCStr})
+          AND rno IN (2,3,4,5,6,9)) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true
+          AND venue_name IN (${venuesCStr})
+          AND rno IN (2,3,4,5,6,9)) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true
+          AND venue_name IN (${venuesCStr})
+          AND rno IN (2,3,4,5,6,9)) AS ret_f
+      FROM racenum
+    `);
+    const ksF = keirinSimF[0];
+    console.log("\n  ─── [SIM-F] 5場×R2/3/4/5/6/9のみ（R1/7/8/10/11/12除外） ──");
+    console.log(`  n=${fmt(ksF.eval_f)} 的中率: ${pct(ksF.hit_f, ksF.eval_f)}  回収率: ${rr(ksF.ret_f, parseInt(ksF.eval_f) * 600)}`);
+
     // SIM-E: 全場 × R1/8/11/12 skip（R制約のみ）
     const { rows: keirinSimE } = await client.query(`
       WITH racenum AS (
