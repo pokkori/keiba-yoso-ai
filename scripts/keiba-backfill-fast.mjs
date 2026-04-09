@@ -198,28 +198,33 @@ async function fetchRaceIdsByYear(year) {
 
 // ── レース結果ページから全出走馬の情報を取得 ──────────────────────────────────
 /**
- * netkeiba SP APIから複勝オッズの下限を取得する
- * URL: https://race.sp.netkeiba.com/?pid=api&action=RaceOdds&race_id=XXXXXXXX&type=1&json=1
- * @returns {Map<number, number>} horseNum → 複勝オッズ下限（例: 1.5 = 1.5倍）
+ * netkeibaのJRA公式APIから複勝オッズの下限を取得する
+ * URL: https://race.netkeiba.com/api/api_get_jra_odds.html?race_id={id}&type=1
+ * レスポンス: { status:"result", data:{ odds:{ "1":{tansh}, "2":{fukusho:[下限,上限,人気]} } } }
+ * 動作確認: 2021年以降の全過去レースでアクセス可能（UTF-8 JSON）
+ * @returns {Map<number, number>} horseNum → 複勝オッズ下限（例: 2.5 = 2.5倍）
  */
 async function fetchFukushoOddsFromAPI(raceId) {
-  const url = `https://race.sp.netkeiba.com/?pid=api&action=RaceOdds&race_id=${raceId}&type=1&json=1`;
+  const url = `https://race.netkeiba.com/api/api_get_jra_odds.html?race_id=${raceId}&type=1`;
   const oddsMap = new Map();
   try {
     const res = await fetch(url, {
       headers: {
         "User-Agent": HEADERS["User-Agent"],
-        "Referer": "https://sp.netkeiba.com/",
-        "Accept": "application/json, text/javascript, */*",
+        "Referer": "https://race.netkeiba.com/",
+        "Accept": "application/json, */*",
       },
     });
     if (!res.ok) return oddsMap;
     const json = await res.json();
-    // レスポンス構造: { data: { Odds: [ { HorseNum: "1", PlaceOddsLow: "1.5", PlaceOddsHigh: "2.0", ... }, ... ] } }
-    const oddsList = json?.data?.Odds ?? json?.Odds ?? [];
-    for (const entry of oddsList) {
-      const num = parseInt(String(entry.HorseNum || entry.horse_num || ""), 10);
-      const low = parseFloat(String(entry.PlaceOddsLow || entry.place_odds_low || "0"));
+    if (json.status !== "result") return oddsMap;
+    // 複勝データ: data.odds["2"] または data["2"]（旧形式互換）
+    const fukushoData = json?.data?.odds?.["2"] ?? json?.data?.["2"] ?? {};
+    for (const [key, val] of Object.entries(fukushoData)) {
+      // キーは2桁ゼロパディング("01","02"...): parseInt で馬番取得
+      const num = parseInt(key, 10);
+      // val = [下限オッズ文字列, 上限オッズ文字列, 人気順位文字列]
+      const low = parseFloat(String(val[0] ?? ""));
       if (!isNaN(num) && num > 0 && !isNaN(low) && low > 0) {
         oddsMap.set(num, low);
       }
