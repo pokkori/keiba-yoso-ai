@@ -1587,12 +1587,14 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
                   console.log(`LongShotSkip: tanshOdds=${tanshOddsVal}倍 pop=${popularityVal}番人気 → skip（大穴帯）`);
                 }
 
-                // 単勝7-8倍帯スキップ（バックテスト516件実証: 7倍台ROI=80%/8倍台ROI=70%・控除率超え確定帯）
-                // 根拠: keiba_prediction_logs 516件分析: 7倍台=149件ROI80%/8倍台=112件ROI70% → 長期赤字確定
-                // 9倍台以上(ROI90%)は通過させる
-                if (finalRecommendation === "buy" && tanshOddsVal !== null && tanshOddsVal >= 7.0 && tanshOddsVal < 9.0) {
+                // 単勝7-10倍帯スキップ（バックテスト516件実証: 7倍台ROI=80%/8倍台ROI=70%/9倍台ROI=79%・控除率超え確定帯）
+                // 根拠: keiba_prediction_logs 516件分析 + SIM-6分析（2026-04-09）
+                //   7-10倍帯(n=341): ROI=79.1% → 全件スキップ
+                //   SIM-6(odds>=9.0): n=255 ROI=88.8% → 10倍以上特化で+6.9%改善
+                // 旧: 7.0-8.99倍スキップ → 新: 7.0-9.99倍スキップ（9倍台も赤字確定帯）
+                if (finalRecommendation === "buy" && tanshOddsVal !== null && tanshOddsVal >= 7.0 && tanshOddsVal < 10.0) {
                   finalRecommendation = "skip";
-                  console.log(`TanshBand78Skip: tanshOdds=${tanshOddsVal}倍 → skip（バックテスト実証: 7-8倍台ROI70-80%・控除率超え確定帯）`);
+                  console.log(`TanshBand710Skip: tanshOdds=${tanshOddsVal}倍 → skip（バックテスト実証: 7-10倍台ROI79%以下・SIM-6確認済み）`);
                 }
 
                 // 複勝オッズ範囲フィルター（2.0倍未満・4.0倍超はスキップ）
