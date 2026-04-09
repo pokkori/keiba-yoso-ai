@@ -131,8 +131,64 @@ async function keibaKPI(client) {
     console.log("\n  ─── [SIM-7] 単勝11-13倍帯特化 ────────────────");
     console.log(`  n=${fmt(s7.eval_f)} 的中率: ${pct(s7.hit_f, s7.eval_f)}  回収率: ${rr(s7.ret_f, inv7)}`);
 
-    // SIM-8: 9-13倍 × 12頭以下（頭数フィルター追加）
-    // ※ race_name等から頭数取得不可なためodd帯のみ
+    // SIM-8: 1レース1頭（最高tanshOdds特化）
+    // 実際のAIは1レースで1頭を推奨。最高odds帯を特化することで価値発見率向上を狙う
+    const { rows: sim8 } = await client.query(`
+      WITH ranked AS (
+        SELECT *,
+          ROW_NUMBER() OVER (PARTITION BY race_id ORDER BY odds DESC NULLS LAST) AS rnk
+        FROM keiba_prediction_logs
+        WHERE recommendation='buy' AND odds IS NOT NULL
+      )
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL AND rnk=1) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true AND rnk=1) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true AND rnk=1) AS ret_f
+      FROM ranked
+    `);
+    const s8 = sim8[0];
+    const inv8 = parseInt(s8.eval_f) * BET_UNIT;
+    console.log("\n  ─── [SIM-8] 1レース1頭（最高odds特化） ────────");
+    console.log(`  n=${fmt(s8.eval_f)} 的中率: ${pct(s8.hit_f, s8.eval_f)}  回収率: ${rr(s8.ret_f, inv8)}`);
+
+    // SIM-9: 2-3番人気のみ（的中率重視）
+    const { rows: sim9 } = await client.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true) AS ret_f
+      FROM keiba_prediction_logs kl
+      JOIN (
+        SELECT race_id, horse_num,
+          RANK() OVER (PARTITION BY race_id ORDER BY odds ASC NULLS LAST) AS pop_rank
+        FROM keiba_prediction_logs WHERE recommendation='buy'
+      ) ranked USING (race_id, horse_num)
+      WHERE kl.recommendation='buy' AND ranked.pop_rank BETWEEN 2 AND 3
+    `);
+    const s9 = sim9[0];
+    const inv9 = parseInt(s9.eval_f) * BET_UNIT;
+    console.log("\n  ─── [SIM-9] 2-3番人気のみ（的中率重視） ────────");
+    console.log(`  n=${fmt(s9.eval_f)} 的中率: ${pct(s9.hit_f, s9.eval_f)}  回収率: ${rr(s9.ret_f, inv9)}`);
+
+    // SIM-10: 1レース1頭（最低odds=最高人気・的中率重視）
+    const { rows: sim10 } = await client.query(`
+      WITH ranked AS (
+        SELECT *,
+          ROW_NUMBER() OVER (PARTITION BY race_id ORDER BY odds ASC NULLS LAST) AS rnk
+        FROM keiba_prediction_logs
+        WHERE recommendation='buy' AND odds IS NOT NULL
+      )
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL AND rnk=1) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true AND rnk=1) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true AND rnk=1) AS ret_f
+      FROM ranked
+    `);
+    const s10 = sim10[0];
+    const inv10 = parseInt(s10.eval_f) * BET_UNIT;
+    console.log("\n  ─── [SIM-10] 1レース1頭（最低odds=高確率特化） ─");
+    console.log(`  n=${fmt(s10.eval_f)} 的中率: ${pct(s10.hit_f, s10.eval_f)}  回収率: ${rr(s10.ret_f, inv10)}`);
+
     // SIM-4: 旧SIM保持（4-5倍帯スキップ）
     const { rows: sim } = await client.query(`
       SELECT
@@ -518,7 +574,7 @@ async function boatKPI(client) {
     console.log("\n  ─── [SIM-4] +ABSOLUTE_MIN 1.2化 ─────────────");
     console.log(`  的中率: ${pct(s4.hit_f, s4.eval_f)}  回収率: ${rr(s4.ret_f, parseInt(s4.eval_f) * 100)}`);
 
-    // SIM-5: conf_null 1.2-2.5倍のみ（最高ROI帯特化）
+    // SIM-5: conf_null 1.2-2.5倍のみ（旧実装・参考値）
     const { rows: sim5 } = await client.query(`
       SELECT
         COUNT(*) FILTER (WHERE hit IS NOT NULL
@@ -533,8 +589,26 @@ async function boatKPI(client) {
       FROM boat_prediction_logs WHERE recommendation='buy'
     `);
     const s5 = sim5[0];
-    console.log("\n  ─── [SIM-5] conf=null 1.2-2.5倍特化（現行実装） ─");
+    console.log("\n  ─── [SIM-5] conf=null 1.2-2.5倍特化（旧実装・参考値） ─");
     console.log(`  n=${fmt(s5.eval_f)} 的中率: ${pct(s5.hit_f, s5.eval_f)}  回収率: ${rr(s5.ret_f, parseInt(s5.eval_f) * 100)}`);
+
+    // SIM-5B: conf_null 1.5-2.5倍のみ（現行実装: 1.2-1.5倍帯ROI110.5%を除外）
+    const { rows: sim5b } = await client.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL
+          AND confidence IS NULL AND odds BETWEEN 1.5 AND 2.5
+        ) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true
+          AND confidence IS NULL AND odds BETWEEN 1.5 AND 2.5
+        ) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true
+          AND confidence IS NULL AND odds BETWEEN 1.5 AND 2.5
+        ) AS ret_f
+      FROM boat_prediction_logs WHERE recommendation='buy'
+    `);
+    const s5b = sim5b[0];
+    console.log("\n  ─── [SIM-5B] conf=null 1.5-2.5倍特化（現行実装） ──");
+    console.log(`  n=${fmt(s5b.eval_f)} 的中率: ${pct(s5b.hit_f, s5b.eval_f)}  回収率: ${rr(s5b.ret_f, parseInt(s5b.eval_f) * 100)}`);
 
     // SIM-6: 高ROI会場のみ（丸亀/蒲郡/唐津/児島/福岡/尼崎）
     const TOP_VENUES = ["丸亀", "蒲郡", "唐津", "児島", "福岡", "尼崎", "若松", "三国"];
