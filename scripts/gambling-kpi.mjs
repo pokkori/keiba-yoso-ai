@@ -1018,9 +1018,38 @@ async function boatKPI(client) {
       FROM boat_prediction_logs WHERE recommendation='buy'
     `);
     const sJBoat = simJBoat[0];
-    console.log("\n  ─── [SIM-J] SIM-I + 高ROI venue×R 除外R復活 ← 現行実装 ──");
+    console.log("\n  ─── [SIM-J] SIM-I + 高ROI venue×R 除外R復活 ──");
     console.log(`  n合計=${fmt(sJBoat.eval_f)} 的中率: ${pct(sJBoat.hit_f, sJBoat.eval_f)}  回収率: ${rr(sJBoat.ret_f, parseInt(sJBoat.eval_f) * 100)}`);
     console.log(`  スキップ率: ${((1 - parseInt(sJBoat.eval_f)/6521)*100).toFixed(1)}%`);
+
+    // SIM-L競艇: SIM-J + conf=null 1.3-1.5倍帯を追加（現在除外中のROI124.6%/n=592帯）
+    // 期待効果: スキップ率69.4%→63%台、ROI微減
+    const { rows: simLBoat } = await client.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL AND (
+          (((confidence IS NULL AND odds BETWEEN 1.3 AND 2.5) OR (confidence >= 10 AND venue IN (${conf10VenHStr})))
+           AND CAST(SUBSTRING(race_id FROM 'r([0-9]+)') AS INTEGER) NOT IN (4,7,10,12))
+          OR (((confidence IS NULL AND odds BETWEEN 1.3 AND 2.5) OR (confidence >= 10 AND venue IN (${conf10VenHStr})))
+              AND (${boatJRestoreConds}))
+        )) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true AND (
+          (((confidence IS NULL AND odds BETWEEN 1.3 AND 2.5) OR (confidence >= 10 AND venue IN (${conf10VenHStr})))
+           AND CAST(SUBSTRING(race_id FROM 'r([0-9]+)') AS INTEGER) NOT IN (4,7,10,12))
+          OR (((confidence IS NULL AND odds BETWEEN 1.3 AND 2.5) OR (confidence >= 10 AND venue IN (${conf10VenHStr})))
+              AND (${boatJRestoreConds}))
+        )) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true AND (
+          (((confidence IS NULL AND odds BETWEEN 1.3 AND 2.5) OR (confidence >= 10 AND venue IN (${conf10VenHStr})))
+           AND CAST(SUBSTRING(race_id FROM 'r([0-9]+)') AS INTEGER) NOT IN (4,7,10,12))
+          OR (((confidence IS NULL AND odds BETWEEN 1.3 AND 2.5) OR (confidence >= 10 AND venue IN (${conf10VenHStr})))
+              AND (${boatJRestoreConds}))
+        )) AS ret_f
+      FROM boat_prediction_logs WHERE recommendation='buy'
+    `);
+    const sLBoat = simLBoat[0];
+    console.log("\n  ─── [SIM-L] SIM-J + conf=null 1.3-1.5倍帯追加 ← 現行実装 ──");
+    console.log(`  n合計=${fmt(sLBoat.eval_f)} 的中率: ${pct(sLBoat.hit_f, sLBoat.eval_f)}  回収率: ${rr(sLBoat.ret_f, parseInt(sLBoat.eval_f) * 100)}`);
+    console.log(`  スキップ率: ${((1 - parseInt(sLBoat.eval_f)/6521)*100).toFixed(1)}%`);
   }
 }
 
