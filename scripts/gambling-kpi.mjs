@@ -547,8 +547,51 @@ async function keirinKPI(client) {
       FROM racenum
     `);
     const ksGp = keirinSimGPlus[0];
-    console.log("\n  ─── [SIM-G+] SIM-G + 和歌山R1 + 久留米R7 例外 ← 現行実装 ──");
+    console.log("\n  ─── [SIM-G+] SIM-G + 和歌山R1 + 久留米R7 例外 ──");
     console.log(`  n=${fmt(ksGp.eval_f)} 的中率: ${pct(ksGp.hit_f, ksGp.eval_f)}  回収率: ${rr(ksGp.ret_f, parseInt(ksGp.eval_f) * 600)}`);
+
+    // SIM-I: SIM-G+ から venue×R番号 ROI<100%の組み合わせを除外
+    // 2026-04-09 Supabase実証: SIM-G+(n=684/ROI158.9%)→SIM-I(n=484/ROI192.3%)
+    const SIM_I_SKIP = [
+      ["久留米",6],["立川",4],["小松島",3],["静岡",2],["小松島",5],
+      ["和歌山",6],["取手",3],["小松島",2],["久留米",9],["久留米",3],
+      ["熊本",5],["取手",4],["宇都宮",4],["和歌山",9]
+    ];
+    const simISkipConds = SIM_I_SKIP.map(([v,r]) => `NOT (venue_name='${v}' AND rno=${r})`).join("\n          AND ");
+    const { rows: keirinSimI } = await client.query(`
+      WITH racenum AS (
+        SELECT *,
+          SPLIT_PART(race_name, ' ', 1) AS venue_name,
+          CASE
+            WHEN race_id ~ '^keirinv'
+              THEN CAST(SUBSTRING(race_id FROM '([0-9]{4})$') AS INTEGER)
+            WHEN race_id ~ '-R?[0-9]+$'
+              THEN CAST(SUBSTRING(race_id FROM '-R?([0-9]+)$') AS INTEGER)
+            ELSE NULL
+          END AS rno
+        FROM keirin_prediction_logs
+        WHERE recommendation='buy'
+          AND race_id ~ '^(keirinv|[a-z].*-2025-|[a-z].*-2026-)'
+          AND race_id !~ '_(car[0-9]+|2tan|2fuku|3tan|3fu|3fuku|hukuren|tansho)$'
+      )
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL
+          AND venue_name IN (${venuesGStr})
+          AND (rno IN (2,3,4,5,6,9) OR (venue_name='和歌山' AND rno=1) OR (venue_name='久留米' AND rno=7))
+          AND ${simISkipConds}) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true
+          AND venue_name IN (${venuesGStr})
+          AND (rno IN (2,3,4,5,6,9) OR (venue_name='和歌山' AND rno=1) OR (venue_name='久留米' AND rno=7))
+          AND ${simISkipConds}) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true
+          AND venue_name IN (${venuesGStr})
+          AND (rno IN (2,3,4,5,6,9) OR (venue_name='和歌山' AND rno=1) OR (venue_name='久留米' AND rno=7))
+          AND ${simISkipConds}) AS ret_f
+      FROM racenum
+    `);
+    const ksI = keirinSimI[0];
+    console.log("\n  ─── [SIM-I] SIM-G+ - venue×R ROI<100%除外 ← 現行実装 ──");
+    console.log(`  n=${fmt(ksI.eval_f)} 的中率: ${pct(ksI.hit_f, ksI.eval_f)}  回収率: ${rr(ksI.ret_f, parseInt(ksI.eval_f) * 600)}`);
 
     // SIM-H: 11場（+岐阜118.9%/伊東117.2%/京王閣116.6%/玉野113.8%/小倉111.2%）× R2/3/4/5/6/9のみ
     const VENUES_H = [...VENUES_G, "岐阜", "伊東", "京王閣", "玉野", "小倉"];
