@@ -101,8 +101,39 @@ async function keibaKPI(client) {
     }
   }
 
-  // シミュレーション: 4-5倍死亡帯スキップ後の推定KPI
+  // シミュレーション
   if (SIM_MODE) {
+    // SIM-6: 単勝7-9倍除外（9-13倍帯特化）
+    const { rows: sim6 } = await client.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL AND odds >= 9.0) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true AND odds >= 9.0) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true AND odds >= 9.0) AS ret_f
+      FROM keiba_prediction_logs
+      WHERE recommendation='buy' AND odds IS NOT NULL
+    `);
+    const s6 = sim6[0];
+    const inv6 = parseInt(s6.eval_f) * BET_UNIT;
+    console.log("\n  ─── [SIM-6] 単勝9-13倍帯特化（7-9倍除外） ────");
+    console.log(`  n=${fmt(s6.eval_f)} 的中率: ${pct(s6.hit_f, s6.eval_f)}  回収率: ${rr(s6.ret_f, inv6)}`);
+
+    // SIM-7: 単勝11-13倍帯特化
+    const { rows: sim7 } = await client.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL AND odds >= 11.0) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true AND odds >= 11.0) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true AND odds >= 11.0) AS ret_f
+      FROM keiba_prediction_logs
+      WHERE recommendation='buy' AND odds IS NOT NULL
+    `);
+    const s7 = sim7[0];
+    const inv7 = parseInt(s7.eval_f) * BET_UNIT;
+    console.log("\n  ─── [SIM-7] 単勝11-13倍帯特化 ────────────────");
+    console.log(`  n=${fmt(s7.eval_f)} 的中率: ${pct(s7.hit_f, s7.eval_f)}  回収率: ${rr(s7.ret_f, inv7)}`);
+
+    // SIM-8: 9-13倍 × 12頭以下（頭数フィルター追加）
+    // ※ race_name等から頭数取得不可なためodd帯のみ
+    // SIM-4: 旧SIM保持（4-5倍帯スキップ）
     const { rows: sim } = await client.query(`
       SELECT
         COUNT(*) FILTER (WHERE hit IS NOT NULL AND NOT (odds >= 4.0 AND odds < 5.0)) AS eval_excl45,
@@ -113,7 +144,7 @@ async function keibaKPI(client) {
     `);
     const s = sim[0];
     const inv2 = parseInt(s.eval_excl45) * BET_UNIT;
-    console.log("\n  ─── [SIM] 4-5倍帯スキップ後の推定KPI ────────");
+    console.log("\n  ─── [SIM-OLD] 4-5倍帯スキップ後 ─────────────");
     console.log(`  的中率: ${pct(s.hit_excl45, s.eval_excl45)}  回収率: ${rr(s.ret_excl45, inv2)}`);
   }
 }
@@ -222,8 +253,9 @@ async function keirinKPI(client) {
     }
   }
 
-  // SIM-3: R1/R8/R9/R11/R12 skip（2026-04-09新実装）
+  // SIM-C/D/E: 会場+R番号フィルター検証
   if (SIM_MODE) {
+    // SIM-3: 旧SIM（R1/R8/R9/R11/R12 skip）
     const { rows: keirinSim3 } = await client.query(`
       WITH racenum AS (
         SELECT *,
@@ -246,8 +278,105 @@ async function keirinKPI(client) {
       FROM racenum
     `);
     const ks3 = keirinSim3[0];
-    console.log("\n  ─── [SIM-3] R1/8/9/11/12 skip（新実装） ───────");
-    console.log(`  的中率: ${pct(ks3.hit_f, ks3.eval_f)}  回収率: ${rr(ks3.ret_f, parseInt(ks3.eval_f) * 600)}`);
+    console.log("\n  ─── [SIM-3] R1/8/9/11/12 skip ─────────────────");
+    console.log(`  n=${fmt(ks3.eval_f)} 的中率: ${pct(ks3.hit_f, ks3.eval_f)}  回収率: ${rr(ks3.ret_f, parseInt(ks3.eval_f) * 600)}`);
+
+    // SIM-C: 現行実装（5場 + R1/8/11/12 skip）
+    // 5場: 和歌山/四日市/宇都宮/熊本/久留米（race_nameのSPLIT_PART1で識別）
+    const VENUES_C = ["和歌山", "四日市", "宇都宮", "熊本", "久留米"];
+    const venuesCStr = VENUES_C.map(v => `'${v}'`).join(",");
+    const { rows: keirinSimC } = await client.query(`
+      WITH racenum AS (
+        SELECT *,
+          SPLIT_PART(race_name, ' ', 1) AS venue_name,
+          CASE
+            WHEN race_id ~ '^keirinv'
+              THEN CAST(SUBSTRING(race_id FROM '([0-9]{4})$') AS INTEGER)
+            WHEN race_id ~ '-R?[0-9]+$'
+              THEN CAST(SUBSTRING(race_id FROM '-R?([0-9]+)$') AS INTEGER)
+            ELSE NULL
+          END AS rno
+        FROM keirin_prediction_logs
+        WHERE recommendation='buy'
+          AND race_id ~ '^(keirinv|[a-z].*-2025-|[a-z].*-2026-)'
+          AND race_id !~ '_(car[0-9]+|2tan|2fuku|3tan|3fu|3fuku|hukuren|tansho)$'
+      )
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL
+          AND venue_name IN (${venuesCStr})
+          AND rno NOT IN (1,8,11,12)) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true
+          AND venue_name IN (${venuesCStr})
+          AND rno NOT IN (1,8,11,12)) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true
+          AND venue_name IN (${venuesCStr})
+          AND rno NOT IN (1,8,11,12)) AS ret_f
+      FROM racenum
+    `);
+    const ksC = keirinSimC[0];
+    console.log("\n  ─── [SIM-C] 5場×R1/8/11/12 skip（現行実装） ──");
+    console.log(`  n=${fmt(ksC.eval_f)} 的中率: ${pct(ksC.hit_f, ksC.eval_f)}  回収率: ${rr(ksC.ret_f, parseInt(ksC.eval_f) * 600)}`);
+
+    // SIM-D: 6場（+小松島）× R1/8/11/12 skip
+    const VENUES_D = [...VENUES_C, "小松島"];
+    const venuesDStr = VENUES_D.map(v => `'${v}'`).join(",");
+    const { rows: keirinSimD } = await client.query(`
+      WITH racenum AS (
+        SELECT *,
+          SPLIT_PART(race_name, ' ', 1) AS venue_name,
+          CASE
+            WHEN race_id ~ '^keirinv'
+              THEN CAST(SUBSTRING(race_id FROM '([0-9]{4})$') AS INTEGER)
+            WHEN race_id ~ '-R?[0-9]+$'
+              THEN CAST(SUBSTRING(race_id FROM '-R?([0-9]+)$') AS INTEGER)
+            ELSE NULL
+          END AS rno
+        FROM keirin_prediction_logs
+        WHERE recommendation='buy'
+          AND race_id ~ '^(keirinv|[a-z].*-2025-|[a-z].*-2026-)'
+          AND race_id !~ '_(car[0-9]+|2tan|2fuku|3tan|3fu|3fuku|hukuren|tansho)$'
+      )
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL
+          AND venue_name IN (${venuesDStr})
+          AND rno NOT IN (1,8,11,12)) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true
+          AND venue_name IN (${venuesDStr})
+          AND rno NOT IN (1,8,11,12)) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true
+          AND venue_name IN (${venuesDStr})
+          AND rno NOT IN (1,8,11,12)) AS ret_f
+      FROM racenum
+    `);
+    const ksD = keirinSimD[0];
+    console.log("\n  ─── [SIM-D] 6場(+小松島)×R1/8/11/12 skip ────");
+    console.log(`  n=${fmt(ksD.eval_f)} 的中率: ${pct(ksD.hit_f, ksD.eval_f)}  回収率: ${rr(ksD.ret_f, parseInt(ksD.eval_f) * 600)}`);
+
+    // SIM-E: 全場 × R1/8/11/12 skip（R制約のみ）
+    const { rows: keirinSimE } = await client.query(`
+      WITH racenum AS (
+        SELECT *,
+          CASE
+            WHEN race_id ~ '^keirinv'
+              THEN CAST(SUBSTRING(race_id FROM '([0-9]{4})$') AS INTEGER)
+            WHEN race_id ~ '-R?[0-9]+$'
+              THEN CAST(SUBSTRING(race_id FROM '-R?([0-9]+)$') AS INTEGER)
+            ELSE NULL
+          END AS rno
+        FROM keirin_prediction_logs
+        WHERE recommendation='buy'
+          AND race_id ~ '^(keirinv|[a-z].*-2025-|[a-z].*-2026-)'
+          AND race_id !~ '_(car[0-9]+|2tan|2fuku|3tan|3fu|3fuku|hukuren|tansho)$'
+      )
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL AND rno NOT IN (1,8,11,12)) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true AND rno NOT IN (1,8,11,12)) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true AND rno NOT IN (1,8,11,12)) AS ret_f
+      FROM racenum
+    `);
+    const ksE = keirinSimE[0];
+    console.log("\n  ─── [SIM-E] 全場×R1/8/11/12 skip ─────────────");
+    console.log(`  n=${fmt(ksE.eval_f)} 的中率: ${pct(ksE.hit_f, ksE.eval_f)}  回収率: ${rr(ksE.ret_f, parseInt(ksE.eval_f) * 600)}`);
   }
 }
 
@@ -404,8 +533,43 @@ async function boatKPI(client) {
       FROM boat_prediction_logs WHERE recommendation='buy'
     `);
     const s5 = sim5[0];
-    console.log("\n  ─── [SIM-5] conf=null 1.2-2.5倍特化 ──────────");
-    console.log(`  的中率: ${pct(s5.hit_f, s5.eval_f)}  回収率: ${rr(s5.ret_f, parseInt(s5.eval_f) * 100)}`);
+    console.log("\n  ─── [SIM-5] conf=null 1.2-2.5倍特化（現行実装） ─");
+    console.log(`  n=${fmt(s5.eval_f)} 的中率: ${pct(s5.hit_f, s5.eval_f)}  回収率: ${rr(s5.ret_f, parseInt(s5.eval_f) * 100)}`);
+
+    // SIM-6: 高ROI会場のみ（丸亀/蒲郡/唐津/児島/福岡/尼崎）
+    const TOP_VENUES = ["丸亀", "蒲郡", "唐津", "児島", "福岡", "尼崎", "若松", "三国"];
+    const topVenStr = TOP_VENUES.map(v => `'${v}'`).join(",");
+    const { rows: sim6 } = await client.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL AND venue IN (${topVenStr})) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true AND venue IN (${topVenStr})) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true AND venue IN (${topVenStr})) AS ret_f
+      FROM boat_prediction_logs WHERE recommendation='buy'
+    `);
+    const s6 = sim6[0];
+    console.log("\n  ─── [SIM-6] 高ROI会場8場のみ ─────────────────");
+    console.log(`  n=${fmt(s6.eval_f)} 的中率: ${pct(s6.hit_f, s6.eval_f)}  回収率: ${rr(s6.ret_f, parseInt(s6.eval_f) * 100)}`);
+
+    // SIM-7: SIM-5 + 高ROI会場のみ（最強組み合わせ）
+    const { rows: sim7 } = await client.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL
+          AND confidence IS NULL AND odds BETWEEN 1.2 AND 2.5
+          AND venue IN (${topVenStr})
+        ) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true
+          AND confidence IS NULL AND odds BETWEEN 1.2 AND 2.5
+          AND venue IN (${topVenStr})
+        ) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true
+          AND confidence IS NULL AND odds BETWEEN 1.2 AND 2.5
+          AND venue IN (${topVenStr})
+        ) AS ret_f
+      FROM boat_prediction_logs WHERE recommendation='buy'
+    `);
+    const s7 = sim7[0];
+    console.log("\n  ─── [SIM-7] SIM-5 + 高ROI会場8場（最強組） ──");
+    console.log(`  n=${fmt(s7.eval_f)} 的中率: ${pct(s7.hit_f, s7.eval_f)}  回収率: ${rr(s7.ret_f, parseInt(s7.eval_f) * 100)}`);
   }
 }
 
