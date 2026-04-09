@@ -550,12 +550,13 @@ async function keirinKPI(client) {
     console.log("\n  ─── [SIM-G+] SIM-G + 和歌山R1 + 久留米R7 例外 ──");
     console.log(`  n=${fmt(ksGp.eval_f)} 的中率: ${pct(ksGp.hit_f, ksGp.eval_f)}  回収率: ${rr(ksGp.ret_f, parseInt(ksGp.eval_f) * 600)}`);
 
-    // SIM-I: SIM-G+ から venue×R番号 ROI<100%の組み合わせを除外
-    // 2026-04-09 Supabase実証: SIM-G+(n=684/ROI158.9%)→SIM-I(n=484/ROI192.3%)
+    // SIM-I2: SIM-G+ から venue×R番号 ROI<115%の組み合わせを除外
+    // 2026-04-09 Supabase実証: SIM-G+(n=684/ROI158.9%)→SIM-I(n=484/ROI192.3%)→SIM-I2(n=441/ROI~197%)
     const SIM_I_SKIP = [
       ["久留米",6],["立川",4],["小松島",3],["静岡",2],["小松島",5],
       ["和歌山",6],["取手",3],["小松島",2],["久留米",9],["久留米",3],
-      ["熊本",5],["取手",4],["宇都宮",4],["和歌山",9]
+      ["熊本",5],["取手",4],["宇都宮",4],["和歌山",9],
+      ["取手",9],["久留米",4]  // SIM-I2追加: 取手R9(103.1%/n=20), 久留米R4(112.7%/n=23)
     ];
     const simISkipConds = SIM_I_SKIP.map(([v,r]) => `NOT (venue_name='${v}' AND rno=${r})`).join("\n          AND ");
     const { rows: keirinSimI } = await client.query(`
@@ -906,9 +907,40 @@ async function boatKPI(client) {
       FROM boat_prediction_logs WHERE recommendation='buy'
     `);
     const sH = simH[0];
-    console.log("\n  ─── [SIM-H] SIM-5B + conf>=10 芦屋+住之江除外 ← 現行実装 ──");
+    console.log("\n  ─── [SIM-H] SIM-5B + conf>=10 芦屋+住之江除外 ──");
     console.log(`  n合計=${fmt(sH.eval_f)} 的中率: ${pct(sH.hit_f, sH.eval_f)}  回収率: ${rr(sH.ret_f, parseInt(sH.eval_f) * 100)}`);
     console.log(`  └ conf>=10部分: n=${fmt(sH.n_conf10)} ROI=${sH.roi_conf10}%`);
+
+    // SIM-I競艇: SIM-H + R4/R7/R10/R12スキップ → ROI=127.4%(n=1784) ← 現行実装
+    // Supabase実証: R4=114.5%/R7=117.1%/R10=115.6%/R12=117.1% (SIM-H平均123.9%を下回る)
+    const { rows: simIBoat } = await client.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL
+          AND (
+            (confidence IS NULL AND odds BETWEEN 1.5 AND 2.5)
+            OR (confidence >= 10 AND venue IN (${conf10VenHStr}))
+          )
+          AND CAST(SUBSTRING(race_id FROM 'r([0-9]+)') AS INTEGER) NOT IN (4,7,10,12)
+        ) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true
+          AND (
+            (confidence IS NULL AND odds BETWEEN 1.5 AND 2.5)
+            OR (confidence >= 10 AND venue IN (${conf10VenHStr}))
+          )
+          AND CAST(SUBSTRING(race_id FROM 'r([0-9]+)') AS INTEGER) NOT IN (4,7,10,12)
+        ) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true
+          AND (
+            (confidence IS NULL AND odds BETWEEN 1.5 AND 2.5)
+            OR (confidence >= 10 AND venue IN (${conf10VenHStr}))
+          )
+          AND CAST(SUBSTRING(race_id FROM 'r([0-9]+)') AS INTEGER) NOT IN (4,7,10,12)
+        ) AS ret_f
+      FROM boat_prediction_logs WHERE recommendation='buy'
+    `);
+    const sIBoat = simIBoat[0];
+    console.log("\n  ─── [SIM-I] SIM-H + R4/R7/R10/R12スキップ ← 現行実装 ──");
+    console.log(`  n合計=${fmt(sIBoat.eval_f)} 的中率: ${pct(sIBoat.hit_f, sIBoat.eval_f)}  回収率: ${rr(sIBoat.ret_f, parseInt(sIBoat.eval_f) * 100)}`);
   }
 }
 
