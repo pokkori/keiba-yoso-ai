@@ -7,8 +7,18 @@
  * データフロー:
  *   1. netkeiba 開催一覧ページから過去レースの race_id を収集
  *   2. 各レースの結果ページから出走馬・着順・複勝払戻を取得
- *   3. 全馬を recommendation='buy' として prediction_logs に挿入
- *   4. 結果（hit/return_amount/actual_pos）も同時に設定
+ *   3. AI予測ロジックを模倣して buy/skip を決定（バイアス除去版）
+ *      - 重賞・特別以外: 全馬skip（一般クラスはAIが即スキップするため）
+ *      - 15頭以上: 全馬skip（AIの絶対ルール）
+ *      - 6番人気以上: skip（大穴バイアス大）
+ *      - 単勝7.0倍未満: skip（複勝2.5倍未満≒控除率に負ける過剰人気帯）
+ *      - 単勝13.0倍超: skip（大穴過剰人気バイアス帯）
+ *   DR2026-04-09: 単勝7-13倍特化（市場過小評価ゾーン・複勝2.5-5.0倍帯）
+ *   4. 結果（hit/return_amount/actual_pos/ev）も同時に設定
+ *
+ * 旧版からの変更点（2026-04-09）:
+ *   - 旧版は全馬をbuyで挿入 → バックテストが「全馬買い」になりROIが歪む
+ *   - 修正版はAI予測の絶対ルールを再現して正確なバックテストを実現
  *
  * 使い方:
  *   node scripts/keiba-backfill-fast.mjs            # 2023-2025 全重賞
@@ -285,11 +295,16 @@ async function fetchRaceFullResult(raceId) {
       const horseNum = parseInt(numText, 10);
       const actualPos = /^\d+$/.test(posText) ? parseInt(posText, 10) : 0;
 
-      // 単勝オッズ（10列目前後）
+      // 単勝オッズ・人気（db.netkeiba.com 実際の列配置）
+      // 0:着順 1:枠番 2:馬番 3:馬名 4:性齢 5:斤量 6:騎手 7:タイム 8:着差
+      // 9-13:映像/misc 14:通過順 15:上り3F 16:単勝オッズ 17:人気 18:馬体重
       let tanshOdds = null;
-      if (tds.length >= 10) {
-        const oddsText = getText(tds[9]);
-        if (/[\d.]+/.test(oddsText)) tanshOdds = parseFloat(oddsText);
+      let popularityFromTable = null;
+      if (tds.length >= 17) {
+        const oddsText = getText(tds[16]);
+        if (/^[\d.]+$/.test(oddsText)) tanshOdds = parseFloat(oddsText);
+        const popText = getText(tds[17]);
+        if (/^\d+$/.test(popText)) popularityFromTable = parseInt(popText, 10);
       }
 
       horses.push({
@@ -297,6 +312,7 @@ async function fetchRaceFullResult(raceId) {
         horseName: nameText,
         actualPos,
         tanshOdds,
+        popularityFromTable,
         fukushoReturn: fukushoMap[horseNum] || 0,
       });
     }
@@ -329,6 +345,97 @@ async function getExistingRaceIds(client, raceIds) {
   return new Set(res.rows.map((r) => r.race_id));
 }
 
+// ── AI予測ロジック模倣: バックテスト用 buy/skip 判定 ─────────────────────────
+/**
+ * 実際の predict API が使う判断基準を模倣する（route.ts の絶対ルールを再現）。
+ *
+ * 実際のAIプロンプト（route.ts 1392行付近）から抽出した絶対ルール:
+ *   - 一般クラス戦（未勝利・1勝・2勝・新馬）→ 即スキップ
+ *   - 重賞・特別以外 → 即スキップ
+ *   - 出走頭数15頭以上 → スキップ
+ *   - 複勝オッズ2.0倍未満（単勝≒5倍以下）→ スキップ
+ *   - 前走6着以下の馬 → スキップ（バックフィルでは前走情報がないため省略）
+ *
+ * 実績データ分析から判明したオッズ帯別ROI（76件サンプル）:
+ *   2-3倍: ROI 210% / 3-4倍: ROI 112% / 5-7倍: ROI 185%
+ *   4-5倍（死亡帯）: ROI 36.7% / 7-10倍×重賞: ROI 232%
+ *   7-10倍×低グレード: ROI 0%
+ *
+ * 人気判定:
+ *   出走馬中の相対的な単勝オッズ順位で 1-3番人気相当かどうかを判断する。
+ *   tanshOdds が全馬中上位3位以内 → 人気馬フラグ
+ *
+ * @param {object} h         - 1頭分データ { horseNum, horseName, tanshOdds, fukushoReturn }
+ * @param {number} totalHorses - レース頭数
+ * @param {boolean} isGraded   - 重賞・OP かどうか
+ * @param {number} popularityRank - 人気順位（単勝オッズ昇順での順位、1始まり）
+ * @returns {{ recommendation: 'buy'|'skip', ev: number|null }}
+ */
+function simulateAIPrediction(h, totalHorses, isGraded, popularityRank) {
+  const tansh = h.tanshOdds;
+
+  // ルール1: 重賞・特別以外はスキップ（呼び出し元で isGraded チェック済みだが念のため）
+  if (!isGraded) {
+    return { recommendation: "skip", ev: null };
+  }
+
+  // ルール2: 15頭以上はスキップ
+  if (totalHorses >= 15) {
+    return { recommendation: "skip", ev: null };
+  }
+
+  // ルール3: オッズ不明の場合 → 人気順位が計算不能のため skip
+  // （以前は暫定 buy にしていたが、不正データが大量発生したため修正: 2026-04-09）
+  if (!tansh || tansh <= 0) {
+    return { recommendation: "skip", ev: null };
+  }
+
+  // ルール4: 2-5番人気から選ぶ（DR2026-04-09更新・人気縛り緩和）
+  //   route.tsプロンプト更新: 「2〜6番人気で条件を満たす馬を積極推奨」
+  //   1番人気は単勝7倍未満が多くルール5で除外される
+  //   6番人気以上は大穴帯でバイアス大きいため5番人気まで
+  if (popularityRank > 5) {
+    return { recommendation: "skip", ev: null };
+  }
+
+  // ルール5: 過剰人気スキップ（DR2026-04-09更新）
+  //   単勝7.0倍未満 ≈ 複勝2.5倍未満 → 控除率25%に負ける数学的不利ゾーン
+  //   DR確定: 1番人気複勝回収率73.9% / 複勝1.51倍平均は期待値マイナス
+  //   単勝7-13倍帯が市場過小評価ゾーン（DR: 複勝2.5-5.0倍特化推奨）
+  if (tansh < 7.0) {
+    return { recommendation: "skip", ev: null };
+  }
+
+  // ルール6: 大穴帯スキップ（DR2026-04-09更新）
+  //   単勝13倍超 ≈ 複勝5倍超 → 大穴過剰人気バイアス帯
+  if (tansh > 13.0) {
+    return { recommendation: "skip", ev: null };
+  }
+
+  // EV計算（参考値として保存）
+  //   バックフィルでは複勝オッズが不明なため単勝から推定
+  //   実績: return_amount ≈ odds × 100（oddsがそのまま複勝払戻倍率）
+  //   → odds カラム値 = 単勝オッズ ≈ 複勝オッズの約1倍（同値に見える）
+  //   NOTE: 実DBでは odds = tanshOdds(単勝) として格納されているが、
+  //          return_amount/100 ≈ odds と一致しているのは偶然ではなく
+  //          「バックフィルでtanshOddsをoddsに入れているから」
+  //   モデル推定確率: 1-3番人気 × 重賞 × ≤14頭
+  //   1番人気 ≈ 34% / 2番人気 ≈ 26% / 3番人気 ≈ 20%
+  const estimatedProb =
+    popularityRank === 1 ? 0.34 :
+    popularityRank === 2 ? 0.26 :
+    0.20; // 3番人気
+
+  // 複勝オッズ推定: 単勝オッズとほぼ同じ（バックフィルの挙動から）
+  const estimatedFukushoOdds = tansh;
+  const ev = Math.round(estimatedFukushoOdds * estimatedProb * 100) / 100;
+
+  return {
+    recommendation: "buy",
+    ev,
+  };
+}
+
 // ── DB: レース結果を一括挿入 ────────────────────────────────────────────────
 async function insertRaceResults(client, raceId, raceName, raceDate, horses) {
   if (horses.length === 0) return 0;
@@ -341,20 +448,39 @@ async function insertRaceResults(client, raceId, raceName, raceDate, horses) {
     );
   }
 
-  // 複勝圏内（3着以内）のみ買い推奨として挿入（バックテスト用）
-  // 全馬挿入して、実際の着順から hit を決定する
+  const totalHorses = horses.length;
+  const isGraded = isGradedRace(raceName);
+
+  // 人気順位を単勝オッズ昇順で算出（同オッズは同順位）
+  // tanshOdds が null の馬は最後尾扱い
+  const sortedByOdds = [...horses]
+    .filter(h => h.tanshOdds != null && h.tanshOdds > 0)
+    .sort((a, b) => a.tanshOdds - b.tanshOdds);
+  const popularityMap = new Map();
+  sortedByOdds.forEach((h, idx) => {
+    // 同一オッズは同順位（先着優先の簡易処理）
+    if (!popularityMap.has(h.horseNum)) {
+      popularityMap.set(h.horseNum, idx + 1);
+    }
+  });
+
+  // AI予測ロジックを模倣して buy/skip を決定（バイアス除去版）
   const values = horses.map((h) => {
     const hit = h.actualPos > 0 ? h.actualPos <= 3 : h.fukushoReturn > 0;
+    // テーブルから直接取得した人気順位を優先（より正確）、なければオッズ順で推計
+    const popularityRank = h.popularityFromTable ?? popularityMap.get(h.horseNum) ?? 999;
+    const { recommendation, ev } = simulateAIPrediction(h, totalHorses, isGraded, popularityRank);
+
     return [
       raceId,
       raceName,
       raceDate,
-      "buy",          // 全馬をbuyとして記録
+      recommendation,  // buy/skip をAI模倣ロジックで決定
       h.horseNum,
       h.horseName,
-      null,           // ev（期待値）は後続解析で計算
-      h.tanshOdds,    // odds
-      null,           // confidence
+      ev,              // EV を記録
+      h.tanshOdds,     // 単勝オッズ
+      null,            // confidence（現行AIでは未使用）
       h.actualPos > 0 ? h.actualPos : null,
       hit,
       h.fukushoReturn,
