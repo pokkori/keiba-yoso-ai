@@ -8,13 +8,6 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./tests/setup.ts'],
-    // NEW: Browser Mode設定
-    browser: {
-      enabled: false, // デフォルトはfalse。--browser フラグで有効化
-      provider: 'playwright',
-      headless: true,
-      instances: [{ browser: 'chromium' }],
-    },
     include: [
       'tests/**/*.test.ts',
       'tests/**/*.test.tsx',
