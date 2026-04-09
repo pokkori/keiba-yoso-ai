@@ -1663,6 +1663,29 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
               console.log(`LowEVSkip: ev=${parsedEv} < 1.9 → skip（バックテスト実証: EV>=1.9がROI92.1%最高帯）`);
             }
 
+            // raceInfoStr からROI分析用フィールドを抽出
+            // 例: "東京1R ヴィクトリアマイル(G1) 芝1600m 良 12頭"
+            const trackTypeMatch = raceInfoStr.match(/芝|ダ[ー一]ト|障害/);
+            const trackType = trackTypeMatch
+              ? trackTypeMatch[0].startsWith('ダ') ? 'ダート'
+                : trackTypeMatch[0].startsWith('障') ? '障害'
+                : '芝'
+              : null;
+
+            const distanceMatch = raceInfoStr.match(/(\d{3,4})m/);
+            const distance = distanceMatch ? parseInt(distanceMatch[1], 10) : null;
+
+            const fieldMatch = raceInfoStr.match(/不良|稍重|重(?!賞)|良(?!馬)/);
+            const fieldCondition = fieldMatch ? fieldMatch[0] : null;
+
+            const raceGradeMatch = raceInfoStr.match(/\(?(G1|G2|G3|OP|オープン)\)?/i);
+            const raceGrade = raceGradeMatch
+              ? raceGradeMatch[1].toUpperCase().replace('オープン', 'OP')
+              : '一般';
+
+            const raceTypeMatch = raceInfoStr.match(/牝馬限定|牝馬|牡馬限定|ハンデ|新馬|未勝利/);
+            const raceType = raceTypeMatch ? raceTypeMatch[0] : '一般';
+
             await savePrediction({
               raceId: body.raceId!,
               raceName: raceInfoStr,
@@ -1673,6 +1696,11 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
               ev: parsedEv,
               odds,
               confidence,
+              trackType,
+              fieldCondition,
+              distance,
+              raceType,
+              raceGrade,
             });
           } catch (saveErr) {
             console.error("backtest save error:", saveErr);

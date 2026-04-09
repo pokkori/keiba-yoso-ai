@@ -17,6 +17,12 @@ export interface PredictionLog {
   hit: boolean | null; // 複勝圏内（3着以内）かどうか
   returnAmount: number | null; // 払い戻し金額（100円購入時）
   updatedAt: string | null;
+  // ROI分析用フィールド
+  trackType?: string | null;     // '芝' | 'ダート' | '障害'
+  fieldCondition?: string | null; // '良' | '稍重' | '重' | '不良'
+  distance?: number | null;      // 1200, 1600, 2000, 2400 etc
+  raceType?: string | null;      // '牝馬限定' | 'ハンデ' | '新馬' | '未勝利' | '一般'
+  raceGrade?: string | null;     // 'G1' | 'G2' | 'G3' | 'OP' | '一般'
 }
 
 export interface ConfidenceBand {
@@ -87,6 +93,11 @@ export async function savePrediction(
         hit: log.hit ?? null,
         return_amount: log.returnAmount ?? null,
         updated_at: log.actualPos != null ? new Date().toISOString() : null,
+        track_type: log.trackType ?? null,
+        field_condition: log.fieldCondition ?? null,
+        distance: log.distance ?? null,
+        race_type: log.raceType ?? null,
+        race_grade: log.raceGrade ?? null,
       })
       .select("id")
       .single();
