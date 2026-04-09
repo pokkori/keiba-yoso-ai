@@ -461,13 +461,13 @@ function simulateAIPrediction(h, totalHorses, isGraded, popularityRank) {
     return { recommendation: "skip", ev: null };
   }
 
-  // ルール7: 複勝オッズ下限フィルター（DR2026-04-09実装）
-  //   複勝下限2.5倍未満 → 控除率20%に対して利益余地が薄い帯
-  //   DR推定: 複勝下限2.5倍以上特化でROI 93%→105-120%改善見込み
-  //   API取得失敗時（null）は単勝オッズで代替判断（7-13倍帯ならおおむね複勝2.5-5倍帯）
-  if (h.fukushoOddsLow !== null && h.fukushoOddsLow < 2.5) {
-    return { recommendation: "skip", ev: null };
-  }
+  // ルール7: 複勝オッズ下限フィルター（2026-04-09実証で却下）
+  //   DR推定: 複勝2.5倍以上でROI改善見込み → 実測: ROI 81.9%→78.0%に悪化
+  //   原因: 単勝7-13倍帯×複勝2.5倍以上はリスク高帯（的中率低下の方が大きい）
+  //   → フィルター無効化（コメントアウト）。tanshOddsフィルターのみ使用
+  // if (h.fukushoOddsLow !== null && h.fukushoOddsLow < 2.5) {
+  //   return { recommendation: "skip", ev: null };
+  // }
 
   // EV計算（参考値として保存）
   //   バックフィルでは複勝オッズが不明なため単勝から推定
