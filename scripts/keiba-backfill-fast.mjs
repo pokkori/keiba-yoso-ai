@@ -198,6 +198,39 @@ async function fetchRaceIdsByYear(year) {
 
 // ── レース結果ページから全出走馬の情報を取得 ──────────────────────────────────
 /**
+ * netkeiba SP APIから複勝オッズの下限を取得する
+ * URL: https://race.sp.netkeiba.com/?pid=api&action=RaceOdds&race_id=XXXXXXXX&type=1&json=1
+ * @returns {Map<number, number>} horseNum → 複勝オッズ下限（例: 1.5 = 1.5倍）
+ */
+async function fetchFukushoOddsFromAPI(raceId) {
+  const url = `https://race.sp.netkeiba.com/?pid=api&action=RaceOdds&race_id=${raceId}&type=1&json=1`;
+  const oddsMap = new Map();
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": HEADERS["User-Agent"],
+        "Referer": "https://sp.netkeiba.com/",
+        "Accept": "application/json, text/javascript, */*",
+      },
+    });
+    if (!res.ok) return oddsMap;
+    const json = await res.json();
+    // レスポンス構造: { data: { Odds: [ { HorseNum: "1", PlaceOddsLow: "1.5", PlaceOddsHigh: "2.0", ... }, ... ] } }
+    const oddsList = json?.data?.Odds ?? json?.Odds ?? [];
+    for (const entry of oddsList) {
+      const num = parseInt(String(entry.HorseNum || entry.horse_num || ""), 10);
+      const low = parseFloat(String(entry.PlaceOddsLow || entry.place_odds_low || "0"));
+      if (!isNaN(num) && num > 0 && !isNaN(low) && low > 0) {
+        oddsMap.set(num, low);
+      }
+    }
+  } catch {
+    // APIエラーは無視（下限なしで処理継続）
+  }
+  return oddsMap;
+}
+
+/**
  * @returns {Array<{horseNum, horseName, actualPos, tanshOdds, fukushoReturn}>}
  */
 async function fetchRaceFullResult(raceId) {
@@ -320,6 +353,17 @@ async function fetchRaceFullResult(raceId) {
 
   if (horses.length === 0) return null;
 
+  // 複勝オッズAPIから事前オッズ（レース結果確定前）を取得
+  // 注意: db.netkeibaのレース結果ページは確定後データのため払戻金は取得できるが
+  //       事前オッズはSP APIから別途取得する必要がある
+  const fukushoOddsMap = await fetchFukushoOddsFromAPI(raceId);
+  await sleep(SLEEP_NORMAL_MS);
+
+  // 各馬に複勝オッズ下限を付与
+  for (const h of horses) {
+    h.fukushoOddsLow = fukushoOddsMap.get(h.horseNum) ?? null;
+  }
+
   return { raceName, raceDate, horses };
 }
 
@@ -365,7 +409,7 @@ async function getExistingRaceIds(client, raceIds) {
  *   出走馬中の相対的な単勝オッズ順位で 1-3番人気相当かどうかを判断する。
  *   tanshOdds が全馬中上位3位以内 → 人気馬フラグ
  *
- * @param {object} h         - 1頭分データ { horseNum, horseName, tanshOdds, fukushoReturn }
+ * @param {object} h         - 1頭分データ { horseNum, horseName, tanshOdds, fukushoReturn, fukushoOddsLow }
  * @param {number} totalHorses - レース頭数
  * @param {boolean} isGraded   - 重賞・OP かどうか
  * @param {number} popularityRank - 人気順位（単勝オッズ昇順での順位、1始まり）
@@ -409,6 +453,14 @@ function simulateAIPrediction(h, totalHorses, isGraded, popularityRank) {
   // ルール6: 大穴帯スキップ（DR2026-04-09更新）
   //   単勝13倍超 ≈ 複勝5倍超 → 大穴過剰人気バイアス帯
   if (tansh > 13.0) {
+    return { recommendation: "skip", ev: null };
+  }
+
+  // ルール7: 複勝オッズ下限フィルター（DR2026-04-09実装）
+  //   複勝下限2.5倍未満 → 控除率20%に対して利益余地が薄い帯
+  //   DR推定: 複勝下限2.5倍以上特化でROI 93%→105-120%改善見込み
+  //   API取得失敗時（null）は単勝オッズで代替判断（7-13倍帯ならおおむね複勝2.5-5倍帯）
+  if (h.fukushoOddsLow !== null && h.fukushoOddsLow < 2.5) {
     return { recommendation: "skip", ev: null };
   }
 
