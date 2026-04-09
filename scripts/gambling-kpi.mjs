@@ -468,6 +468,76 @@ async function keirinKPI(client) {
     const ksE = keirinSimE[0];
     console.log("\n  ─── [SIM-E] 全場×R1/8/11/12 skip ─────────────");
     console.log(`  n=${fmt(ksE.eval_f)} 的中率: ${pct(ksE.hit_f, ksE.eval_f)}  回収率: ${rr(ksE.ret_f, parseInt(ksE.eval_f) * 600)}`);
+
+    // SIM-G: 9場（+小松島148.9%/静岡142.6%/取手126.6%/立川125.5%）× R2/3/4/5/6/9のみ
+    const VENUES_G = [...VENUES_C, "小松島", "静岡", "取手", "立川"];
+    const venuesGStr = VENUES_G.map(v => `'${v}'`).join(",");
+    const { rows: keirinSimG } = await client.query(`
+      WITH racenum AS (
+        SELECT *,
+          SPLIT_PART(race_name, ' ', 1) AS venue_name,
+          CASE
+            WHEN race_id ~ '^keirinv'
+              THEN CAST(SUBSTRING(race_id FROM '([0-9]{4})$') AS INTEGER)
+            WHEN race_id ~ '-R?[0-9]+$'
+              THEN CAST(SUBSTRING(race_id FROM '-R?([0-9]+)$') AS INTEGER)
+            ELSE NULL
+          END AS rno
+        FROM keirin_prediction_logs
+        WHERE recommendation='buy'
+          AND race_id ~ '^(keirinv|[a-z].*-2025-|[a-z].*-2026-)'
+          AND race_id !~ '_(car[0-9]+|2tan|2fuku|3tan|3fu|3fuku|hukuren|tansho)$'
+      )
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL
+          AND venue_name IN (${venuesGStr})
+          AND rno IN (2,3,4,5,6,9)) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true
+          AND venue_name IN (${venuesGStr})
+          AND rno IN (2,3,4,5,6,9)) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true
+          AND venue_name IN (${venuesGStr})
+          AND rno IN (2,3,4,5,6,9)) AS ret_f
+      FROM racenum
+    `);
+    const ksG = keirinSimG[0];
+    console.log("\n  ─── [SIM-G] 9場(+小松島/静岡/取手/立川)×R2/3/4/5/6/9 ──");
+    console.log(`  n=${fmt(ksG.eval_f)} 的中率: ${pct(ksG.hit_f, ksG.eval_f)}  回収率: ${rr(ksG.ret_f, parseInt(ksG.eval_f) * 600)}`);
+
+    // SIM-H: 11場（+岐阜118.9%/伊東117.2%/京王閣116.6%/玉野113.8%/小倉111.2%）× R2/3/4/5/6/9のみ
+    const VENUES_H = [...VENUES_G, "岐阜", "伊東", "京王閣", "玉野", "小倉"];
+    const venuesHStr = VENUES_H.map(v => `'${v}'`).join(",");
+    const { rows: keirinSimH } = await client.query(`
+      WITH racenum AS (
+        SELECT *,
+          SPLIT_PART(race_name, ' ', 1) AS venue_name,
+          CASE
+            WHEN race_id ~ '^keirinv'
+              THEN CAST(SUBSTRING(race_id FROM '([0-9]{4})$') AS INTEGER)
+            WHEN race_id ~ '-R?[0-9]+$'
+              THEN CAST(SUBSTRING(race_id FROM '-R?([0-9]+)$') AS INTEGER)
+            ELSE NULL
+          END AS rno
+        FROM keirin_prediction_logs
+        WHERE recommendation='buy'
+          AND race_id ~ '^(keirinv|[a-z].*-2025-|[a-z].*-2026-)'
+          AND race_id !~ '_(car[0-9]+|2tan|2fuku|3tan|3fu|3fuku|hukuren|tansho)$'
+      )
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL
+          AND venue_name IN (${venuesHStr})
+          AND rno IN (2,3,4,5,6,9)) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true
+          AND venue_name IN (${venuesHStr})
+          AND rno IN (2,3,4,5,6,9)) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true
+          AND venue_name IN (${venuesHStr})
+          AND rno IN (2,3,4,5,6,9)) AS ret_f
+      FROM racenum
+    `);
+    const ksH = keirinSimH[0];
+    console.log("\n  ─── [SIM-H] 14場×R2/3/4/5/6/9（SIM-G+5場） ──");
+    console.log(`  n=${fmt(ksH.eval_f)} 的中率: ${pct(ksH.hit_f, ksH.eval_f)}  回収率: ${rr(ksH.ret_f, parseInt(ksH.eval_f) * 600)}`);
   }
 }
 
@@ -679,6 +749,42 @@ async function boatKPI(client) {
     const s7 = sim7[0];
     console.log("\n  ─── [SIM-7] SIM-5 + 高ROI会場8場（最強組） ──");
     console.log(`  n=${fmt(s7.eval_f)} 的中率: ${pct(s7.hit_f, s7.eval_f)}  回収率: ${rr(s7.ret_f, parseInt(s7.eval_f) * 100)}`);
+
+    // SIM-G: SIM-5B(conf=null 1.5-2.5) + conf>=10 高ROI会場（芦屋以外）
+    // conf=10+全体: n=1521, ROI=116.2%。高ROI場: 丸亀135.4%/蒲郡133.6%/唐津124.9%/多摩川123.7%/児島120.9%/宮島117.2%/三国116.3%/尼崎115.7%/福岡114.5%/徳山112.5%/下関112.0%/大村111.5%/津110.3%
+    // 芦屋(98.1%)のみ除外
+    const CONF10_VENUES = ["丸亀","蒲郡","唐津","多摩川","児島","宮島","三国","尼崎","福岡","徳山","下関","大村","津","浜名湖","常滑","若松"];
+    const conf10VenStr = CONF10_VENUES.map(v => `'${v}'`).join(",");
+    const { rows: simG } = await client.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL
+          AND (
+            (confidence IS NULL AND odds BETWEEN 1.5 AND 2.5)
+            OR (confidence >= 10 AND venue IN (${conf10VenStr}))
+          )
+        ) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true
+          AND (
+            (confidence IS NULL AND odds BETWEEN 1.5 AND 2.5)
+            OR (confidence >= 10 AND venue IN (${conf10VenStr}))
+          )
+        ) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true
+          AND (
+            (confidence IS NULL AND odds BETWEEN 1.5 AND 2.5)
+            OR (confidence >= 10 AND venue IN (${conf10VenStr}))
+          )
+        ) AS ret_f,
+        COUNT(*) FILTER (WHERE hit IS NOT NULL AND confidence >= 10 AND venue IN (${conf10VenStr})) AS n_conf10,
+        ROUND(SUM(return_amount) FILTER (WHERE hit=true AND confidence >= 10 AND venue IN (${conf10VenStr}))*100.0/
+          NULLIF(COUNT(*) FILTER (WHERE hit IS NOT NULL AND confidence >= 10 AND venue IN (${conf10VenStr}))*100,0),1) AS roi_conf10
+      FROM boat_prediction_logs WHERE recommendation='buy'
+    `);
+    const sG = simG[0];
+    console.log("\n  ─── [SIM-G] SIM-5B + conf>=10 高ROI場（芦屋除外） ──");
+    console.log(`  n合計=${fmt(sG.eval_f)} 的中率: ${pct(sG.hit_f, sG.eval_f)}  回収率: ${rr(sG.ret_f, parseInt(sG.eval_f) * 100)}`);
+    console.log(`  ├ SIM-5B部分: n=1189 ROI=131.4%（既知）`);
+    console.log(`  └ conf>=10部分: n=${fmt(sG.n_conf10)} ROI=${sG.roi_conf10}%`);
   }
 }
 
