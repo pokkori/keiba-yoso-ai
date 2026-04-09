@@ -1493,9 +1493,28 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
               || fullText.match(/\((\d+)\/10\)/);
             const confidence = confidenceMatch ? parseInt(confidenceMatch[1]) : null;
 
+            // ─── サーバーサイド強制スキップ: 一般クラス安全網 ───
+            // AIが【推奨判定】スキップを出力し忘れた場合の保険。
+            // 重賞・特別キーワードなし = 一般クラス確定 → buyを保存しない
+            const ssGradeRace = /[SＳ]|賞|カップ|ステークス|記念|特別|オープン|[Gg][123]|GT|OP/i.test(raceInfoStr);
+            const ssLowerClass = /新馬|未勝利|1勝クラス|2勝クラス|3勝クラス/.test(raceInfoStr);
+            // "東京 11R" (8文字) は race name 未取得 → 判断不能のためスキップしない
+            // "東京 11R 桜花賞" のように race name あり (15文字超) のみ適用
+            const ssHasRaceName = raceInfoStr.replace(/\s/g, "").length > 10;
+
             // ─── フラクショナルKelly動的スキップ（追加フィルター） ───
             // 買い推奨の場合のみKellyフィルターを適用（スキップ済みはそのまま通過）
             let finalRecommendation: "skip" | "buy" = recommendation;
+
+            if (finalRecommendation === "buy") {
+              if (ssLowerClass) {
+                finalRecommendation = "skip";
+                console.log(`[ServerClassFilter] "${raceInfoStr}" → skip (下位クラスキーワード検出)`);
+              } else if (ssHasRaceName && !ssGradeRace) {
+                finalRecommendation = "skip";
+                console.log(`[ServerClassFilter] "${raceInfoStr}" → skip (重賞・特別キーワード未検出)`);
+              }
+            }
 
             // AI出力から複勝オッズを抽出（rawHorsesがnullの場合のフォールバック）
             // パターン例: 「複勝オッズ2.3倍」「複勝2.3〜3.1倍」「複勝オッズ2.3〜3.1倍」「1.9倍〜2.5倍」
