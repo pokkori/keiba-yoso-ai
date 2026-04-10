@@ -148,10 +148,12 @@ export function calculateHorseScore(
   // ─── EV 判定 ───
   const expectedValue = data.fukushoOdds * estimatedProb;
   // DR2026-04-10: EV閾値1.35に引き上げ・totalScore>=3(中〜高確信度)フィルター追加
+  // DR2026-04-10(v2): 出走頭数ハードフィルター追加（8〜12頭限定・+3〜5% ROI期待）
   const recommendBuy =
-    expectedValue >= 1.35 &&        // EV閾値引き上げ: 1.30→1.35（+3〜8% ROI期待）
+    expectedValue >= 1.35 &&        // EV閾値: 1.30→1.35（+3〜8% ROI期待）
     marketEdge >= 0.12 &&           // +12%以上
     totalScore >= 3 &&              // confidence>=7相当（中〜高確信度のみ）
+    raceContext.totalHorses >= 8 && raceContext.totalHorses <= 12 && // 最適頭数帯ハードフィルター
     !(data.fukushoOdds < 2.0 && impliedProb > 0.4); // 過剰人気除外
 
   return {
