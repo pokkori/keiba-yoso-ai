@@ -10,7 +10,7 @@ interface KeywordData {
   lastUpdated: string;
 }
 
-export const KEYWORDS: Record<string, KeywordData> = {
+const KEYWORDS: Record<string, KeywordData> = {
   "keiba-yoso-ai-muryou": {
     title: "競馬 予想 AI 無料 独自分析 | 競馬予想AI",
     h1: "競馬 予想 AI 無料 独自分析",
