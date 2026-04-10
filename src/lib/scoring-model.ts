@@ -137,7 +137,8 @@ export function calculateHorseScore(
     0.45 * totalScore +
     0.3 * courseAdaptScore +
     0.25 * recentFormScore +
-    (raceContext.totalHorses <= 9 ? 0.5 : 0.0); // 少頭数ボーナス
+    (raceContext.totalHorses >= 8 && raceContext.totalHorses <= 12 ? 0.5 : 0.0) + // 最適頭数ボーナス(8-12頭)
+    (raceContext.totalHorses < 8 ? -0.3 : 0.0); // 7頭以下はペナルティ
 
   const estimatedProb = 1 / (1 + Math.exp(-logit)); // sigmoid
 
@@ -146,9 +147,11 @@ export function calculateHorseScore(
 
   // ─── EV 判定 ───
   const expectedValue = data.fukushoOdds * estimatedProb;
+  // DR2026-04-10: EV閾値1.35に引き上げ・totalScore>=3(中〜高確信度)フィルター追加
   const recommendBuy =
-    expectedValue >= 1.30 &&
-    marketEdge >= 0.12 && // +12%以上
+    expectedValue >= 1.35 &&        // EV閾値引き上げ: 1.30→1.35（+3〜8% ROI期待）
+    marketEdge >= 0.12 &&           // +12%以上
+    totalScore >= 3 &&              // confidence>=7相当（中〜高確信度のみ）
     !(data.fukushoOdds < 2.0 && impliedProb > 0.4); // 過剰人気除外
 
   return {
@@ -216,8 +219,8 @@ export function filterInvestmentCandidates(
     // 条件A: Market Edge ≥ +12%
     if (score.marketEdge < 0.12) return false;
 
-    // 条件B: EV ≥ 1.30
-    if (score.expectedValue < 1.30) return false;
+    // 条件B: EV ≥ 1.35（DR2026-04-10引き上げ）
+    if (score.expectedValue < 1.35) return false;
 
     // 条件C: オッズ帯別フィルター
     const odds = score.impliedProb > 0 ? 1 / (score.impliedProb * 3) : 0;
@@ -251,7 +254,12 @@ export function getOptimalOddsBand(
     } else if (odds >= 5.0 && odds < 7.0) {
       wide.push(score);
     } else if (odds >= 3.0 && odds < 5.0) {
-      avoid.push(score);
+      // DR2026-04-10: 高確信度(totalScore>=5)の場合は死亡帯を救済してtightに格上げ
+      if (score.totalScore >= 5 && score.expectedValue >= 1.40) {
+        tight.push(score);
+      } else {
+        avoid.push(score);
+      }
     }
   }
 
