@@ -9,10 +9,14 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./tests/setup.ts'],
     include: [
-      'tests/**/*.test.ts',
-      'tests/**/*.test.tsx',
+      'tests/unit/**/*.test.ts',
+      'tests/unit/**/*.test.tsx',
       'tests/**/*.browser.test.ts',
       'tests/**/*.browser.test.tsx',
+    ],
+    exclude: [
+      'tests/e2e/**',
+      'node_modules/**',
     ],
     coverage: {
       provider: 'v8',
