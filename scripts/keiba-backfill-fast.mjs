@@ -96,6 +96,7 @@ const GRADED_KEYWORDS = [
   "賞","カップ","ステークス","記念","特別",
   "ＯＰ","OP","オープン","OPEN",
   "（G","(G",
+  "ハンデ","ハンデキャップ", // DR2026-04-11追加: ハンデ戦も対象に（単勝118%実績）
 ];
 
 function isGradedRace(raceName) {

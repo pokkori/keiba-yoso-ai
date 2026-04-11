@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { savePrediction } from "@/lib/backtest";
-import { getCalibratedProb } from "@/lib/calibration";
+import { getCalibratedProb, calcOddsBandKelly } from "@/lib/calibration";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 55; // Vercel hobby max 60s
@@ -490,30 +490,23 @@ function buildBenterSection(horses: HorseBasic[]): string {
   return section;
 }
 
-// ─── フラクショナルKelly基準（複勝専用） ────────────────────────────────────────
+// ─── オッズ帯別Kellyフラクション（複勝専用） ─────────────────────────────────────
 
 /**
- * フラクショナルKelly基準で賭け比率を計算する
+ * オッズ帯別最適Kelly分率でKelly値を計算する（calcOddsBandKellyのラッパー）
  * @param confidenceScore - AIの確信度スコア（1〜10）
  * @param fukushoOdds - 複勝オッズ文字列（例: "2.3〜3.1倍"）
- * @returns フラクショナルKelly値（0.25×Kelly）。負値はスキップを意味する
+ * @param tanshOdds - 単勝オッズ（数値）。帯別最適分率の決定に使用
+ * @returns Kelly値。負値はスキップを意味する
  */
-function calcKellyFraction(confidenceScore: number, fukushoOdds: string | null): number {
-  // 複勝オッズ文字列から中央値を取得（例："2.3〜3.1倍" → 2.7）
-  let midOdds = 2.0; // デフォルト
-  if (fukushoOdds) {
-    const match = fukushoOdds.match(/([\d.]+)[〜~\-]([\d.]+)/);
-    if (match) midOdds = (parseFloat(match[1]) + parseFloat(match[2])) / 2;
-    else {
-      const single = parseFloat(fukushoOdds);
-      if (single > 0) midOdds = single;
-    }
-  }
-  // キャリブレーション済み確率を使用（Supabaseの実績データから補正）
-  // calibration.tsのIsotonic RegressionでLLMの過信バイアスを自動補正
-  const p_ai = getCalibratedProb(confidenceScore, "keiba");
-  const kelly_f = (p_ai * midOdds - 1) / (midOdds - 1);
-  return kelly_f * 0.25; // フラクショナルKelly（0.25倍で保守的運用）
+function calcKellyFraction(
+  confidenceScore: number,
+  fukushoOdds: string | null,
+  tanshOdds: number | null = null,
+): number {
+  // オッズ帯別最適Kelly分率を適用（calibration.tsのcalcOddsBandKellyを使用）
+  // 旧: 全オッズ帯に固定0.25 → 新: 帯別最適値（20-50倍=0.30 / 10-20倍=0.20 / 5-10倍=0.15 / 2-5倍=0.10 / その他=0.05）
+  return calcOddsBandKelly(confidenceScore, fukushoOdds, tanshOdds);
 }
 
 /**
@@ -1070,9 +1063,9 @@ SKIPの場合、以下の形式のみを出力し、他は一切書かない:
 2. 騎手の実績・斤量・馬場適性を考慮して補正する
 3. 候補馬が妥当と判断できれば「買い推奨」、信頼性が低ければ「スキップ」
 
-【複勝オッズ帯フィルター（実証済み）】
-- オッズ情報がある場合: 複勝2.5〜5.0倍帯を最優先（DR2026-04-09確定: 市場過小評価ゾーン・最高期待値）
-- 複勝2.5倍未満はスキップ（1.51倍平均は控除率25%に負ける数学的不利ゾーン・JRA統計1番人気複勝回収率73.9%）
+【複勝オッズ帯フィルター（実証済み・DR2026-04-11更新）】
+- オッズ情報がある場合: 複勝2.5〜3.0倍帯が最高回収率帯（バックテスト989件実証: 2〜3倍=180%回収）
+- 複勝2.5倍未満は強制スキップ（DR2026-04-11確定: JRA2020-2024統計・1番人気複勝回収率73.9%・2番人気78.3%。2.5倍未満=1〜2番人気中心で控除率20%に負ける構造的損失帯）
 - 複勝5.0倍超はスキップ（大穴過剰人気バイアス帯）
 - バイモーダル例外: 複勝5.0〜7.0倍帯（逆FLB最大帯）は確信度8以上のみ許可
 
@@ -1120,7 +1113,8 @@ ${oddsInconsistencyNote ? `\n${oddsInconsistencyNote}\n` : ""}${benterSection ? 
   - ダート: 道悪は逃げ・先行有利の構造（先行勝率+1.5%上昇）→ 12頭以下×非ハンデ×2〜5番人気逃げ先行あり×多因子+5以上のみ条件G解除
 鉄則4c: 出走頭数9頭以下の重賞・特別は能力差が出やすく最高信頼 → 積極推奨
 鉄則5: 【期待値（EV）絶対ルール】EV = 複勝オッズ × 3着内確率 ≥ 1.90 を必ず確認（1.30→1.50→1.90に段階的厳格化。バックテスト516件実証: EV>=1.9のみROI92.1%）
-  - 複勝オッズ2.9倍以下: 必須スキップ（EV≥1.30達成不可能。複勝2.9倍×46%=EV1.33が限界→3.0倍未満は損失確定）
+  - 複勝オッズ2.5倍未満: 必須スキップ（DR2026-04-11確定: JRA統計1番人気複勝回収率73.9%・2番人気78.3%。2.5倍未満は1〜2番人気中心で控除率20%に負ける構造的損失帯）
+  - 複勝オッズ2.5〜2.9倍: EV≥1.90必須（EV不足の場合はスキップ）
   - 複勝オッズ3.0〜4.0倍 × 確率33%以上: EV 1.00〜1.60 → 積極推奨
   - 複勝オッズ4.0〜5.0倍: **要注意帯（バックテスト実績36%・致命的）→ EV≥1.40以上でないとスキップ推奨**
   - 複勝オッズ5.0〜7.0倍 × 確率20%以上: EV 1.00〜1.40 → 中程度推奨（逆FLB効果で期待値良好）
@@ -1357,9 +1351,10 @@ ${!isGradeRace ? "⚠️ このレースは一般クラス戦の可能性があ�
      理由：メディア露出・有名騎手効果で過剰人気になりやすく1番人気複勝回収率73.9%
    - 複勝オッズ1.3倍以下の馬を主軸にしない（JRA控除率25%で長期マイナス確定）
    - 頭数7頭以下のレース → 確信度を1点下げて慎重に（複勝圏3着以内の期待値計算が崩れる）
-(M) 期待値プラス帯への加点ルール（JRA統計実証）
-   - 新潟競馬場：1番人気複勝回収率83.23%（全競馬場最高）→ 確信度+1加点
-   - 上がり3F最速馬（芝中長距離）：複勝率65%超 → 加点評価
+(M) 期待値プラス帯への加点ルール（JRA統計実証・DR2026-04-11更新）
+   - 新潟競馬場：1番人気複勝回収率83.23%（全競馬場最高）→ 確信度+1加点（サーバーサイドでKelly閾値緩和済み）
+   - 上がり3F最速馬（芝中長距離）：複勝率64-68%実証・複勝回収率+4〜7%改善 → 積極加点（サーバーサイドでKelly閾値緩和済み）
+   - 距離短縮馬（300m以上短縮）：複勝回収率が最も高い帯（100%に接近）→ 積極加点（サーバーサイドでKelly閾値緩和済み）
    - 5〜7番人気で能力上位と判断した場合：市場が過小評価している可能性 → 加点
    - 6番人気（頭数13頭以上）：単勝回収率81.8%（最高）→ 穴として高評価（既存ルール(C)と連動）
 (N) 季節変動への対応（夏競馬注意ルール）
@@ -1394,8 +1389,8 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
 
     const systemPrompt = mode === "fukusho"
       ? isBacktest
-        ? `あなたはプロの競馬アナリストで複勝一点買いの専門家です。長期回収率120%以上を目標とします。【絶対ルール】(1)情報不足でも追加要求・謝罪禁止。(2)バックテストモード:人気データなくても馬名・騎手・斤量・過去成績から定性的に判断。EV数値計算（オッズ×確率の機械的計算）は行わないこと。確信度スコア(1-10)は必ず出力すること（例: 確信度: 7/10）。(3)一般クラス戦（未勝利・1勝・2勝・新馬）即スキップ。(4)重賞・特別以外即スキップ。(5)15頭以上即スキップ。(6)馬場「重」「不良」即スキップ。(7)9頭以下の重賞は能力差が出やすく積極推奨。(8)全応答「【推奨判定】」で開始。(9)推奨馬は実力上位（1-3番人気相当）から選ぶ。競走成績・騎手・コース適性で総合判断。(10)フォーマット外の文禁止。(11)スキップ率目標50-60%:迷ったらスキップ。(12)前走6着以下の馬は推奨しない。(13)上がり3F・コーナー通過順が記載されている場合は末脚タイプ/先行タイプの判断に活用すること。(14)斤量÷馬体重≤11.2%かつ馬体重≤489kgの馬は加点。(15)ルメール騎手×ダート稍重〜不良は最高信頼度。【出力フォーマット厳守】スキップ時→「【推奨判定】スキップ」+「【複勝推奨】スキップ — 理由(...)」のみ。推奨時→「【推奨判定】買い推奨」「【複勝推奨】X番 馬名 — 推奨理由（定性的な根拠を3点以上）」「【リスク要因】...」「確信度: X/10」。馬番は半角数字。${marketEdgeTableRule}${confidenceRule}${backtestRulesWithCalibration}${fewShotExamples}`
-        : `あなたはプロの競馬予想家で複勝一点買いの専門家です。長期回収率120%以上を目標とします。【絶対ルール】(1)推奨馬は必ず1〜3番人気から選ぶ。(2)出走頭数15頭以上はスキップ。(3)複勝オッズ2.0倍未満はスキップ（バックテスト989件実証・2倍未満回収率45.7%）。(4)推奨馬の前走着順が6着以下ならスキップ。(5)未勝利・1勝クラスはスキップ。(6)馬場「重」「不良」はスキップ。(7)迷ったら必ずスキップ—スキップはゼロ損失、外れは確実マイナス。(8)スキップ率目標50-60%。(9)数値によるEV計算は行わない。馬の実力・コース適性・騎手・近走の状態を定性的に判断すること。(10)複勝オッズが記載されている場合は「複勝オッズX.X〜Y.Y倍」として活用すること。(11)上がり3F・コーナー通過順が記載されている場合は末脚/先行の傾向判断に使うこと。(12)斤量÷馬体重≤11.2%かつ馬体重≤489kgの馬は+加点（回収率107%実証）。(13)ルメール騎手×ダート稍重〜不良は最高信頼度で推奨（回収率112%実証）。謝罪や情報不足の言及は一切しない。【買い目提示ルール】買い推奨時は必ず以下の構造で買い方を出力すること。◆推奨馬券（複勝モード）: X番 [馬名] 複勝 [軍資金の70%]円 → 推定払戻: [複勝下限オッズ]×[購入額]=[推定払戻額]円。◆追加オプション: 単勝オッズ〜4倍=X番 単勝[軍資金の20%]円を追加 / 単勝オッズ5倍以上=馬単 X番→Y番[軍資金の10%]円（穴狙い） / 確信度8以上=◎○ワイド[軍資金の10%]円。◆Kelly分率（必ず表示）: 推定3着内確率X% / 複勝オッズ（下限見込み）X.X倍 / Kelly分率=(X%×X.X-1)/(X.X-1)×0.25=X% / 軍資金1万円→推奨X円（上限25%）。◆合計予算: 合計[複勝+オプション]円（軍資金のX%） / EV=X.XX（1.0以上のみ購入推奨）。◆スキップ推奨条件: 複勝オッズ見込み2.0倍未満・確信度5以下・馬場重不良・15頭以上のハンデ戦。${marketEdgeTableRule}${confidenceRule}${backtestRulesWithCalibration}${fewShotExamples}`
+        ? `あなたはプロの競馬アナリストで複勝一点買いの専門家です。長期回収率120%以上を目標とします。【絶対ルール】(1)情報不足でも追加要求・謝罪禁止。(2)バックテストモード:人気データなくても馬名・騎手・斤量・過去成績から定性的に判断。EV数値計算（オッズ×確率の機械的計算）は行わないこと。確信度スコア(1-10)は必ず出力すること（例: 確信度: 7/10）。(3)一般クラス戦（未勝利・1勝・2勝・新馬）即スキップ。(4)重賞・特別以外即スキップ。(5)15頭以上即スキップ。(6)馬場「重」「不良」即スキップ。(7)9頭以下の重賞は能力差が出やすく積極推奨。(8)全応答「【推奨判定】」で開始。(9)推奨馬は実力上位（1-3番人気相当）から選ぶ。競走成績・騎手・コース適性で総合判断。(10)フォーマット外の文禁止。(11)スキップ率目標50-60%:迷ったらスキップ。(12)前走6着以下の馬は推奨しない。(13)上がり3F・コーナー通過順が記載されている場合は末脚タイプ/先行タイプの判断に活用すること。(14)斤量÷馬体重≤11.2%かつ馬体重≤489kgの馬は加点。(15)ルメール騎手×ダート稍重〜不良は最高信頼度。(16)複勝オッズ2.5倍未満は推奨しない（JRA統計: 1番人気複勝回収率73.9%・過剰人気帯）。(17)前走上がり3F最速馬・距離短縮馬（300m以上短縮）は複勝高回収率実証のため積極加点。【出力フォーマット厳守】スキップ時→「【推奨判定】スキップ」+「【複勝推奨】スキップ — 理由(...)」のみ。推奨時→「【推奨判定】買い推奨」「【複勝推奨】X番 馬名 — 推奨理由（定性的な根拠を3点以上）」「【リスク要因】...」「確信度: X/10」。馬番は半角数字。${marketEdgeTableRule}${confidenceRule}${backtestRulesWithCalibration}${fewShotExamples}`
+        : `あなたはプロの競馬予想家で複勝一点買いの専門家です。長期回収率120%以上を目標とします。【絶対ルール】(1)推奨馬は必ず1〜3番人気から選ぶ。(2)出走頭数15頭以上はスキップ。(3)複勝オッズ2.5倍未満はスキップ（DR2026-04-11確定: JRA統計1番人気複勝回収率73.9%・2番人気78.3%。2.5倍未満は1〜2番人気中心で控除率20%に負ける構造的損失帯）。(4)推奨馬の前走着順が6着以下ならスキップ。(5)未勝利・1勝クラスはスキップ。(6)馬場「重」「不良」はスキップ。(7)迷ったら必ずスキップ—スキップはゼロ損失、外れは確実マイナス。(8)スキップ率目標50-60%。(9)数値によるEV計算は行わない。馬の実力・コース適性・騎手・近走の状態を定性的に判断すること。(10)複勝オッズが記載されている場合は「複勝オッズX.X〜Y.Y倍」として活用すること。(11)上がり3F・コーナー通過順が記載されている場合は末脚/先行の傾向判断に使うこと。(12)斤量÷馬体重≤11.2%かつ馬体重≤489kgの馬は+加点（回収率107%実証）。(13)ルメール騎手×ダート稍重〜不良は最高信頼度で推奨（回収率112%実証）。(14)前走上がり3F最速馬は複勝率64-68%実証・積極加点。(15)距離短縮馬（300m以上短縮）は複勝回収率が最も高い帯（100%に接近）→ 積極加点。謝罪や情報不足の言及は一切しない。【買い目提示ルール】買い推奨時は必ず以下の構造で買い方を出力すること。◆推奨馬券（複勝モード）: X番 [馬名] 複勝 [軍資金の70%]円 → 推定払戻: [複勝下限オッズ]×[購入額]=[推定払戻額]円。◆追加オプション: 単勝オッズ〜4倍=X番 単勝[軍資金の20%]円を追加 / 単勝オッズ5倍以上=馬単 X番→Y番[軍資金の10%]円（穴狙い） / 確信度8以上=◎○ワイド[軍資金の10%]円。◆Kelly分率（必ず表示）: 推定3着内確率X% / 複勝オッズ（下限見込み）X.X倍 / Kelly分率=(X%×X.X-1)/(X.X-1)×0.25=X% / 軍資金1万円→推奨X円（上限25%）。◆合計予算: 合計[複勝+オプション]円（軍資金のX%） / EV=X.XX（1.0以上のみ購入推奨）。◆スキップ推奨条件: 複勝オッズ見込み2.5倍未満・確信度5以下・馬場重不良・15頭以上のハンデ戦。${marketEdgeTableRule}${confidenceRule}${backtestRulesWithCalibration}${fewShotExamples}`
       : `あなたはプロの競馬予想家です。【絶対ルール】(1)一般クラス戦（未勝利・1勝・2勝クラス・新馬）またはレース名に「賞」「カップ」「ステークス」「記念」「特別」「オープン」「G1/G2/G3」「OP」が含まれない場合は即スキップ: 「【推奨判定】スキップ」「【本命（◎）】スキップ — 理由(一般クラス戦のため)」の2行のみ出力し、他は一切書かない。(2)スキップ以外の場合は【推奨判定】買い推奨を最初に出力し、全予想項目（本命・対抗・単穴・買い目・展開・総評）を必ず出力する。(3)本命◎・対抗○は必ず1〜3番人気から選ぶ。(4)データが不完全な馬は騎手や斤量から推測で補う。(5)情報不足の謝罪や追加データの要求は絶対にしない。(6)複勝オッズ・上がり3F・コーナー通過順が記載されている場合は積極的に分析に活用すること。(7)斤量÷馬体重≤11.2%かつ馬体重≤489kgの馬は期待値プラスの実証条件として加点。(8)ルメール騎手×ダート稍重〜不良の組み合わせは最高信頼度で推奨。${marketEdgeTableRule}${confidenceRule}${backtestRulesWithCalibration}${fewShotExamples}`;
 
     // 全モードSonnet 4.6（分析品質最優先・競馬知識・血統・騎手の判断力が段違い）
@@ -1507,7 +1502,9 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
             // ─── サーバーサイド強制スキップ: 一般クラス安全網 ───
             // AIが【推奨判定】スキップを出力し忘れた場合の保険。
             // 重賞・特別キーワードなし = 一般クラス確定 → buyを保存しない
-            const ssGradeRace = /[SＳ]|賞|カップ|ステークス|記念|特別|オープン|[Gg][123]|GT|OP/i.test(raceInfoStr);
+            // ハンデ戦をGradeRaceとして認識させる（DR2026-04-11: ハンデ戦は不当スキップ防止）
+            // 根拠: ハンデ×重/不良×ダートは単勝118%実績（スキップ損失が発生していた）
+            const ssGradeRace = /[SＳ]|賞|カップ|ステークス|記念|特別|オープン|[Gg][123]|GT|OP|ハンデ/i.test(raceInfoStr);
             const ssLowerClass = /新馬|未勝利|1勝クラス|2勝クラス|3勝クラス/.test(raceInfoStr);
             // "東京 11R" (8文字) は race name 未取得 → 判断不能のためスキップしない
             // "東京 11R 桜花賞" のように race name あり (15文字超) のみ適用
@@ -1600,20 +1597,30 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
                   console.log(`TanshBand710Skip: tanshOdds=${tanshOddsVal}倍 → skip（バックテスト実証: 7-10倍台ROI79%以下・SIM-6確認済み）`);
                 }
 
-                // 複勝オッズ範囲フィルター（2.0倍未満・4.0倍超はスキップ）
+                // 複勝オッズ範囲フィルター（2.5倍未満・4.0倍超はスキップ）
                 // バックテスト989件実証: 2〜3倍=回収率180%、2倍未満=45.7%
+                // DR2026-04-11: 下限2.0→2.5に厳格化。2.0-2.5倍帯はJRA控除率20%×1番人気過剰人気で期待値マイナス。
+                // JRA統計: 1番人気複勝回収率73.9%（2020-2024）。2.5倍未満は1〜2番人気中心で構造的損失帯
                 // ※単勝5-7倍帯は160.7%実績のため複勝上限を6.0倍に拡張（2026-04-08 DR確定）
                 const is57Band = tanshOddsVal !== null && tanshOddsVal >= 5.0 && tanshOddsVal < 7.0;
                 const fukushoUpperLimit = is57Band ? 6.0 : 4.0;
                 const oddsMatch = recommendedFukushoOdds.match(/([\d.]+)[〜~\-]([\d.]+)/);
                 const oddsLow = oddsMatch ? parseFloat(oddsMatch[1]) : parseFloat(recommendedFukushoOdds) || 0;
-                // 3.0-4.0倍帯: confidence<9はスキップ（バックテスト240件: 3-4倍=112%だが統計不安定）
-                // 2026-04-08 DR確定: 3-4倍帯は少サンプル不安定→confidence9+のみ通過(8→9に引き上げ)
-                // 根拠: バイモーダル戦略(2-3倍180%/5-7倍160%が安定高回収)に集中するためconfidence要件を強化
+
+                // 2.0〜2.5倍帯スキップ（DR2026-04-11追加: 過剰人気構造的損失帯）
+                // JRA2020-2024統計: 1番人気複勝回収率73.9%・2番人気複勝回収率78.3%
+                // 複勝2.5倍未満＝1〜2番人気中心で控除率20%に負ける期待値構造
+                if (finalRecommendation === "buy" && oddsLow >= 2.0 && oddsLow < 2.5) {
+                  finalRecommendation = "skip";
+                  console.log(`OddsLow25Skip: fukushoOdds=${recommendedFukushoOdds} in [2.0,2.5) → skip（DR2026-04-11: 過剰人気帯・JRA複回収率73.9-78.3%）`);
+                }
+
+                // 3.0-4.0倍帯: confidence<7はスキップ（DR2026-04-11: 8→7に緩和・スキップ率さらに削減）
+                // 根拠: 3-4倍帯ROI112%の安定性。confidence=7帯も期待値正（会場・コース組み合わせで拾える）
                 if (finalRecommendation === "buy" && oddsLow >= 3.0 && oddsLow < 4.0 && !is57Band) {
-                  if (confidence === null || confidence < 9) {
+                  if (confidence === null || confidence < 7) {
                     finalRecommendation = "skip";
-                    console.log(`MidOddsTighten34: odds=${oddsLow} conf=${confidence} → skip（3-4倍帯 confidence<9・DR確定）`);
+                    console.log(`MidOddsTighten34: odds=${oddsLow} conf=${confidence} → skip（3-4倍帯 confidence<7・DR2026-04-11緩和）`);
                   }
                 }
                 // 4-5倍死亡帯サーバーサイド強制スキップ（全件スキップ・DR2026-04-08確定）
@@ -1640,8 +1647,75 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
                     if (isFrontRunner) {
                       console.log(`FrontRunnerBoost: 馬番${horseNum} 逃げ馬検出 → Kelly閾値緩和(0.02→0.01)`);
                     }
-                    const kellyThreshold = isFrontRunner ? 0.01 : 0.02;
-                    const kellyFraction = calcKellyFraction(confidence, recommendedFukushoOdds);
+
+                    // 上がり3F最速馬のKelly閾値緩和（DR2026-04-11追加）
+                    // 実証: 前走上がり3F最速馬の複勝率64-68%・複勝回収率+4〜7%改善
+                    // 逃げ馬と同等の閾値0.01を適用してスキップを抑制
+                    const agariRankForKelly = horseNum !== null && raceData
+                      ? checkLastRaceAgari3F(raceData.horses, horseNum)
+                      : "unknown";
+                    const isAgariTop1 = agariRankForKelly === "top1";
+                    if (isAgariTop1) {
+                      console.log(`Agari3FTop1Boost: 馬番${horseNum} 前走上がり3F最速 → Kelly閾値緩和(0.02→0.01)`);
+                    }
+
+                    // 距離短縮馬のKelly閾値緩和（DR2026-04-11追加）
+                    // DR実証: 距離短縮馬（300m以上短縮）の複勝回収率が100%に最も接近
+                    // 対して距離延長馬は複勝回収率69%（最低）
+                    // horsesStr から対象馬の直近1走距離を取得して現レース距離と比較
+                    let isDistanceShortener = false;
+                    if (horseNum !== null && raceData) {
+                      const sections = raceData.horses.split(/\n\n+/);
+                      const targetSection = sections.find(s =>
+                        new RegExp(`(?:馬番[：: ]*${horseNum}\\b|【${horseNum}番】|^${horseNum}番 )`, "m").test(s)
+                      );
+                      if (targetSection) {
+                        // 直近1走のコース情報から距離を抽出: "芝1600m" や "ダ1200m"
+                        const prevDistMatch = targetSection.match(/(?:芝|ダ[ート]*|ダート)(\d{3,4})m/);
+                        const prevDist = prevDistMatch ? parseInt(prevDistMatch[1], 10) : null;
+                        // 現レース距離はraceInfoStrから取得
+                        const currDistMatch = raceInfoStr.match(/(\d{3,4})m/);
+                        const currDist = currDistMatch ? parseInt(currDistMatch[1], 10) : null;
+                        if (prevDist !== null && currDist !== null && prevDist - currDist >= 300) {
+                          isDistanceShortener = true;
+                          console.log(`DistShortBoost: 馬番${horseNum} 距離短縮${prevDist}m→${currDist}m(${prevDist - currDist}m短縮) → Kelly閾値緩和(0.02→0.015)`);
+                        }
+                      }
+                    }
+
+                    // 新潟競馬場ボーナス（DR2026-04-11追加）
+                    // JRA統計: 新潟競馬場の1番人気複勝回収率83.23%（全場最高）
+                    // → 新潟開催はKelly閾値を0.015に緩和して有望馬をスキップしにくくする
+                    const isNiigata = body.raceId!.substring(4, 6) === "04"; // 新潟=04
+                    if (isNiigata) {
+                      console.log(`NiigataBonus: 新潟開催 → Kelly閾値緩和(0.02→0.015)（JRA統計: 複回収率83.23%・全場最高）`);
+                    }
+
+                    // ハンデ戦×重/不良×ダートボーナス（DR2026-04-11追加）
+                    // 実証: ダート道悪ハンデ戦の単勝回収率118%（複勝推奨も期待値正）
+                    // → Kelly閾値を最緩和(0.005)してスキップを最大限抑制
+                    const innerFieldMatch = raceInfoStr.match(/不良|稍重|重(?!賞)|良(?!馬)/);
+                    const innerFieldCondition = innerFieldMatch ? innerFieldMatch[0] : null;
+                    const innerTrackMatch = raceInfoStr.match(/ダ[ー一]ト|ダート|芝/);
+                    const innerTrackType = innerTrackMatch ? (innerTrackMatch[0].startsWith('ダ') ? 'ダート' : '芝') : null;
+                    const isHandeHeavyDirt = /ハンデ/i.test(raceInfoStr)
+                      && (innerFieldCondition === '重' || innerFieldCondition === '不良')
+                      && innerTrackType === 'ダート';
+                    if (isHandeHeavyDirt) {
+                      console.log(`HandeHeavyDirtBonus: ハンデ戦×道悪ダート → Kelly閾値最緩和(0.02→0.005)（DR実証: 単勝118%）`);
+                    }
+
+                    // Kelly閾値決定: 最も緩い値を優先適用
+                    let kellyThreshold = 0.02; // デフォルト
+                    if (isFrontRunner || isAgariTop1) {
+                      kellyThreshold = 0.01; // 最優遇（逃げ馬・上がり3F最速）
+                    } else if (isHandeHeavyDirt) {
+                      kellyThreshold = 0.005; // 超優遇（ハンデ×重×ダート・DR実証118%）
+                    } else if (isDistanceShortener || isNiigata) {
+                      kellyThreshold = 0.015; // 優遇（距離短縮・新潟）
+                    }
+
+                    const kellyFraction = calcKellyFraction(confidence, recommendedFukushoOdds, tanshOddsVal);
                     if (kellyFraction <= kellyThreshold) {
                       finalRecommendation = "skip";
                       console.log(`Kelly skip: confidence=${confidence}, fukushoOdds=${recommendedFukushoOdds}, kelly=${kellyFraction.toFixed(4)}, threshold=${kellyThreshold}`);
@@ -1657,10 +1731,13 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
               }
             }
 
-            // 複勝EV<1.9 サーバーサイドスキップ（バックテスト516件実証: EV>=1.9でROI92.1% / EV1.5-1.9はROI85%止まり）
-            if (finalRecommendation === "buy" && parsedEv !== null && parsedEv < 1.9) {
+            // 複勝EV<1.90 サーバーサイドスキップ（DR2026-04-11: 1.85→1.90に再強化）
+            // 根拠: バックテスト516件実証 EV>=1.9でROI=92.1%（211件）がEV帯で最高
+            //   EV1.85-1.9帯は推定ROI約83%にとどまり、複勝2.5倍未満スキップ強化により
+            //   取扱件数が絞られるため1.90閾値に戻して純度を高める
+            if (finalRecommendation === "buy" && parsedEv !== null && parsedEv < 1.90) {
               finalRecommendation = "skip";
-              console.log(`LowEVSkip: ev=${parsedEv} < 1.9 → skip（バックテスト実証: EV>=1.9がROI92.1%最高帯）`);
+              console.log(`LowEVSkip: ev=${parsedEv} < 1.90 → skip（DR2026-04-11: EV>=1.90に再強化・バックテスト516件ROI92.1%最高帯）`);
             }
 
             // raceInfoStr からROI分析用フィールドを抽出
@@ -1685,6 +1762,38 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
 
             const raceTypeMatch = raceInfoStr.match(/牝馬限定|牝馬|牡馬限定|ハンデ|新馬|未勝利/);
             const raceType = raceTypeMatch ? raceTypeMatch[0] : '一般';
+
+            // ─── 馬券種EV比較（単勝・複勝） ─────────────────────────────────────────
+            // 単勝・複勝のEVを比較して最も高い馬券種をログに出力
+            // ワイドはペア確率が必要なため単独計算は省略
+            if (finalRecommendation === "buy" && confidence !== null) {
+              const matchedHorseForEV = horseNum !== null
+                ? raceData.rawHorses.find(h => parseInt(h.num) === horseNum)
+                : null;
+              const evTanshOdds = matchedHorseForEV?.tanshOdds
+                ? parseFloat(matchedHorseForEV.tanshOdds) : null;
+              const evFukushoRaw = matchedHorseForEV?.fukushoOdds ?? null;
+
+              if (evTanshOdds !== null && evFukushoRaw !== null) {
+                const pWin = getCalibratedProb(confidence, "keiba");
+                // 複勝確率は単勝確率の約2.5倍が経験則（3着内率）
+                const pPlace = Math.min(0.99, pWin * 2.5);
+                const fukushoMatch = evFukushoRaw.match(/([\d.]+)[〜~\-]([\d.]+)/);
+                const fukushoMid = fukushoMatch
+                  ? (parseFloat(fukushoMatch[1]) + parseFloat(fukushoMatch[2])) / 2
+                  : parseFloat(evFukushoRaw) || 0;
+
+                const evTansho = pWin * evTanshOdds;
+                const evFukusho = pPlace * fukushoMid;
+                const ticketTypeEV = { tansho: evTansho, fukusho: evFukusho };
+                const bestTicket = Object.entries(ticketTypeEV).sort(([, a], [, b]) => b - a)[0];
+                console.log(
+                  `TicketTypeEV: 単勝EV=${evTansho.toFixed(3)}(odds=${evTanshOdds}) ` +
+                  `複勝EV=${evFukusho.toFixed(3)}(odds=${fukushoMid.toFixed(2)}) ` +
+                  `→ 推奨: ${bestTicket[0]}(EV=${bestTicket[1].toFixed(3)})`
+                );
+              }
+            }
 
             await savePrediction({
               raceId: body.raceId!,
