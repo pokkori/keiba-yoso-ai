@@ -640,17 +640,18 @@ async function fetchAllHorseDetails(horses: HorseBasic[], log: string[]): Promis
 
 // ─── Main race data fetch ─────────────────────────────────────────────────────
 
-type FetchResult = { data: { info: string; horses: string; rawHorses: HorseBasic[] } | null; debugLog: string[] };
+type FetchResult = { data: { info: string; horses: string; rawHorses: HorseBasic[]; condRaw: string } | null; debugLog: string[] };
 
 // 結果ページからレース情報（名称・距離・馬場）を取得
-function extractRaceInfoFromResultPage(html: string, venue: string, raceNo: number): string {
+function extractRaceInfoFromResultPage(html: string, venue: string, raceNo: number): { raceInfo: string; condRaw: string } {
   const stripped = (s: string) => s.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
   const raceName = stripped(html.match(/<h1[^>]*class="[^"]*RaceName[^"]*"[^>]*>([\s\S]*?)<\/h1>/)?.[1] ?? "");
   const cond = stripped(html.match(/<div[^>]*class="[^"]*RaceData01[^"]*"[^>]*>([\s\S]*?)<\/div>/)?.[1] ?? "");
   // e.g. "芝1200m / 晴 / 良" or "ダ1600m / 曇 / 稍重"
   const condShort = cond.replace(/\s+/g, " ").slice(0, 60);
   const base = `${venue} ${raceNo}R${raceName ? " " + raceName : ""}`;
-  return condShort ? `${base} (${condShort})` : base;
+  const raceInfo = condShort ? `${base} (${condShort})` : base;
+  return { raceInfo, condRaw: condShort };
 }
 
 async function fetchRaceData(raceId: string, isBacktest = false): Promise<FetchResult> {
@@ -659,6 +660,7 @@ async function fetchRaceData(raceId: string, isBacktest = false): Promise<FetchR
   const raceNo = parseInt(raceId.substring(10, 12), 10);
   const venue = TRACK_NAMES[trackCode] || "不明";
   let raceInfo = `${venue} ${raceNo}R`;
+  let condRaw = "";
 
   // ── Try JSON odds API first (fast, gives horse names + jockey) ──
   let baseHorses: HorseBasic[] | null = null;
@@ -732,7 +734,9 @@ async function fetchRaceData(raceId: string, isBacktest = false): Promise<FetchR
 
   // 結果ページから取得した場合はレース情報を拡充
   if (shutubaResult?.racePageHtml) {
-    raceInfo = extractRaceInfoFromResultPage(shutubaResult.racePageHtml, venue, raceNo);
+    const extracted = extractRaceInfoFromResultPage(shutubaResult.racePageHtml, venue, raceNo);
+    raceInfo = extracted.raceInfo;
+    if (extracted.condRaw) condRaw = extracted.condRaw;
     log.push(`raceInfo from result page: ${raceInfo}`);
   }
 
@@ -786,9 +790,10 @@ async function fetchRaceData(raceId: string, isBacktest = false): Promise<FetchR
         });
         if (!r.ok) continue;
         const html = await decodeBuffer(await r.arrayBuffer());
-        const enriched = extractRaceInfoFromResultPage(html, venue, raceNo);
-        if (enriched !== raceInfo) {
-          raceInfo = enriched;
+        const enrichedResult = extractRaceInfoFromResultPage(html, venue, raceNo);
+        if (enrichedResult.raceInfo !== raceInfo) {
+          raceInfo = enrichedResult.raceInfo;
+          if (enrichedResult.condRaw) condRaw = enrichedResult.condRaw;
           log.push(`raceInfo enriched: ${raceInfo}`);
           break;
         }
@@ -797,7 +802,7 @@ async function fetchRaceData(raceId: string, isBacktest = false): Promise<FetchR
   }
 
   return {
-    data: { info: raceInfo, horses: horseDetails.join("\n\n"), rawHorses: horses },
+    data: { info: raceInfo, horses: horseDetails.join("\n\n"), rawHorses: horses, condRaw },
     debugLog: log,
   };
 }
@@ -1740,19 +1745,24 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
               console.log(`LowEVSkip: ev=${parsedEv} < 1.90 → skip（DR2026-04-11: EV>=1.90に再強化・バックテスト516件ROI92.1%最高帯）`);
             }
 
-            // raceInfoStr からROI分析用フィールドを抽出
-            // 例: "東京1R ヴィクトリアマイル(G1) 芝1600m 良 12頭"
-            const trackTypeMatch = raceInfoStr.match(/芝|ダ[ー一]ト|障害/);
+            // raceInfoStr + condRaw からROI分析用フィールドを抽出
+            // raceInfoStr 例: "東京1R ヴィクトリアマイル(G1) 芝1600m 良 12頭"
+            // condRaw 例: "芝1200m / 晴 / 良" or "ダ1600m / 曇 / 稍重"（HTMLから取得した生情報）
+            // raceInfoStrに距離・馬場がない場合はcondRawをフォールバックとして使用
+            const condRawFallback: string = raceData.condRaw ?? "";
+            const parseTarget = raceInfoStr + " " + condRawFallback;
+
+            const trackTypeMatch = parseTarget.match(/芝|ダ[ー一]ト|障害/);
             const trackType = trackTypeMatch
               ? trackTypeMatch[0].startsWith('ダ') ? 'ダート'
                 : trackTypeMatch[0].startsWith('障') ? '障害'
                 : '芝'
               : null;
 
-            const distanceMatch = raceInfoStr.match(/(\d{3,4})m/);
+            const distanceMatch = parseTarget.match(/(\d{3,4})m/);
             const distance = distanceMatch ? parseInt(distanceMatch[1], 10) : null;
 
-            const fieldMatch = raceInfoStr.match(/不良|稍重|重(?!賞)|良(?!馬)/);
+            const fieldMatch = parseTarget.match(/不良|稍重|重(?!賞)|良(?!馬)/);
             const fieldCondition = fieldMatch ? fieldMatch[0] : null;
 
             const raceGradeMatch = raceInfoStr.match(/\(?(G1|G2|G3|OP|オープン)\)?/i);
@@ -1762,6 +1772,8 @@ Market Edgeがプラスで、かつキャリブレーション的に合理的な
 
             const raceTypeMatch = raceInfoStr.match(/牝馬限定|牝馬|牡馬限定|ハンデ|新馬|未勝利/);
             const raceType = raceTypeMatch ? raceTypeMatch[0] : '一般';
+
+            console.log(`[RaceMetaParse] raceInfoStr="${raceInfoStr}" condRaw="${condRawFallback}" → track=${trackType} dist=${distance} field=${fieldCondition} grade=${raceGrade} type=${raceType}`);
 
             // ─── 馬券種EV比較（単勝・複勝） ─────────────────────────────────────────
             // 単勝・複勝のEVを比較して最も高い馬券種をログに出力
