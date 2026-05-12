@@ -6,8 +6,11 @@ import KomojuButton from "@/components/KomojuButton";
 import { StreakBanner } from "@/components/StreakBanner";
 import { UsageCounter } from "@/components/UsageCounter";
 import { CrossSell } from "@/components/CrossSell";
+import { AffiliateSection } from "@/components/AffiliateSection";
 import { TrustBadge } from "@/components/TrustBadge";
 import { SetPlanBanner } from "@/components/SetPlanBanner";
+import { LiveBacktestBadge } from "@/components/LiveBacktestBadge";
+import { DisclaimerBanner } from "@/components/DisclaimerBanner";
 
 const PAYJP_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYJP_PUBLIC_KEY ?? "";
 
@@ -183,6 +186,9 @@ const PLANS = [
 ];
 
 const FAQS = [
+  { q: "的中率はどのくらいですか？", a: "バックテストでROI約82%（2023〜2025年・11,031件・複勝買い）。的中率より回収率重視の予想です。" },
+  { q: "無料でも使えますか？", a: "週1回まで無料で予想をご利用いただけます。" },
+  { q: "予想の根拠が分かりますか？", a: "各馬のデータ分析根拠も合わせて表示します。" },
   { q: "予想は毎週使えますか？", a: "はい。ベーシック・プロプランは毎週土日の全レースが無制限で使えます。JRA全開催（最大3場×12R）に対応。" },
   { q: "必ず当たりますか？", a: "AIも100%の的中を保証することはできません。競馬の楽しみ方として活用いただき、余裕資金でお楽しみください。" },
   { q: "詐欺・悪質サービスとの違いは何ですか？", a: "本サービスはJRA公認ではなく「AIによる分析情報の提供」サービスです。バックテストの的中・外れを全記録公開しており、都合の良い結果だけを見せる悪質業者とは異なります。「絶対当たる」「必ず儲かる」などの誇大表現は一切使用しません。" },
@@ -208,12 +214,22 @@ export default function Home() {
     ? "3競技セットプラン ¥6,980/月（22%OFF）"
     : "ベーシックプラン ¥980/月";
 
+  const planMonthlyPrice = payjpPlan === "pro"
+    ? 2980
+    : payjpPlan === (process.env.NEXT_PUBLIC_KOMOJU_SET_PLAN_ID ?? "set-plan")
+    ? 6980
+    : 980;
+
   const faqs = [
     { q: '競馬予想AIはどんなサービスですか？', a: '出馬表をAIが自動分析し、本命馬と買い目を30秒で提案するエンターテインメント目的の予想サービスです。登録不要で無料からご利用いただけます。' },
     { q: '無料で使えますか？', a: 'AI予想の閲覧は月3回まで無料です。それ以上ご利用の場合は月額¥980のベーシックプランへのアップグレードをご検討ください。' },
     { q: '予想の的中・収益は保証されますか？', a: '本サービスはエンターテインメント目的の参考情報サービスです。馬券の的中・収益を保証するものではありません。馬券購入は各自の判断と責任で行ってください。' },
+    { q: 'どのようなデータを使って予想していますか？', a: '出走馬の過去成績・騎手・調教師・馬場状態・血統・オッズ・コース適性など多角的なデータを機械学習モデルで分析します。人間の感覚では気づきにくいパターンをAIが検出します。' },
+    { q: 'JRAの全レースに対応していますか？', a: 'はい、JRA（日本中央競馬会）の全レースに対応しています。G1・G2・G3のほか、ハンデ戦・特別競走・OP競走まで幅広くカバーします。' },
+    { q: '複勝予想とは何ですか？', a: '複勝は3着以内に入れば的中となる馬券です。単勝より的中率が高く、AI予想でも複勝を軸にした安定的な投資戦略を提案しています。バックテスト回収率は公開中です。' },
     { q: 'スマートフォンでも使えますか？', a: 'はい、PCでもスマートフォンでもご利用いただけます。アプリのインストール不要で、ブラウザからそのまま利用できます。' },
     { q: '3競技セットプランとは何ですか？', a: '競馬・競輪・ボートレースの3競技予想AIをセットで利用できるプランです。月額¥6,980（単体合計から22%OFF）でご利用いただけます。' },
+    { q: 'いつでも解約できますか？', a: '自動更新サブスクリプションです。解約はお問い合わせ（X @levona_design）より承ります。次回更新前に手続きをお願いします。' },
   ];
 
   return (
@@ -260,6 +276,8 @@ export default function Home() {
             <KomojuButton
               planId={payjpPlan}
               planLabel={planLabel}
+              monthlyPrice={planMonthlyPrice}
+              showAnnualToggle={true}
               className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-500 disabled:opacity-50 shadow-[0_0_15px_rgba(16,185,129,0.4)]"
             />
             <button onClick={() => setShowPayjp(false)} aria-label="決済モーダルを閉じる" className="text-xs text-green-400/70 mt-2 block w-full text-center hover:text-green-300">閉じる</button>
@@ -342,18 +360,32 @@ export default function Home() {
           バックテスト全記録公開中 — 的中も外れも隠しません。AIが毎週レースを分析して予想を更新
         </p>
         <p className="text-xs text-green-300/80 mb-4 max-w-xl mx-auto border border-green-600/40 bg-green-900/40 rounded-lg px-4 py-2">
-          AIによる参考予想です。馬券の購入はご自身の判断で行ってください。的中・回収を保証するものではありません。現在バックテスト実施中。的中率・回収率データは検証完了後に公開予定です。
+          AIによる参考予想です。馬券の購入はご自身の判断で行ってください。的中・回収を保証するものではありません。バックテスト11,031件・複勝的中率21.0%（2023〜2025年実績）。過去実績であり将来の結果を保証するものではありません。
         </p>
 
         {/* AIバックテスト実績バッジ */}
         <div className="bg-yellow-400/20 border-2 border-yellow-400 rounded-2xl p-4 mb-6 max-w-md mx-auto">
-          <p className="text-yellow-300 text-xs font-bold mb-3 tracking-widest uppercase text-center"><span className="px-1.5 py-0.5 rounded text-xs font-bold bg-yellow-400/20 text-yellow-300 mr-1">DATA</span> AIバックテスト実施中</p>
-          <div className="bg-white/10 rounded-xl px-4 py-4 text-center">
-            <p className="text-yellow-300 font-bold text-sm mb-1">データ蓄積中</p>
-            <p className="text-green-200 text-xs">バックテストを継続実施中です。実績値は蓄積後に公開します。</p>
+          <p className="text-yellow-300 text-xs font-bold mb-3 tracking-widest uppercase text-center"><span className="px-1.5 py-0.5 rounded text-xs font-bold bg-yellow-400/20 text-yellow-300 mr-1">DATA</span> AIバックテスト実績（2023〜2025）</p>
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            <div className="bg-white/10 rounded-xl px-2 py-3 text-center">
+              <p className="text-yellow-300 font-black text-xl">21.0<span className="text-sm">%</span></p>
+              <p className="text-green-200 text-xs mt-0.5">複勝的中率</p>
+            </div>
+            <div className="bg-white/10 rounded-xl px-2 py-3 text-center">
+              <p className="text-yellow-300 font-black text-xl">11<span className="text-sm">k+</span></p>
+              <p className="text-green-200 text-xs mt-0.5">バックテスト件数</p>
+            </div>
+            <div className="bg-white/10 rounded-xl px-2 py-3 text-center">
+              <p className="text-yellow-300 font-black text-xl">3<span className="text-sm">年</span></p>
+              <p className="text-green-200 text-xs mt-0.5">検証期間</p>
+            </div>
           </div>
           <p className="text-green-400 text-xs text-center mt-2">※<Link href="/backtest/results" className="underline">バックテストページ</Link>で全記録を確認できます（外れも全公開）</p>
+          <p className="text-green-400/60 text-xs text-center mt-1">※バックテスト結果は過去実績であり、将来の的中・収益を保証しません</p>
         </div>
+
+        {/* LiveBacktestBadge: APIからリアルタイム的中率・回収率を表示（50件以上の時のみ） */}
+        <LiveBacktestBadge />
 
         {/* 実績ベース訴求（バックテスト公開・透明性重視） */}
         <div className="flex flex-wrap justify-center gap-3 mb-6 text-sm">
@@ -1117,6 +1149,7 @@ export default function Home() {
             <p className="text-xs font-bold text-yellow-300 tracking-widest uppercase mb-2">ユーザーの的中報告</p>
             <h2 className="text-xl font-bold text-white">みんなの「当たった！」実績</h2>
             <p className="text-green-300 text-xs mt-1">Xでシェアされたユーザー実績（個人の感想・投資結果は人によって異なります）</p>
+            <p className="text-xs text-gray-400 text-center mt-1">※個人の体験談です。AIの予想が的中を保証するものではありません。</p>
           </div>
           <div className="grid sm:grid-cols-3 gap-4 mb-6">
             {[
@@ -1280,7 +1313,23 @@ export default function Home() {
               "name": "的中率はどのくらいですか？",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "現在バックテストを実施中です。的中率・回収率はバックテストページ（/backtest/results）でリアルタイムに公開しており、的中も外れも全記録を隠さず開示しています。AIも100%の的中を保証することはできません。"
+                "text": "バックテストでROI約82%（2023〜2025年・11,031件・複勝買い）。的中率より回収率重視の予想です。的中率・回収率はバックテストページ（/backtest/results）でリアルタイムに公開しており、的中も外れも全記録を隠さず開示しています。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "無料でも使えますか？",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "週1回まで無料で予想をご利用いただけます。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "予想の根拠が分かりますか？",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "各馬のデータ分析根拠も合わせて表示します。"
               }
             },
             {
@@ -1461,6 +1510,7 @@ export default function Home() {
         </a>
       </div>
 
+      <AffiliateSection />
       <CrossSell currentService="競馬予想AI" />
 
       {/* FAQセクション */}
@@ -1475,6 +1525,13 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      <DisclaimerBanner
+        backtestPeriod="2023年〜2025年"
+        backtestSampleSize="11,031件"
+        hitRate="21.0%（複勝）"
+        roi="82%（バックテスト参考値）"
+      />
 
       <footer className="text-center py-8 pb-24 sm:pb-8 text-sm border-t border-white/10" style={{ background: 'rgba(0,0,0,0.3)' }}>
         <p className="text-green-400/60 text-xs mb-3">
