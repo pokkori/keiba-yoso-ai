@@ -447,6 +447,19 @@ export default function Home() {
             プロプラン ¥2,980/月
           </button>
         </div>
+        {/* 3競技セットプランバナー */}
+        <div className="mx-auto max-w-md mt-4 rounded-2xl border-2 border-yellow-400 bg-gradient-to-r from-yellow-900/40 to-orange-900/40 p-4 text-center">
+          <p className="text-xs text-yellow-300 font-bold mb-1">おトクな3競技セットプラン</p>
+          <p className="text-lg font-black text-white">競馬+競輪+ボートレース</p>
+          <p className="text-yellow-400 font-bold text-xl">¥6,980<span className="text-sm font-normal text-white/70">/月</span></p>
+          <p className="text-xs text-white/60 mt-1">各サービス単体より最大¥1,920おトク</p>
+          <button
+            onClick={() => startCheckout("set-plan")}
+            className="mt-3 w-full bg-yellow-400 text-gray-900 font-black py-2 rounded-full text-sm hover:bg-yellow-300 transition-colors"
+          >
+            3競技セットで始める
+          </button>
+        </div>
         <p className="text-sm text-amber-300 mt-2 font-semibold">
           <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-gradient-to-r from-emerald-500 to-green-600 text-white mr-1">LIVE</span> バックテスト継続中 — 全記録をリアルタイム公開
         </p>
