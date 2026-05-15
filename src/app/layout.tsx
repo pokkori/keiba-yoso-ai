@@ -3,6 +3,7 @@ import { Noto_Sans_JP } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
+import { GoogleAdScript } from "@/components/GoogleAdScript";
 import "./globals.css";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
 import FeedbackButton from "@/components/FeedbackButton";
@@ -189,10 +190,18 @@ export default function RootLayout({
             </a>
           </div>
         </section>
-        <footer className="flex justify-center py-2">
-          <FeedbackButton serviceName="競馬予想AI" />
+        <footer className="py-6 mt-4 border-t border-white/10">
+          <nav className="flex flex-wrap justify-center gap-4 text-xs text-gray-500 mb-3">
+            <a href="/legal" className="hover:text-gray-300 transition-colors">特定商取引法</a>
+            <a href="/privacy" className="hover:text-gray-300 transition-colors">プライバシーポリシー</a>
+            <a href="/terms" className="hover:text-gray-300 transition-colors">利用規約</a>
+          </nav>
+          <div className="flex justify-center">
+            <FeedbackButton serviceName="競馬予想AI" />
+          </div>
         </footer>
         </AgeGate>
+        <GoogleAdScript />
         <Analytics />
         <SpeedInsights />
         {process.env.NEXT_PUBLIC_CLARITY_ID && process.env.NODE_ENV === 'production' && (

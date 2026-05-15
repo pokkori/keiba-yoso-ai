@@ -18,6 +18,28 @@ interface ConfidenceBand {
   recoveryRate: number;
 }
 
+interface YearlyRoi {
+  year: string;
+  buyCount: number;
+  hitCount: number;
+  hitRate: number;
+  hitRateLow: number;
+  hitRateHigh: number;
+  totalReturn: number;
+  totalInvested: number;
+  recoveryRate: number;
+  sampleSize: number;
+}
+
+interface SegmentRoi {
+  key: string;
+  condition: string;
+  sampleSize: number;
+  hitRate: number;
+  recoveryRate: number;
+  isProven: boolean;
+}
+
 interface BacktestStats {
   totalPredictions: number;
   buyCount: number;
@@ -31,6 +53,289 @@ interface BacktestStats {
   recoveryRate: number;
   period: { from: string; to: string };
   confidenceBreakdown: ConfidenceBand[];
+  yearly: YearlyRoi[];
+  segmentRoi: SegmentRoi[];
+}
+
+// --- SVGグラフコンポーネント（依存ゼロ）---
+
+function YearlyRoiChart({ yearly }: { yearly: YearlyRoi[] }) {
+  if (!yearly || yearly.length === 0) return null;
+  const W = 480;
+  const H = 200;
+  const PAD = { top: 30, right: 30, bottom: 40, left: 56 };
+  const innerW = W - PAD.left - PAD.right;
+  const innerH = H - PAD.top - PAD.bottom;
+
+  const rates = yearly.map((y) => y.recoveryRate);
+  const minRate = Math.min(...rates, 80);
+  const maxRate = Math.max(...rates, 110);
+  const range = maxRate - minRate || 1;
+
+  const xStep = yearly.length > 1 ? innerW / (yearly.length - 1) : innerW / 2;
+
+  function xPos(i: number) {
+    return PAD.left + (yearly.length > 1 ? i * xStep : innerW / 2);
+  }
+  function yPos(rate: number) {
+    return PAD.top + innerH - ((rate - minRate) / range) * innerH;
+  }
+
+  const baseline100Y = yPos(100);
+  const polyline = yearly
+    .map((y, i) => `${xPos(i)},${yPos(y.recoveryRate)}`)
+    .join(" ");
+
+  // Y軸目盛り: minRate〜maxRateを4等分
+  const yTicks = Array.from({ length: 5 }, (_, i) =>
+    Math.round(minRate + (range / 4) * i)
+  );
+
+  return (
+    <div className="overflow-x-auto">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full max-w-lg mx-auto"
+        role="img"
+        aria-label="年別回収率推移グラフ（バックテスト参考値）"
+      >
+        {/* グリッド線 */}
+        {yTicks.map((tick) => (
+          <line
+            key={tick}
+            x1={PAD.left}
+            y1={yPos(tick)}
+            x2={W - PAD.right}
+            y2={yPos(tick)}
+            stroke="#374151"
+            strokeWidth="1"
+          />
+        ))}
+
+        {/* 100%基準線（緑破線） */}
+        {baseline100Y >= PAD.top && baseline100Y <= PAD.top + innerH && (
+          <>
+            <line
+              x1={PAD.left}
+              y1={baseline100Y}
+              x2={W - PAD.right}
+              y2={baseline100Y}
+              stroke="#22c55e"
+              strokeWidth="1.5"
+              strokeDasharray="6 4"
+            />
+            <text
+              x={PAD.left - 4}
+              y={baseline100Y + 4}
+              textAnchor="end"
+              fontSize="10"
+              fill="#22c55e"
+            >
+              100%
+            </text>
+          </>
+        )}
+
+        {/* Y軸目盛り */}
+        {yTicks.map((tick) => (
+          <text
+            key={`yt-${tick}`}
+            x={PAD.left - 6}
+            y={yPos(tick) + 4}
+            textAnchor="end"
+            fontSize="9"
+            fill="#9ca3af"
+          >
+            {tick}
+          </text>
+        ))}
+
+        {/* 折れ線 */}
+        {yearly.length > 1 && (
+          <polyline
+            points={polyline}
+            fill="none"
+            stroke="#facc15"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+        )}
+
+        {/* データポイント */}
+        {yearly.map((y, i) => {
+          const cx = xPos(i);
+          const cy = yPos(y.recoveryRate);
+          const color = y.recoveryRate >= 100 ? "#22c55e" : "#ef4444";
+          return (
+            <g key={y.year}>
+              <circle cx={cx} cy={cy} r="5" fill={color} />
+              <text
+                x={cx}
+                y={cy - 10}
+                textAnchor="middle"
+                fontSize="11"
+                fontWeight="bold"
+                fill={color}
+              >
+                {Math.round(y.recoveryRate)}%
+              </text>
+              {/* X軸ラベル */}
+              <text
+                x={cx}
+                y={PAD.top + innerH + 18}
+                textAnchor="middle"
+                fontSize="11"
+                fill="#d1d5db"
+              >
+                {y.year}
+              </text>
+              <text
+                x={cx}
+                y={PAD.top + innerH + 32}
+                textAnchor="middle"
+                fontSize="9"
+                fill="#6b7280"
+              >
+                ({y.sampleSize}件)
+              </text>
+            </g>
+          );
+        })}
+
+        {/* 軸 */}
+        <line
+          x1={PAD.left}
+          y1={PAD.top}
+          x2={PAD.left}
+          y2={PAD.top + innerH}
+          stroke="#4b5563"
+          strokeWidth="1"
+        />
+        <line
+          x1={PAD.left}
+          y1={PAD.top + innerH}
+          x2={W - PAD.right}
+          y2={PAD.top + innerH}
+          stroke="#4b5563"
+          strokeWidth="1"
+        />
+
+        {/* Y軸ラベル */}
+        <text
+          x={12}
+          y={PAD.top + innerH / 2}
+          textAnchor="middle"
+          fontSize="10"
+          fill="#9ca3af"
+          transform={`rotate(-90, 12, ${PAD.top + innerH / 2})`}
+        >
+          回収率(%)
+        </text>
+      </svg>
+    </div>
+  );
+}
+
+function SegmentRoiTable({ segments }: { segments: SegmentRoi[] }) {
+  if (!segments || segments.length === 0) return null;
+  const sorted = [...segments].sort((a, b) => b.recoveryRate - a.recoveryRate);
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="text-gray-500 border-b border-gray-700">
+            <th className="text-left py-2 pr-3">条件</th>
+            <th className="text-right py-2 px-2">件数</th>
+            <th className="text-right py-2 px-2">的中率</th>
+            <th className="text-right py-2 px-2">回収率</th>
+            <th className="text-right py-2 pl-2">信頼性</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((seg) => (
+            <tr key={seg.key} className="border-b border-gray-800">
+              <td className="py-2 pr-3 font-medium text-gray-200">
+                {seg.condition}
+              </td>
+              <td className="py-2 px-2 text-right text-gray-400">
+                {seg.sampleSize}件
+              </td>
+              <td className="py-2 px-2 text-right text-gray-400">
+                {seg.sampleSize > 0
+                  ? `${(seg.hitRate * 100).toFixed(1)}%`
+                  : "-"}
+              </td>
+              <td
+                className={`py-2 px-2 text-right font-bold ${
+                  seg.sampleSize === 0
+                    ? "text-gray-600"
+                    : seg.recoveryRate >= 100
+                    ? "text-green-400"
+                    : "text-gray-400"
+                }`}
+              >
+                {seg.sampleSize > 0
+                  ? `${seg.recoveryRate.toFixed(1)}%`
+                  : "-"}
+              </td>
+              <td className="py-2 pl-2 text-right">
+                {seg.sampleSize === 0 ? (
+                  <span className="text-gray-600">-</span>
+                ) : seg.isProven ? (
+                  <span
+                    className="text-yellow-400"
+                    title="50件以上の実績あり"
+                  >
+                    ★実証
+                  </span>
+                ) : seg.sampleSize < 30 ? (
+                  <span
+                    className="text-gray-500"
+                    title="30件未満のため参考値"
+                  >
+                    *参考値
+                  </span>
+                ) : (
+                  <span className="text-gray-400">蓄積中</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function YearlyDipAlert({ yearly }: { yearly: YearlyRoi[] }) {
+  if (!yearly || yearly.length < 2) return null;
+  let hasDip = false;
+  let dipYear = "";
+  let dipPrev = 0;
+  let dipCurr = 0;
+  for (let i = 1; i < yearly.length; i++) {
+    const diff = yearly[i].recoveryRate - yearly[i - 1].recoveryRate;
+    if (diff <= -15) {
+      hasDip = true;
+      dipYear = yearly[i].year;
+      dipPrev = Math.round(yearly[i - 1].recoveryRate);
+      dipCurr = Math.round(yearly[i].recoveryRate);
+      break;
+    }
+  }
+  if (!hasDip) return null;
+  return (
+    <div className="bg-yellow-950/40 border border-yellow-700/60 rounded-xl p-4 mb-6">
+      <p className="text-yellow-400 font-bold text-sm mb-2">
+        {dipYear}年急落について（透明性のための開示）
+      </p>
+      <p className="text-gray-400 text-xs leading-relaxed">
+        {dipYear}年の回収率は{dipPrev}%から{dipCurr}%へ低下しました。
+        原因は予想確率計算（implied_prob）のバグ（修正済み）です。
+        バグ修正後のデータで改めて検証中です。過去実績であり将来を保証するものではありません。
+      </p>
+    </div>
+  );
 }
 
 const MIN_SAMPLES = 100;
@@ -295,6 +600,44 @@ export default function BacktestStatsPage() {
                   </div>
                   <p className="text-xs text-gray-600 mt-2">
                     ※件数が少ない間は参考値です。確信度8以上のレースに絞ると回収率が向上する傾向を検証中。
+                  </p>
+                </div>
+              </section>
+            )}
+
+            {/* 年別ROIグラフ */}
+            {stats.yearly && stats.yearly.length > 0 && (
+              <section className="mb-8">
+                <div className="bg-gray-900 border border-gray-700 rounded-2xl p-5">
+                  <h2 className="text-sm font-bold text-gray-300 mb-1">
+                    年別回収率推移
+                  </h2>
+                  <p className="text-xs text-gray-500 mb-4">
+                    バックテスト結果（参考値・将来保証なし）。100%以上=収支プラス。
+                  </p>
+                  <YearlyDipAlert yearly={stats.yearly} />
+                  <YearlyRoiChart yearly={stats.yearly} />
+                  <p className="text-xs text-gray-600 mt-3 text-center">
+                    ※過去実績値です。将来の回収率を保証するものではありません。
+                  </p>
+                </div>
+              </section>
+            )}
+
+            {/* 条件別ROIテーブル */}
+            {stats.segmentRoi && stats.segmentRoi.some((s) => s.sampleSize > 0) && (
+              <section className="mb-8">
+                <div className="bg-gray-900 border border-gray-700 rounded-2xl p-5">
+                  <h2 className="text-sm font-bold text-gray-300 mb-1">
+                    条件別回収率（セグメント分析）
+                  </h2>
+                  <p className="text-xs text-gray-500 mb-4">
+                    ROI降順。★実証=50件以上の実績あり。*参考値=30件未満。
+                    バックテスト結果であり将来の回収率を保証するものではありません。
+                  </p>
+                  <SegmentRoiTable segments={stats.segmentRoi} />
+                  <p className="text-xs text-gray-600 mt-3">
+                    ※件数が少ない条件は統計的信頼性が低いため参考値です。
                   </p>
                 </div>
               </section>

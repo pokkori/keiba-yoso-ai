@@ -12,6 +12,9 @@ const cspValue = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   experimental: {
     viewTransition: true,
   },

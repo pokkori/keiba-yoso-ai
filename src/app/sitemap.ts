@@ -11,6 +11,8 @@ const keywordSlugs = [
   "keiba-tenkai-yoso-katsuritu",
   "keiba-blood-pedigree-analysis",
   "keiba-tokubetsu-kyuusou",
+  "oaks-2026-yoso-ai",
+  "nihon-derby-2026-yoso-ai",
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -31,6 +33,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/race/sakurahana-sho`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/race/satsuki-sho`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/race/nihon-derby`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
+    { url: `${base}/race/victoria-mile`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
+    { url: `${base}/race/oaks`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
+    { url: `${base}/race/yasuda-kinen`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/race/arima-kinen`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/news`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/news/weekly`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },

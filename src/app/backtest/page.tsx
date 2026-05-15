@@ -466,6 +466,18 @@ export default function BacktestPage() {
         )}
       </div>
 
+      <div className="bg-yellow-50 border-t-2 border-yellow-400 px-4 py-3 text-center mt-8">
+        <p className="text-xs text-gray-700 leading-relaxed">
+          <span className="font-bold text-yellow-700">【免責事項】</span>{" "}
+          表示の的中率・回収率は2023年〜2025年・11,031件を対象としたバックテスト集計結果です。
+          過去の実績であり、将来の的中・回収を保証するものではありません。
+          本サービスは予想情報の提供であり、馬券の購入を推奨するものではありません。
+          馬券の購入はご自身の判断と責任で行ってください。
+          公営競技は余裕資金でお楽しみください。
+          <span className="ml-2 font-bold text-red-600">20歳未満の方はご利用いただけません。</span>
+        </p>
+      </div>
+
       <footer className="text-center py-6 text-xs text-gray-400 border-t mt-8 space-x-4">
         <a href="/legal" className="hover:text-gray-600">特定商取引法に基づく表記</a>
         <a href="/privacy" className="hover:text-gray-600">プライバシーポリシー</a>

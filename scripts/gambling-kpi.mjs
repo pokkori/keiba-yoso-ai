@@ -131,6 +131,76 @@ async function keibaKPI(client) {
     console.log("\n  ─── [SIM-7] 単勝11-13倍帯特化 ────────────────");
     console.log(`  n=${fmt(s7.eval_f)} 的中率: ${pct(s7.hit_f, s7.eval_f)}  回収率: ${rr(s7.ret_f, inv7)}`);
 
+    // SIM-NEW-A: 人気×オッズ帯クロス最適化（2026-05-02実装）
+    // 4番人気×8-10倍除外 + 5番人気×7-9倍除外（赤字組み合わせ除去）
+    const { rows: simNewA } = await client.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL
+          AND NOT (horse_popularity=4 AND odds >= 8.0 AND odds < 10.0)
+          AND NOT (horse_popularity=5 AND odds >= 7.0 AND odds < 9.0)) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true
+          AND NOT (horse_popularity=4 AND odds >= 8.0 AND odds < 10.0)
+          AND NOT (horse_popularity=5 AND odds >= 7.0 AND odds < 9.0)) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true
+          AND NOT (horse_popularity=4 AND odds >= 8.0 AND odds < 10.0)
+          AND NOT (horse_popularity=5 AND odds >= 7.0 AND odds < 9.0)) AS ret_f
+      FROM keiba_prediction_logs
+      WHERE recommendation='buy'
+    `);
+    const snA = simNewA[0];
+    const invnA = parseInt(snA.eval_f) * BET_UNIT;
+    console.log("\n  ─── [SIM-NEW-A] 4番人気×8-10倍+5番人気×7-9倍除外 ────");
+    console.log(`  n=${fmt(snA.eval_f)} 的中率: ${pct(snA.hit_f, snA.eval_f)}  回収率: ${rr(snA.ret_f, invnA)}`);
+
+    // SIM-NEW-B: 最適帯特化（バックテスト実証ROI=96.4%）
+    // 3番人気以下×9倍以上 / 4番人気×10-12倍 / 5番人気×9-12倍
+    const { rows: simNewB } = await client.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE hit IS NOT NULL
+          AND horse_popularity IS NOT NULL
+          AND (
+            (horse_popularity <= 3 AND odds >= 9.0)
+            OR (horse_popularity = 4 AND odds >= 10.0 AND odds < 12.0)
+            OR (horse_popularity = 5 AND odds >= 9.0 AND odds < 12.0)
+          )) AS eval_f,
+        COUNT(*) FILTER (WHERE hit=true
+          AND horse_popularity IS NOT NULL
+          AND (
+            (horse_popularity <= 3 AND odds >= 9.0)
+            OR (horse_popularity = 4 AND odds >= 10.0 AND odds < 12.0)
+            OR (horse_popularity = 5 AND odds >= 9.0 AND odds < 12.0)
+          )) AS hit_f,
+        SUM(return_amount) FILTER (WHERE hit=true
+          AND horse_popularity IS NOT NULL
+          AND (
+            (horse_popularity <= 3 AND odds >= 9.0)
+            OR (horse_popularity = 4 AND odds >= 10.0 AND odds < 12.0)
+            OR (horse_popularity = 5 AND odds >= 9.0 AND odds < 12.0)
+          )) AS ret_f
+      FROM keiba_prediction_logs
+      WHERE recommendation='buy'
+    `);
+    const snB = simNewB[0];
+    const invnB = parseInt(snB.eval_f) * BET_UNIT;
+    console.log("\n  ─── [SIM-NEW-B] 最適帯特化（3番以下×9倍+/4番×10-12倍/5番×9-12倍）────");
+    console.log(`  n=${fmt(snB.eval_f)} 的中率: ${pct(snB.hit_f, snB.eval_f)}  回収率: ${rr(snB.ret_f, invnB)}`);
+
+    // SIM-NEW-C: 人気別ROI（参考データ）
+    const { rows: simNewC } = await client.query(`
+      SELECT horse_popularity,
+        COUNT(*) FILTER (WHERE hit IS NOT NULL) AS eval,
+        COUNT(*) FILTER (WHERE hit=true) AS hits,
+        SUM(return_amount) FILTER (WHERE hit=true) AS ret
+      FROM keiba_prediction_logs
+      WHERE recommendation='buy' AND horse_popularity IS NOT NULL
+      GROUP BY horse_popularity ORDER BY horse_popularity
+    `);
+    console.log("\n  ─── [SIM-NEW-C] 人気別ROI ────────────────────");
+    for (const r of simNewC) {
+      const roi = parseInt(r.eval) > 0 ? rr(r.ret, parseInt(r.eval) * BET_UNIT) : "-";
+      console.log(`  ${r.horse_popularity}番人気: 評${fmt(r.eval)} 的${pct(r.hits, r.eval)} 回${roi}`);
+    }
+
     // SIM-8: 1レース1頭（最高tanshOdds特化）
     // 実際のAIは1レースで1頭を推奨。最高odds帯を特化することで価値発見率向上を狙う
     const { rows: sim8 } = await client.query(`

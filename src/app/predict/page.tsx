@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import KomojuButton from "@/components/KomojuButton";
+import BankTransferModal from "@/components/BankTransferModal";
 import { track } from '@vercel/analytics';
 import { updateStreak, loadStreak, type StreakData } from "@/lib/streak";
 
@@ -397,6 +398,7 @@ export default function PredictPage() {
   const [usageCount, setUsageCount] = useState(0);
   const [showPaywall, setShowPaywall] = useState(false);
   const [showPayjp, setShowPayjp] = useState(false);
+  const [showBankTransfer, setShowBankTransfer] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState("basic");
   const [streakData, setStreakData] = useState<StreakData | null>(null);
 
@@ -1043,11 +1045,26 @@ export default function PredictPage() {
             <KomojuButton
               planId={checkoutPlan}
               planLabel={checkoutPlan === "pro" ? "プロプラン ¥2,980/月（税込）— G1・重賞の詳細分析付き" : "ベーシックプラン ¥980/月（税込）— 全レース無制限予想"}
+              monthlyPrice={checkoutPlan === "pro" ? 2980 : 980}
+              showAnnualToggle={true}
               className="w-full bg-green-700 text-white font-bold py-3 rounded-xl hover:bg-green-800 disabled:opacity-50"
             />
+            <div className="my-2 text-center text-xs text-gray-400">または</div>
+            <button
+              onClick={() => { setShowPayjp(false); setShowBankTransfer(true); }}
+              className="w-full border border-blue-700 text-blue-700 font-bold py-3 rounded-xl hover:bg-blue-50 text-sm"
+            >
+              銀行振込でお申し込み（カード不要）
+            </button>
             <button onClick={() => setShowPayjp(false)} aria-label="プレミアムプラン申込みモーダルを閉じる" className="text-xs text-gray-400 mt-2 block w-full text-center">閉じる</button>
           </div>
         </div>
+      )}
+      {showBankTransfer && (
+        <BankTransferModal
+          defaultPlan={checkoutPlan}
+          onClose={() => setShowBankTransfer(false)}
+        />
       )}
     </div>
   );

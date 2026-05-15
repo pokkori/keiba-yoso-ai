@@ -42,9 +42,19 @@ export default function LegalPage() {
           </dl>
         </div>
 
-        <div className="mt-6 rounded-xl p-4" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)" }}>
-          <p className="text-yellow-300 text-xs leading-relaxed">
-            ※ 本サービスはエンターテインメント目的の予想サービスです。馬券の的中を保証するものではありません。ギャンブル等依存でお困りの方は公益財団法人 日本依存症対策協会（0570-064-556）にご相談ください。
+        <div className="mt-6 rounded-xl p-4 space-y-3" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)" }}>
+          <p className="text-yellow-300 text-xs leading-relaxed font-bold">【重要事項・景品表示法に基づく表示】</p>
+          <p className="text-yellow-200 text-xs leading-relaxed">
+            本サービスはエンターテインメント目的のAI競馬予想情報提供サービスです。馬券の購入・的中・収益を保証するものではありません。
+          </p>
+          <p className="text-yellow-200 text-xs leading-relaxed">
+            【過去実績について】当サービスが表示する的中率・回収率等の数値は、特定の測定期間・特定の馬券種・特定の購入条件のもとで算出された過去の統計値です。サンプル数が少ない場合は統計的信頼性が低く、実際の成績と大きく乖離する可能性があります。過去の実績は将来の成果を一切保証するものではありません。
+          </p>
+          <p className="text-yellow-200 text-xs leading-relaxed">
+            【AI予想の根拠】本サービスのAI予想は、公開データを用いた機械学習モデルによる確率的な推定です。予想根拠・モデルの詳細はバックテストページをご参照ください。予想は情報提供を目的とするものであり、馬券購入の最終判断はお客様ご自身が行ってください。
+          </p>
+          <p className="text-yellow-200 text-xs leading-relaxed">
+            ギャンブル等依存症でお困りの方は公益財団法人 日本依存症対策協会（0570-064-556）にご相談ください。18歳未満の方のご利用はお断りしています。
           </p>
         </div>
       </div>

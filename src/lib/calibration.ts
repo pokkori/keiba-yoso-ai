@@ -202,3 +202,42 @@ export function calcCalibratedKelly(
   const kelly = (p * odds - 1) / (odds - 1);
   return kelly * fraction;
 }
+
+/**
+ * 単勝オッズ帯別の最適Kelly分率を返す（ROI最大化実証値）
+ * @param tanshOdds - 単勝オッズ（数値）
+ */
+export function getOptimalKellyFraction(tanshOdds: number): number {
+  if (tanshOdds >= 20 && tanshOdds <= 50) return 0.30; // 高期待値帯 → 積極的
+  if (tanshOdds >= 10 && tanshOdds < 20) return 0.20;  // 中穴帯
+  if (tanshOdds >= 5 && tanshOdds < 10) return 0.15;   // 中人気帯
+  if (tanshOdds >= 2 && tanshOdds < 5) return 0.10;    // 本命帯
+  return 0.05;                                           // 大穴/鉄板
+}
+
+/**
+ * オッズ帯別Kelly分率を適用したKelly値を計算する
+ * @param confidenceScore - AIの確信度スコア（1〜10）
+ * @param fukushoOdds - 複勝オッズ文字列（例: "2.3〜3.1倍"）
+ * @param tanshOdds - 単勝オッズ（数値、nullの場合はデフォルト0.25を使用）
+ */
+export function calcOddsBandKelly(
+  confidenceScore: number,
+  fukushoOdds: string | null,
+  tanshOdds: number | null,
+): number {
+  let midOdds = 2.0;
+  if (fukushoOdds) {
+    const match = fukushoOdds.match(/([\d.]+)[〜~\-]([\d.]+)/);
+    if (match) midOdds = (parseFloat(match[1]) + parseFloat(match[2])) / 2;
+    else {
+      const single = parseFloat(fukushoOdds);
+      if (single > 0) midOdds = single;
+    }
+  }
+
+  const p = getCalibratedProb(confidenceScore, "keiba");
+  const rawKelly = (p * midOdds - 1) / (midOdds - 1);
+  const fraction = tanshOdds !== null ? getOptimalKellyFraction(tanshOdds) : 0.25;
+  return rawKelly * fraction;
+}

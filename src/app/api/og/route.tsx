@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -103,7 +103,7 @@ export async function GET(req: Request) {
                   display: "flex",
                 }}
               >
-                {isFukusho ? "複勝推奨馬" : "◎ 本命馬"}
+                {isFukusho ? "複勝推奨馬" : "本命馬"}
               </div>
               <div
                 style={{
@@ -248,7 +248,7 @@ export async function GET(req: Request) {
   // 通常予想OGP（的中フラグなし）
   const accentColor = isFukusho ? "#f59e0b" : "#fbbf24";
   const headerLabel = isFukusho ? "複勝予想" : "AI予想";
-  const headerIcon = isFukusho ? "🎯" : "◎";
+  const headerIcon = isFukusho ? "🎯" : "🏇";
 
   return new ImageResponse(
     (
@@ -324,7 +324,7 @@ export async function GET(req: Request) {
                 display: "flex",
               }}
             >
-              {isFukusho ? "複勝推奨馬" : "本命馬（◎）"}
+              {isFukusho ? "複勝推奨馬" : "本命馬"}
             </div>
             <div
               style={{
