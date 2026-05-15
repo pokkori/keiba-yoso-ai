@@ -169,6 +169,24 @@ function SuccessContent() {
           </Link>
         </div>
 
+        {/* 3競技セット会員向けクロスアクセス */}
+        {searchParams.get('plan') === 'bundle' && searchParams.get('session_id') && (
+          <div className="rounded-2xl p-5 mb-6 border-2 border-yellow-400 bg-gradient-to-br from-yellow-50 to-orange-50">
+            <h2 className="font-black text-yellow-800 text-sm text-center mb-2">3競技セット会員様へ</h2>
+            <p className="text-xs text-gray-600 text-center mb-4">残り2サービスへのアクセスを解錠できます（同じブラウザでお開きください）</p>
+            <div className="space-y-2">
+              <a href={`https://keirin-yoso-ai.vercel.app/success?session_id=${searchParams.get('session_id')}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-xl p-3 bg-blue-600 text-white hover:bg-blue-500 transition-colors">
+                <span className="text-sm font-bold">競輪予想AIにアクセス</span>
+                <svg viewBox="0 0 20 20" fill="none" className="w-4 h-4" aria-hidden="true"><path d="M7 4l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+              </a>
+              <a href={`https://boat-yoso-ai.vercel.app/success?session_id=${searchParams.get('session_id')}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-xl p-3 bg-cyan-600 text-white hover:bg-cyan-500 transition-colors">
+                <span className="text-sm font-bold">ボートレース予想AIにアクセス</span>
+                <svg viewBox="0 0 20 20" fill="none" className="w-4 h-4" aria-hidden="true"><path d="M7 4l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+              </a>
+            </div>
+          </div>
+        )}
+
         {/* X Share Button */}
         <div className="mb-6 text-center">
           <a

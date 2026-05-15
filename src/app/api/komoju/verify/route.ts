@@ -10,7 +10,7 @@ export async function POST(req: Request) {
 
     if (!sessionId) return NextResponse.json({ error: 'No sessionId' }, { status: 400 })
 
-    const secretKey = process.env.KOMOJU_SECRET_KEY
+    const secretKey = process.env.KOMOJU_SECRET_KEY?.trim()
     if (!secretKey) return NextResponse.json({ error: 'Not configured' }, { status: 500 })
 
     const response = await fetch(`https://komoju.com/api/v1/sessions/${sessionId}`, {
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     if (session.status === 'completed') {
       const cookieStore = await cookies()
       const planId = session.metadata?.planId || 'basic'
-      const cookieValue = (planId === 'pro' || planId === 'annual') ? planId : '1'
+      const cookieValue = (planId === 'pro' || planId === 'annual' || planId === 'bundle') ? 'pro' : '1'
 
       cookieStore.set('premium', signValue(cookieValue), {
         httpOnly: true,
@@ -58,7 +58,7 @@ export async function GET(req: Request) {
 
   if (!sessionId) return NextResponse.json({ verified: false })
 
-  const secretKey = process.env.KOMOJU_SECRET_KEY
+  const secretKey = process.env.KOMOJU_SECRET_KEY?.trim()
   if (!secretKey) return NextResponse.json({ verified: false })
 
   try {
@@ -75,7 +75,7 @@ export async function GET(req: Request) {
     if (session.status === 'completed') {
       const cookieStore = await cookies()
       const planId = session.metadata?.planId || 'basic'
-      const cookieValue = (planId === 'pro' || planId === 'annual') ? planId : '1'
+      const cookieValue = (planId === 'pro' || planId === 'annual' || planId === 'bundle') ? 'pro' : '1'
 
       cookieStore.set('premium', signValue(cookieValue), {
         httpOnly: true,

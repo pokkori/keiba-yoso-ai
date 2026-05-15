@@ -62,14 +62,14 @@ export function SetPlanBanner({ onStartCheckout }: Props) {
           ))}
         </ul>
 
-        {/* CTA — KOMOJU審査中のため準備中 */}
+        {/* CTA */}
         <button
-          disabled
-          aria-label="3競技セットプランは現在準備中です"
+          onClick={() => onStartCheckout('bundle')}
           data-testid="set-plan-cta"
-          className="block w-full text-center bg-gray-500 text-gray-300 font-black py-4 rounded-full text-base cursor-not-allowed opacity-60 min-h-[52px]"
+          className="block w-full text-center bg-yellow-400 text-green-900 font-black py-4 rounded-full text-base hover:bg-yellow-300 transition-colors min-h-[52px] cursor-pointer"
+          aria-label="3競技セットプランに申し込む（月額6,980円）"
         >
-          準備中 — まもなく申込み開始
+          3競技セットで始める ¥6,980/月
         </button>
 
         <p className="text-emerald-300 text-xs text-center mt-3">

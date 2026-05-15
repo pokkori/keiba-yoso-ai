@@ -4,8 +4,9 @@ export const dynamic = 'force-dynamic'
 
 const PLANS: Record<string, { amount: number; description: string; cookieValue: string }> = {
   basic: { amount: 980, description: '競馬予想AI ベーシックプラン（月額）', cookieValue: '1' },
-  pro: { amount: 1980, description: '競馬予想AI プロプラン（月額）', cookieValue: 'pro' },
+  pro: { amount: 2980, description: '競馬予想AI プロプラン（月額）', cookieValue: 'pro' },
   annual: { amount: 19800, description: '競馬予想AI 年間プラン（一括）', cookieValue: 'pro' },
+  bundle: { amount: 6980, description: '3競技セットプラン（競馬+競輪+ボートレース）月額', cookieValue: 'pro' },
 }
 
 export async function POST(req: Request) {
@@ -15,7 +16,7 @@ export async function POST(req: Request) {
     const plan = PLANS[planId ?? 'basic']
     if (!plan) return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
 
-    const secretKey = process.env.KOMOJU_SECRET_KEY
+    const secretKey = process.env.KOMOJU_SECRET_KEY?.trim()
     if (!secretKey) return NextResponse.json({ error: 'Payment not configured' }, { status: 500 })
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://keiba-yoso-ai.vercel.app'
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
         default_locale: 'ja',
         payment_types: ['credit_card'],
         metadata: { planId: planId ?? 'basic' },
-        return_url: `${baseUrl}/success`,
+        return_url: `${baseUrl}/success${planId === 'bundle' ? '?plan=bundle' : ''}`,
         cancel_url: `${baseUrl}/`,
       }),
     })
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
     }
 
     const session = await response.json()
-    return NextResponse.json({ url: session.payment_url, sessionId: session.id })
+    return NextResponse.json({ url: session.session_url, sessionId: session.id })
   } catch (e) {
     console.error('Komoju checkout error:', e)
     return NextResponse.json({ error: String(e) }, { status: 500 })
