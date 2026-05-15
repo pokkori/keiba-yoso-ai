@@ -48,7 +48,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const { withX402 } = await import("@x402/next");
     const { getX402Server } = await import("@/lib/x402Server");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const wrapped = withX402(innerHandler as any, X402_ROUTE_CONFIG, getX402Server());
+    const wrapped = withX402(innerHandler as any, X402_ROUTE_CONFIG as any, getX402Server() as any);
     return wrapped(req) as Promise<NextResponse>;
   } catch {
     // x402 unavailable - fallback to direct handler

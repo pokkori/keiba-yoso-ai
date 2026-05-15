@@ -1,19 +1,8 @@
-import { x402ResourceServer, HTTPFacilitatorClient } from "@x402/core/server";
-import { ExactEvmScheme } from "@x402/evm/exact/server";
-
 const PAY_TO = process.env.X402_PAY_TO ?? "0xa48E7e7D36EE1aE069B17D4E5E0B8a488c44B95a";
-const NETWORK = "eip155:8453"; // Base Mainnet
-
-let _server: ReturnType<typeof buildServer> | null = null;
-
-function buildServer() {
-  const facilitator = new HTTPFacilitatorClient({ url: "https://facilitator.x402.org" });
-  return new x402ResourceServer(facilitator).register(NETWORK, new ExactEvmScheme());
-}
+const NETWORK = "eip155:8453";
 
 export function getX402Server() {
-  if (!_server) _server = buildServer();
-  return _server;
+  return null;
 }
 
 export const X402_ROUTE_CONFIG = {

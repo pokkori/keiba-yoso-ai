@@ -53,6 +53,30 @@ export interface BacktestStats {
   recoveryRate: number; // totalReturn / totalInvested * 100
   period: { from: string; to: string };
   confidenceBreakdown: ConfidenceBand[];
+  yearly: YearlyRoi[];
+  segmentRoi: SegmentRoi[];
+}
+
+export interface YearlyRoi {
+  year: string;
+  buyCount: number;
+  hitCount: number;
+  hitRate: number;
+  hitRateLow: number;
+  hitRateHigh: number;
+  totalReturn: number;
+  totalInvested: number;
+  recoveryRate: number;
+  sampleSize: number;
+}
+
+export interface SegmentRoi {
+  key: string;
+  condition: string;
+  sampleSize: number;
+  hitRate: number;
+  recoveryRate: number;
+  isProven: boolean;
 }
 
 // ウィルソン区間計算（95%CI）
@@ -183,6 +207,111 @@ export async function getPredictionLogs(): Promise<PredictionLog[]> {
   }
 }
 
+function calcYearlyRoi(buyLogs: PredictionLog[]): YearlyRoi[] {
+  const yearMap = new Map<string, PredictionLog[]>();
+  for (const log of buyLogs) {
+    const year = log.raceDate.slice(0, 4);
+    if (!yearMap.has(year)) yearMap.set(year, []);
+    yearMap.get(year)!.push(log);
+  }
+  const result: YearlyRoi[] = [];
+  for (const [year, logs] of yearMap) {
+    const completed = logs.filter((l) => l.hit !== null);
+    const hits = completed.filter((l) => l.hit === true);
+    const totalReturn = hits.reduce((s, l) => s + (l.returnAmount ?? 0), 0);
+    const { low, high } = wilsonInterval(hits.length, completed.length);
+    result.push({
+      year,
+      buyCount: logs.length,
+      hitCount: hits.length,
+      hitRate: completed.length > 0 ? hits.length / completed.length : 0,
+      hitRateLow: low,
+      hitRateHigh: high,
+      totalReturn,
+      totalInvested: completed.length * 100,
+      recoveryRate:
+        completed.length > 0
+          ? (totalReturn / (completed.length * 100)) * 100
+          : 0,
+      sampleSize: completed.length,
+    });
+  }
+  return result.sort((a, b) => a.year.localeCompare(b.year));
+}
+
+function calcSegmentRoi(buyLogs: PredictionLog[]): SegmentRoi[] {
+  type Segment = {
+    key: string;
+    condition: string;
+    filter: (l: PredictionLog) => boolean;
+  };
+  const segments: Segment[] = [
+    {
+      key: "handicap_heavy",
+      condition: "ハンデ戦 × 重馬場",
+      filter: (l) =>
+        l.raceType === "ハンデ" &&
+        (l.fieldCondition === "重" || l.fieldCondition === "不良"),
+    },
+    {
+      key: "turf_good",
+      condition: "芝 × 良馬場",
+      filter: (l) => l.trackType === "芝" && l.fieldCondition === "良",
+    },
+    {
+      key: "dirt_heavy",
+      condition: "ダート × 稍重以上",
+      filter: (l) =>
+        l.trackType === "ダート" &&
+        (l.fieldCondition === "稍重" ||
+          l.fieldCondition === "重" ||
+          l.fieldCondition === "不良"),
+    },
+    {
+      key: "sprint",
+      condition: "短距離（1400m以下）",
+      filter: (l) => l.distance != null && l.distance <= 1400,
+    },
+    {
+      key: "middle",
+      condition: "中距離（1600〜2000m）",
+      filter: (l) =>
+        l.distance != null && l.distance >= 1600 && l.distance <= 2000,
+    },
+    {
+      key: "long",
+      condition: "長距離（2001m以上）",
+      filter: (l) => l.distance != null && l.distance >= 2001,
+    },
+    {
+      key: "g1g2",
+      condition: "G1・G2",
+      filter: (l) =>
+        l.raceGrade === "G1" || l.raceGrade === "G2",
+    },
+  ];
+
+  return segments.map((seg) => {
+    const filtered = buyLogs.filter(seg.filter);
+    const completed = filtered.filter((l) => l.hit !== null);
+    const hits = completed.filter((l) => l.hit === true);
+    const totalReturn = hits.reduce((s, l) => s + (l.returnAmount ?? 0), 0);
+    const hitRate = completed.length > 0 ? hits.length / completed.length : 0;
+    const recoveryRate =
+      completed.length > 0
+        ? (totalReturn / (completed.length * 100)) * 100
+        : 0;
+    return {
+      key: seg.key,
+      condition: seg.condition,
+      sampleSize: completed.length,
+      hitRate,
+      recoveryRate,
+      isProven: completed.length >= 50,
+    };
+  });
+}
+
 export async function getBacktestStats(): Promise<BacktestStats> {
   const logs = await getPredictionLogs();
   const buyLogs = logs.filter((l) => l.recommendation === "buy");
@@ -248,5 +377,7 @@ export async function getBacktestStats(): Promise<BacktestStats> {
       to: dates[dates.length - 1] ?? "-",
     },
     confidenceBreakdown,
+    yearly: calcYearlyRoi(buyLogs),
+    segmentRoi: calcSegmentRoi(buyLogs),
   };
 }
